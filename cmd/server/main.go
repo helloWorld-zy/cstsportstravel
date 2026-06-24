@@ -70,7 +70,7 @@ func main() {
 	log.Info("JWT manager initialized")
 
 	// Setup router
-	r := router.New(cfg, db, rdb, jwtManager)
+	r := router.New(cfg, db, rdb, jwtManager, log)
 
 	// HTTP server
 	srv := &http.Server{

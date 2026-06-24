@@ -12,12 +12,19 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
+	adminhandler "github.com/travel-booking/server/internal/admin/handler"
+	adminrepo "github.com/travel-booking/server/internal/admin/repository"
 	"github.com/travel-booking/server/internal/common/cache"
 	"github.com/travel-booking/server/internal/common/config"
+	"github.com/travel-booking/server/internal/common/encrypt"
 	"github.com/travel-booking/server/internal/common/middleware"
 	"github.com/travel-booking/server/internal/common/response"
+	userhandler "github.com/travel-booking/server/internal/user/handler"
+	userrepo "github.com/travel-booking/server/internal/user/repository"
+	userservice "github.com/travel-booking/server/internal/user/service"
 )
 
 // Router holds all route groups and shared dependencies.
@@ -27,10 +34,11 @@ type Router struct {
 	DB          *gorm.DB
 	Redis       *cache.Redis
 	Config      *config.Config
+	Logger      *zap.Logger
 }
 
 // New creates a new Router with all middleware and route groups configured.
-func New(cfg *config.Config, db *gorm.DB, rdb *cache.Redis, jwtManager *middleware.JWTManager) *Router {
+func New(cfg *config.Config, db *gorm.DB, rdb *cache.Redis, jwtManager *middleware.JWTManager, log *zap.Logger) *Router {
 	engine := gin.New()
 
 	// Global middleware
@@ -48,6 +56,7 @@ func New(cfg *config.Config, db *gorm.DB, rdb *cache.Redis, jwtManager *middlewa
 		DB:         db,
 		Redis:      rdb,
 		Config:     cfg,
+		Logger:     log,
 	}
 
 	// Health check endpoints (no auth, no rate limit)
@@ -86,16 +95,43 @@ func (r *Router) setupHealthRoutes() {
 
 // setupAPIRoutes registers all API v1 route groups.
 func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
+	// Initialize services and handlers
+	enc, err := encrypt.NewEncryptor(r.Config.Encryption.Key)
+	if err != nil {
+		r.Logger.Warn("encryption not configured, sensitive field operations will fail", zap.Error(err))
+	}
+
+	// User domain services
+	userRepo := userrepo.NewUserRepository(r.DB)
+	travellerRepo := userrepo.NewTravellerRepository(r.DB)
+	rnvRepo := userservice.NewRealNameVerificationRepo(r.DB)
+
+	smsSvc := userservice.NewSMSService(r.Redis.Client(), r.Config.SMS, r.Config.Server.Mode, r.Logger)
+	userSvc := userservice.NewUserService(userRepo, smsSvc, r.JWTManager, enc, r.Logger, r.Config)
+	wechatSvc := userservice.NewWechatService(userRepo, smsSvc, r.JWTManager, r.Config, r.Logger)
+	realNameSvc := userservice.NewRealNameService(userRepo, rnvRepo, enc, r.Logger)
+	travellerSvc := userservice.NewTravellerService(travellerRepo, enc, r.Logger)
+
+	// User domain handlers
+	userH := userhandler.NewUserHandler(userSvc, smsSvc, r.Logger)
+	wechatH := userhandler.NewWechatHandler(wechatSvc, r.Logger)
+	realNameH := userhandler.NewRealNameHandler(realNameSvc, r.Logger)
+	travellerH := userhandler.NewTravellerHandler(travellerSvc, r.Logger)
+
+	// Admin domain handlers
+	adminUserRepo := adminrepo.NewAdminUserRepository(r.DB)
+	adminAuthH := adminhandler.NewAdminAuthHandler(adminUserRepo, r.JWTManager, r.Logger)
+
 	v1 := r.Engine.Group("/api/v1")
 	{
 		// Auth routes (no JWT required)
 		auth := v1.Group("/auth")
 		{
-			auth.POST("/sms-code", placeholder("send sms code"))
-			auth.POST("/login", placeholder("phone login"))
-			auth.POST("/wechat", placeholder("wechat login"))
-			auth.POST("/admin/login", placeholder("admin login"))
-			auth.POST("/refresh-token", placeholder("refresh token"))
+			auth.POST("/sms-code", userH.SendSMSCode)
+			auth.POST("/login", userH.Login)
+			auth.POST("/wechat", wechatH.Login)
+			auth.POST("/admin/login", adminAuthH.Login)
+			auth.POST("/refresh-token", userH.RefreshToken)
 		}
 
 		// User routes (JWT required)
@@ -103,13 +139,13 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 		user.Use(middleware.AuthRequired(r.JWTManager))
 		user.Use(middleware.PerUserRateLimit(rateLimiter))
 		{
-			user.GET("/me", placeholder("get profile"))
-			user.PUT("/me", placeholder("update profile"))
-			user.POST("/me/real-name", placeholder("submit real-name"))
-			user.GET("/me/travellers", placeholder("list travellers"))
-			user.POST("/me/travellers", placeholder("add traveller"))
-			user.PUT("/me/travellers/:id", placeholder("update traveller"))
-			user.DELETE("/me/travellers/:id", placeholder("delete traveller"))
+			user.GET("/me", userH.GetProfile)
+			user.PUT("/me", userH.UpdateProfile)
+			user.POST("/me/real-name", realNameH.SubmitVerification)
+			user.GET("/me/travellers", travellerH.ListTravellers)
+			user.POST("/me/travellers", travellerH.CreateTraveller)
+			user.PUT("/me/travellers/:id", travellerH.UpdateTraveller)
+			user.DELETE("/me/travellers/:id", travellerH.DeleteTraveller)
 		}
 
 		// Product routes (public, optional auth for personalized results)
@@ -164,7 +200,8 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 	admin.Use(middleware.AuthRequired(r.JWTManager))
 	admin.Use(middleware.PerUserRateLimit(rateLimiter))
 	{
-		// Admin auth (handled in /auth/admin/login above)
+		// Admin user info
+		admin.GET("/users/me", adminAuthH.GetAdminMe)
 
 		// Product management
 		adminProd := admin.Group("/products")

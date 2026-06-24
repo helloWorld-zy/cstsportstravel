@@ -79,35 +79,35 @@
 
 ### Backend API
 
-- [ ] T037 [US1] Implement SMS verification code service in `internal/user/service/sms.go` — generate 6-digit code, store in Redis with 5min TTL, 60s rate limit per phone, integrate with Alibaba Cloud SMS SDK
-- [ ] T038 [US1] Implement user repository in `internal/user/repository/user_repo.go` — Create, FindByPhone, FindByWechatOpenID, Update operations with GORM
-- [ ] T039 [US1] Implement user service in `internal/user/service/user.go` — Register (phone+code), Login (phone+code), GetProfile, UpdateProfile, BindWechat logic
-- [ ] T040 [US1] Implement user handler in `internal/user/handler/user.go` — POST /api/v1/auth/sms-code, POST /api/v1/auth/login, POST /api/v1/auth/wechat-login, GET /api/v1/user/profile, PUT /api/v1/user/profile endpoints per user-api.yaml
-- [ ] T041 [US1] Implement WeChat OAuth integration in `internal/user/service/wechat.go` — wx.login code exchange for openid, OAuth 2.0 flow for web, user creation/binding logic
-- [ ] T042 [US1] Implement real-name verification service in `internal/user/service/realname.go` — submit verification (name+id_card), call public security API for validation, update user real_name_status, encrypt id_card_no with AES-256-GCM before storage
-- [ ] T043 [US1] Implement real-name verification handler in `internal/user/handler/realname.go` — POST /api/v1/user/real-name-verification endpoint per user-api.yaml
-- [ ] T044 [US1] Implement frequent traveller repository in `internal/user/repository/traveller_repo.go` — Create, FindByUserID, Update, Delete operations
-- [ ] T045 [US1] Implement frequent traveller service in `internal/user/service/traveller.go` — CRUD with ID card validation (ISO 7064 checksum), max 20 per user, encrypt sensitive fields
-- [ ] T046 [US1] Implement frequent traveller handler in `internal/user/handler/traveller.go` — CRUD endpoints per user-api.yaml (GET/POST/PUT/DELETE /api/v1/users/me/travellers)
-- [ ] T047 [US1] Implement admin login endpoint in `internal/admin/handler/auth.go` — POST /api/v1/auth/admin/login with username+password, Argon2id verification, JWT generation with role permissions per admin-api.yaml
+- [x] T037 [US1] Implement SMS verification code service in `internal/user/service/sms.go` — generate 6-digit code, store in Redis with 5min TTL, 60s rate limit per phone, integrate with Alibaba Cloud SMS SDK
+- [x] T038 [US1] Implement user repository in `internal/user/repository/user_repo.go` — Create, FindByPhone, FindByWechatOpenID, Update operations with GORM
+- [x] T039 [US1] Implement user service in `internal/user/service/user.go` — Register (phone+code), Login (phone+code), GetProfile, UpdateProfile, BindWechat logic
+- [x] T040 [US1] Implement user handler in `internal/user/handler/user.go` — POST /api/v1/auth/sms-code, POST /api/v1/auth/login, POST /api/v1/auth/wechat-login, GET /api/v1/user/profile, PUT /api/v1/user/profile endpoints per user-api.yaml
+- [x] T041 [US1] Implement WeChat OAuth integration in `internal/user/service/wechat.go` — wx.login code exchange for openid, OAuth 2.0 flow for web, user creation/binding logic
+- [x] T042 [US1] Implement real-name verification service in `internal/user/service/realname.go` — submit verification (name+id_card), call public security API for validation, update user real_name_status, encrypt id_card_no with AES-256-GCM before storage
+- [x] T043 [US1] Implement real-name verification handler in `internal/user/handler/realname.go` — POST /api/v1/user/real-name-verification endpoint per user-api.yaml
+- [x] T044 [US1] Implement frequent traveller repository in `internal/user/repository/traveller_repo.go` — Create, FindByUserID, Update, Delete operations
+- [x] T045 [US1] Implement frequent traveller service in `internal/user/service/traveller.go` — CRUD with ID card validation (ISO 7064 checksum), max 20 per user, encrypt sensitive fields
+- [x] T046 [US1] Implement frequent traveller handler in `internal/user/handler/traveller.go` — CRUD endpoints per user-api.yaml (GET/POST/PUT/DELETE /api/v1/users/me/travellers)
+- [x] T047 [US1] Implement admin login endpoint in `internal/admin/handler/auth.go` — POST /api/v1/auth/admin/login with username+password, Argon2id verification, JWT generation with role permissions per admin-api.yaml
 
 ### Frontend - Web (Nuxt.js 3)
 
-- [ ] T048 [P] [US1] Create login/register page at `web/pages/auth/login.vue` — phone+SMS code form with 60s countdown, WeChat OAuth button, form validation (phone format, code 6-digit), loading/empty/error states
-- [ ] T049 [P] [US1] Create auth composable in `web/composables/useAuth.ts` — login/register/logout functions, token storage (httpOnly cookie), user state management, auth guard
-- [ ] T050 [US1] Create personal center page at `web/pages/user/index.vue` — user card (avatar/nickname/level), menu groups (account/orders/services), real-name verification status display
-- [ ] T051 [US1] Create real-name verification form component in `web/components/RealNameForm.vue` — name+id_card input, real-time ID card format validation, submit with loading state
-- [ ] T052 [US1] Create frequent traveller management page at `web/pages/user/travellers.vue` — traveller list, add/edit/delete forms (name/id_card/phone/birth/gender), ID card validation, max 20 limit
+- [x] T048 [P] [US1] Create login/register page at `web/pages/auth/login.vue` — phone+SMS code form with 60s countdown, WeChat OAuth button, form validation (phone format, code 6-digit), loading/empty/error states
+- [x] T049 [P] [US1] Create auth composable in `web/composables/useAuth.ts` — login/register/logout functions, token storage (httpOnly cookie), user state management, auth guard
+- [x] T050 [US1] Create personal center page at `web/pages/user/index.vue` — user card (avatar/nickname/level), menu groups (account/orders/services), real-name verification status display
+- [x] T051 [US1] Create real-name verification form component in `web/components/RealNameForm.vue` — name+id_card input, real-time ID card format validation, submit with loading state
+- [x] T052 [US1] Create frequent traveller management page at `web/pages/user/travellers.vue` — traveller list, add/edit/delete forms (name/id_card/phone/birth/gender), ID card validation, max 20 limit
 
 ### Frontend - Mini Program (Uni-App)
 
-- [ ] T053 [P] [US1] Create mini-program login page at `miniapp/pages/auth/login.vue` — wx.login quick login, phone binding flow (getPhoneNumber API), loading/error states, conditional compilation `#ifdef MP-WEIXIN`
-- [ ] T054 [P] [US1] Create mini-program auth composable in `miniapp/shared/composables/useAuth.ts` — login flow, token management (uni.setStorageSync), user state
+- [x] T053 [P] [US1] Create mini-program login page at `miniapp/pages/auth/login.vue` — wx.login quick login, phone binding flow (getPhoneNumber API), loading/error states, conditional compilation `#ifdef MP-WEIXIN`
+- [x] T054 [P] [US1] Create mini-program auth composable in `miniapp/shared/composables/useAuth.ts` — login flow, token management (uni.setStorageSync), user state
 
 ### Frontend - Admin (Vue 3)
 
-- [ ] T055 [P] [US1] Create admin login page at `admin-web/src/views/login.vue` — username+password form, remember me checkbox, loading state, redirect to original page after login
-- [ ] T056 [US1] Create admin auth store in `admin-web/src/stores/auth.ts` — login/logout, token management, user info, permission list, dynamic menu generation
+- [x] T055 [P] [US1] Create admin login page at `admin-web/src/views/login.vue` — username+password form, remember me checkbox, loading state, redirect to original page after login
+- [x] T056 [US1] Create admin auth store in `admin-web/src/stores/auth.ts` — login/logout, token management, user info, permission list, dynamic menu generation
 
 **Checkpoint**: User can register via phone, login via WeChat, complete real-name verification, manage frequent travellers on Web and Mini Program. Admin can login to backend.
 

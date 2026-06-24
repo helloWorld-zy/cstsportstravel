@@ -13,7 +13,8 @@
           <div class="code-row">
             <el-input v-model="form.code" placeholder="请输入6位验证码" maxlength="6" />
             <el-button
-              :disabled="countdown > 0"
+              :disabled="countdown > 0 || sendingCode"
+              :loading="sendingCode"
               @click="sendCode"
             >
               {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
@@ -40,10 +41,14 @@
 </template>
 
 <script setup lang="ts">
+import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
+
+const { sendSmsCode, login } = useAuth()
 
 const formRef = ref<FormInstance>()
 const loading = ref(false)
+const sendingCode = ref(false)
 const countdown = ref(0)
 
 const form = reactive({
@@ -64,24 +69,61 @@ const rules: FormRules = {
 
 let timer: ReturnType<typeof setInterval> | null = null
 
-function sendCode() {
-  // TODO: call POST /api/v1/auth/sms-code
-  countdown.value = 60
-  timer = setInterval(() => {
-    countdown.value--
-    if (countdown.value <= 0 && timer) {
-      clearInterval(timer)
-      timer = null
-    }
-  }, 1000)
+async function sendCode() {
+  if (!formRef.value) return
+  try {
+    await formRef.value.validateField('phone')
+  } catch {
+    return
+  }
+
+  sendingCode.value = true
+  try {
+    await sendSmsCode(form.phone)
+    ElMessage.success('验证码已发送')
+    countdown.value = 60
+    timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0 && timer) {
+        clearInterval(timer)
+        timer = null
+      }
+    }, 1000)
+  } catch (err: any) {
+    ElMessage.error(err.message || '发送验证码失败')
+  } finally {
+    sendingCode.value = false
+  }
 }
 
-function handleLogin() {
-  // TODO: call POST /api/v1/auth/login
+async function handleLogin() {
+  if (!formRef.value) return
+  try {
+    await formRef.value.validate()
+  } catch {
+    return
+  }
+
+  loading.value = true
+  try {
+    const result = await login(form.phone, form.code)
+    if (result.is_new_user) {
+      ElMessage.success('注册成功，欢迎加入！')
+    } else {
+      ElMessage.success('登录成功')
+    }
+    navigateTo('/')
+  } catch (err: any) {
+    ElMessage.error(err.message || '登录失败')
+  } finally {
+    loading.value = false
+  }
 }
 
 function handleWechatLogin() {
-  // TODO: redirect to WeChat OAuth
+  // Redirect to WeChat OAuth page
+  // In production, this would redirect to the WeChat OAuth authorization URL
+  ElMessage.info('微信登录功能即将上线')
 }
 
 onUnmounted(() => {

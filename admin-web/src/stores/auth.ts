@@ -6,8 +6,21 @@ interface UserInfo {
   id: number
   username: string
   real_name: string
+  must_change_password: boolean
+}
+
+interface LoginResponse {
+  user: UserInfo
+  access_token: string
+  permissions: string[]
+  menus: unknown[]
+}
+
+interface AdminMeResponse {
+  user: UserInfo
   roles: string[]
   permissions: string[]
+  last_login: string
 }
 
 export const useAuthStore = defineStore('auth', {
@@ -15,13 +28,15 @@ export const useAuthStore = defineStore('auth', {
     token: localStorage.getItem('admin_token') || '',
     userInfo: null as UserInfo | null,
     permissions: [] as string[],
+    roles: [] as string[],
     menus: [] as unknown[],
   }),
 
   getters: {
     isLoggedIn: (state) => !!state.token,
-    userRoles: (state) => state.userInfo?.roles || [],
+    userRoles: (state) => state.roles,
     userPermissions: (state) => state.permissions,
+    mustChangePassword: (state) => state.userInfo?.must_change_password || false,
   },
 
   actions: {
@@ -29,17 +44,17 @@ export const useAuthStore = defineStore('auth', {
      * Admin login with username and password.
      */
     async login(username: string, password: string) {
-      const res = await adminApi.post<{ access_token: string; refresh_token: string; user: UserInfo }>(
+      const res = await adminApi.post<LoginResponse>(
         '/auth/admin/login',
         { username, password },
       )
 
       this.token = res.access_token
       localStorage.setItem('admin_token', res.access_token)
-      localStorage.setItem('admin_refresh_token', res.refresh_token)
 
       this.userInfo = res.user
-      this.permissions = res.user.permissions || []
+      this.permissions = res.permissions || []
+      this.menus = res.menus || []
 
       // Load dynamic routes based on permissions
       loadDynamicRoutes(this.permissions)
@@ -52,6 +67,8 @@ export const useAuthStore = defineStore('auth', {
       this.token = ''
       this.userInfo = null
       this.permissions = []
+      this.roles = []
+      this.menus = []
       localStorage.removeItem('admin_token')
       localStorage.removeItem('admin_refresh_token')
     },
@@ -61,9 +78,10 @@ export const useAuthStore = defineStore('auth', {
      */
     async fetchUserInfo() {
       try {
-        const user = await adminApi.get<UserInfo>('/admin/users/me')
-        this.userInfo = user
-        this.permissions = user.permissions || []
+        const res = await adminApi.get<AdminMeResponse>('/admin/users/me')
+        this.userInfo = res.user
+        this.roles = res.roles || []
+        this.permissions = res.permissions || []
         loadDynamicRoutes(this.permissions)
       } catch {
         this.logout()

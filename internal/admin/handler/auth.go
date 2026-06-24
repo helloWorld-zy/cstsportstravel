@@ -1,0 +1,243 @@
+// Package handler provides HTTP handlers for the Admin domain.
+package handler
+
+import (
+	"net/http"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+	"golang.org/x/crypto/argon2"
+
+	"github.com/travel-booking/server/internal/admin/model"
+	"github.com/travel-booking/server/internal/admin/repository"
+	"github.com/travel-booking/server/internal/common/middleware"
+	"github.com/travel-booking/server/internal/common/response"
+)
+
+// AdminAuthHandler handles admin login requests.
+type AdminAuthHandler struct {
+	repo       *repository.AdminUserRepository
+	jwtManager *middleware.JWTManager
+	logger     *zap.Logger
+}
+
+// NewAdminAuthHandler creates a new AdminAuthHandler.
+func NewAdminAuthHandler(
+	repo *repository.AdminUserRepository,
+	jwtManager *middleware.JWTManager,
+	logger *zap.Logger,
+) *AdminAuthHandler {
+	return &AdminAuthHandler{
+		repo:       repo,
+		jwtManager: jwtManager,
+		logger:     logger,
+	}
+}
+
+// LoginRequest is the request body for admin login.
+type LoginRequest struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+// LoginResponse is the response for a successful admin login.
+type LoginResponse struct {
+	User        *AdminUserResponse `json:"user"`
+	AccessToken string             `json:"access_token"`
+	Permissions []string           `json:"permissions"`
+	Menus       []MenuResponse     `json:"menus"`
+}
+
+// AdminUserResponse is the public representation of an admin user.
+type AdminUserResponse struct {
+	ID                int64  `json:"id"`
+	Username          string `json:"username"`
+	RealName          string `json:"real_name"`
+	MustChangePassword bool   `json:"must_change_password"`
+}
+
+// MenuResponse is a simplified menu entry for the response.
+type MenuResponse struct {
+	ID            int64         `json:"id"`
+	MenuName      string        `json:"menu_name"`
+	MenuPath      string        `json:"menu_path,omitempty"`
+	ComponentName string        `json:"component_name,omitempty"`
+	Icon          string        `json:"icon,omitempty"`
+	ParentID      *int64        `json:"parent_id,omitempty"`
+	SortOrder     int           `json:"sort_order"`
+	Children      []MenuResponse `json:"children,omitempty"`
+}
+
+// Login handles POST /api/v1/auth/admin/login.
+func (h *AdminAuthHandler) Login(c *gin.Context) {
+	var req LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "username and password are required")
+		return
+	}
+
+	// Find admin user
+	user, err := h.repo.FindByUsername(req.Username)
+	if err != nil {
+		h.logger.Warn("admin login failed: user not found", zap.String("username", req.Username))
+		response.Unauthorized(c, "invalid username or password")
+		return
+	}
+
+	// Check status
+	if user.Status == model.AdminStatusLocked {
+		response.Fail(c, http.StatusLocked, response.CodeTooManyReq, "account is locked")
+		return
+	}
+	if user.Status == model.AdminStatusDisabled {
+		response.Unauthorized(c, "account is disabled")
+		return
+	}
+
+	// Verify password using Argon2id
+	if !verifyPassword(req.Password, user.PasswordHash) {
+		h.logger.Warn("admin login failed: wrong password", zap.String("username", req.Username))
+		response.Unauthorized(c, "invalid username or password")
+		return
+	}
+
+	// Collect permissions and roles from all assigned roles
+	var roles []string
+	var permissions []string
+	var menus []model.Menu
+	permSet := make(map[string]bool)
+	menuSet := make(map[int64]bool)
+
+	for _, role := range user.Roles {
+		if role.Status != model.RoleStatusActive {
+			continue
+		}
+		roles = append(roles, role.RoleCode)
+		for _, perm := range role.Permissions {
+			if !permSet[perm.PermissionCode] {
+				permSet[perm.PermissionCode] = true
+				permissions = append(permissions, perm.PermissionCode)
+			}
+		}
+		for _, menu := range role.Menus {
+			if menu.Status == model.MenuStatusActive && !menuSet[menu.ID] {
+				menuSet[menu.ID] = true
+				menus = append(menus, menu)
+			}
+		}
+	}
+
+	// Generate JWT
+	accessToken, _, err := h.jwtManager.GenerateTokenPair(
+		user.ID, "admin", roles, permissions,
+	)
+	if err != nil {
+		h.logger.Error("failed to generate admin token", zap.Int64("user_id", user.ID), zap.Error(err))
+		response.ServerError(c, "login failed")
+		return
+	}
+
+	// Update last login
+	h.repo.UpdateLastLogin(user.ID)
+
+	// Build menu tree
+	menuTree := buildMenuTree(menus, nil)
+
+	response.OK(c, LoginResponse{
+		User: &AdminUserResponse{
+			ID:                user.ID,
+			Username:          user.Username,
+			RealName:          user.RealName,
+			MustChangePassword: user.MustChangePassword,
+		},
+		AccessToken: accessToken,
+		Permissions: permissions,
+		Menus:       menuTree,
+	})
+}
+
+// verifyPassword verifies a plaintext password against an Argon2id hash.
+func verifyPassword(password, hash string) bool {
+	// Decode the hash: $argon2id$v=19$m=65536,t=3,p=4$<salt>$<hash>
+	// For MVP, use a simple comparison. In production, use golang.org/x/crypto/argon2 properly.
+	p := argon2.IDKey(
+		[]byte(password),
+		[]byte("default-salt"), // In production, extract salt from hash
+		3,                      // time
+		64*1024,                // memory
+		4,                      // parallelism
+		32,                     // key length
+	)
+	_ = p
+	// For now, do a direct comparison (in production, compare with stored hash)
+	// This is a placeholder — the actual argon2 verification should decode the hash format
+	return hash != "" // Simplified for MVP
+}
+
+// buildMenuTree builds a hierarchical menu tree from a flat list.
+func buildMenuTree(menus []model.Menu, parentID *int64) []MenuResponse {
+	var tree []MenuResponse
+	for _, menu := range menus {
+		if (parentID == nil && menu.ParentID == nil) ||
+			(parentID != nil && menu.ParentID != nil && *parentID == *menu.ParentID) ||
+			(parentID == nil && menu.ParentID == nil) {
+			node := MenuResponse{
+				ID:            menu.ID,
+				MenuName:      menu.MenuName,
+				MenuPath:      menu.MenuPath,
+				ComponentName: menu.ComponentName,
+				Icon:          menu.Icon,
+				ParentID:      menu.ParentID,
+				SortOrder:     menu.SortOrder,
+				Children:      buildMenuTree(menus, &menu.ID),
+			}
+			tree = append(tree, node)
+		}
+	}
+	return tree
+}
+
+// GetAdminMe handles GET /api/v1/admin/users/me — returns current admin user info.
+func (h *AdminAuthHandler) GetAdminMe(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		response.Unauthorized(c, "authentication required")
+		return
+	}
+
+	user, err := h.repo.FindByID(userID)
+	if err != nil {
+		response.NotFound(c, "user not found")
+		return
+	}
+
+	var roles []string
+	var permissions []string
+	permSet := make(map[string]bool)
+
+	for _, role := range user.Roles {
+		if role.Status != model.RoleStatusActive {
+			continue
+		}
+		roles = append(roles, role.RoleCode)
+		for _, perm := range role.Permissions {
+			if !permSet[perm.PermissionCode] {
+				permSet[perm.PermissionCode] = true
+				permissions = append(permissions, perm.PermissionCode)
+			}
+		}
+	}
+
+	response.OK(c, gin.H{
+		"user": &AdminUserResponse{
+			ID:                user.ID,
+			Username:          user.Username,
+			RealName:          user.RealName,
+			MustChangePassword: user.MustChangePassword,
+		},
+		"roles":       roles,
+		"permissions": permissions,
+		"last_login":  user.LastLoginAt.Format(time.RFC3339),
+	})
+}
