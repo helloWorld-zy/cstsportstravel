@@ -1,0 +1,33 @@
+{
+  "name": "travel-booking-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "@tanstack/vue-query": "^5.0.0",
+    "@vueuse/core": "^12.0.0",
+    "axios": "^1.7.0",
+    "dayjs": "^1.11.0",
+    "element-plus": "^2.9.0",
+    "nuxt": "^3.15.0",
+    "pinia": "^2.2.0",
+    "vue": "^3.5.0",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@nuxt/devtools": "^2.0.0",
+    "@nuxtjs/eslint-config-typescript": "^13.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.4.0",
+    "typescript": "^5.7.0"
+  }
+}

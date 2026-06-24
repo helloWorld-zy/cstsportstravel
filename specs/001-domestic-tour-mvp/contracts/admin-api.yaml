@@ -1,0 +1,1235 @@
+openapi: 3.0.3
+info:
+  title: Admin API
+  description: Admin product management, order management, refund review, and RBAC APIs for the domestic group tour MVP.
+  version: 1.0.0
+
+servers:
+  - url: https://localhost:8443/api/v1
+    description: Local development
+
+tags:
+  - name: admin-products
+    description: Admin product management
+  - name: admin-orders
+    description: Admin order management
+  - name: admin-refunds
+    description: Admin refund review
+  - name: admin-users
+    description: Admin user management
+  - name: admin-roles
+    description: Role and permission management
+  - name: admin-config
+    description: System configuration
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: success
+        data:
+          type: object
+        trace_id:
+          type: string
+          format: uuid
+
+    AdminProduct:
+      type: object
+      properties:
+        id:
+          type: integer
+        product_no:
+          type: string
+        product_name:
+          type: string
+        category_id:
+          type: integer
+        origin_city:
+          type: string
+        destination_cities:
+          type: array
+          items:
+            type: string
+        days:
+          type: integer
+        nights:
+          type: integer
+        transport_mode:
+          type: string
+        product_grade:
+          type: string
+        status:
+          type: string
+          enum: [draft, pending_review, approved, suspended, change_pending_review]
+        supplier_id:
+          type: integer
+        supplier_name:
+          type: string
+        reject_reason:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    AdminOrder:
+      type: object
+      properties:
+        id:
+          type: integer
+        order_no:
+          type: string
+        user_phone:
+          type: string
+          description: Masked phone
+        product_name:
+          type: string
+        departure_date:
+          type: string
+          format: date
+        order_status:
+          type: string
+        payable_amount:
+          type: number
+        adult_count:
+          type: integer
+        child_count:
+          type: integer
+        channel:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    RefundRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        order_id:
+          type: integer
+        order_no:
+          type: string
+        user_phone:
+          type: string
+        product_name:
+          type: string
+        refund_amount:
+          type: number
+        refund_reason:
+          type: string
+        refund_type:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, processing, success, failed]
+        approval_level:
+          type: string
+          enum: [operator, finance_director, director]
+        calculated_refund:
+          type: object
+          properties:
+            payable_amount:
+              type: number
+            days_before_departure:
+              type: integer
+            matched_rule:
+              type: string
+            refund_percentage:
+              type: number
+            refund_amount:
+              type: number
+        created_at:
+          type: string
+          format: date-time
+
+    AdminUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        real_name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        status:
+          type: string
+          enum: [active, locked, disabled]
+        roles:
+          type: array
+          items:
+            type: string
+        supplier_id:
+          type: integer
+          nullable: true
+        must_change_password:
+          type: boolean
+        last_login_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+        role_name:
+          type: string
+        role_code:
+          type: string
+        description:
+          type: string
+        is_system:
+          type: boolean
+        status:
+          type: string
+        permission_ids:
+          type: array
+          items:
+            type: integer
+        menu_ids:
+          type: array
+          items:
+            type: integer
+
+    Menu:
+      type: object
+      properties:
+        id:
+          type: integer
+        menu_name:
+          type: string
+        menu_path:
+          type: string
+        component_name:
+          type: string
+        icon:
+          type: string
+        parent_id:
+          type: integer
+          nullable: true
+        sort_order:
+          type: integer
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Menu'
+
+    DepartureDate:
+      type: object
+      properties:
+        id:
+          type: integer
+        departure_date:
+          type: string
+          format: date
+        return_date:
+          type: string
+          format: date
+        adult_price:
+          type: integer
+        child_price:
+          type: integer
+        infant_price:
+          type: integer
+        single_supplement:
+          type: integer
+        total_stock:
+          type: integer
+        sold_count:
+          type: integer
+        locked_count:
+          type: integer
+        available_stock:
+          type: integer
+        status:
+          type: string
+
+    CancellationRuleTemplate:
+      type: object
+      properties:
+        id:
+          type: integer
+        rule_name:
+          type: string
+        days_before_min:
+          type: integer
+        days_before_max:
+          type: integer
+          nullable: true
+        refund_percentage:
+          type: number
+        description:
+          type: string
+        is_template:
+          type: boolean
+
+paths:
+  /admin/products:
+    get:
+      tags: [admin-products]
+      summary: List products (admin view)
+      description: Returns products with admin-level detail. Supplier users see only their own products (data isolation).
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, pending_review, approved, suspended, change_pending_review]
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - name: destination
+          in: query
+          schema:
+            type: string
+        - name: supplier_id
+          in: query
+          schema:
+            type: integer
+          description: Filter by supplier (admin only)
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Product list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/AdminProduct'
+                          total:
+                            type: integer
+
+    post:
+      tags: [admin-products]
+      summary: Create product
+      description: Creates a new product in draft status. Generates product number (DOM-{cat}-{YYYYMMDD}-{seq}).
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [product_name, category_id, origin_city, destination_cities, days, nights]
+              properties:
+                product_name:
+                  type: string
+                  maxLength: 200
+                category_id:
+                  type: integer
+                origin_city:
+                  type: string
+                destination_cities:
+                  type: array
+                  items:
+                    type: string
+                days:
+                  type: integer
+                  minimum: 1
+                nights:
+                  type: integer
+                  minimum: 0
+                transport_mode:
+                  type: string
+                product_grade:
+                  type: string
+                min_group_size:
+                  type: integer
+                  default: 2
+                max_group_size:
+                  type: integer
+                  default: 50
+                cover_image:
+                  type: string
+                images:
+                  type: array
+                  items:
+                    type: string
+                summary:
+                  type: string
+                  maxLength: 500
+                description:
+                  type: string
+                fee_included:
+                  type: string
+                fee_excluded:
+                  type: string
+                booking_notes:
+                  type: string
+      responses:
+        '200':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AdminProduct'
+
+  /admin/products/{id}:
+    put:
+      tags: [admin-products]
+      summary: Update product
+      description: >
+        Updates product fields. If the product is in 'approved' status and key fields
+        (price, itinerary, days, cancellation rules) are modified, status changes to
+        'change_pending_review' and requires re-approval.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                product_name:
+                  type: string
+                summary:
+                  type: string
+                description:
+                  type: string
+                fee_included:
+                  type: string
+                fee_excluded:
+                  type: string
+                booking_notes:
+                  type: string
+                cover_image:
+                  type: string
+                images:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Product updated
+        '400':
+          description: Cannot edit product in current status
+
+  /admin/products/{id}/submit-review:
+    post:
+      tags: [admin-products]
+      summary: Submit product for review
+      description: Transitions product from draft to pending_review status.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Submitted for review
+        '400':
+          description: Product not in submittable status or missing required fields
+
+  /admin/products/{id}/approve:
+    put:
+      tags: [admin-products]
+      summary: Approve product
+      description: Approves a pending_review or change_pending_review product. Product becomes visible on C-end.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note:
+                  type: string
+                  description: Approval note
+      responses:
+        '200':
+          description: Product approved
+
+  /admin/products/{id}/reject:
+    put:
+      tags: [admin-products]
+      summary: Reject product
+      description: Rejects a pending_review product. Returns product to draft status with rejection reason.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+                  description: Rejection reason (required)
+                  maxLength: 500
+      responses:
+        '200':
+          description: Product rejected
+
+  /admin/products/{id}/suspend:
+    put:
+      tags: [admin-products]
+      summary: Suspend product
+      description: Suspends an approved product. Product becomes invisible on C-end. Does not affect existing orders.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Product suspended
+
+  /admin/products/{id}/departures:
+    get:
+      tags: [admin-products]
+      summary: List product departures (admin view)
+      description: Returns departure dates with full stock detail for admin management.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: month
+          in: query
+          schema:
+            type: string
+          description: YYYY-MM format
+      responses:
+        '200':
+          description: Departure list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DepartureDate'
+
+    post:
+      tags: [admin-products]
+      summary: Create or update departure dates
+      description: Create or batch-update departure dates with pricing and stock.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [departures]
+              properties:
+                departures:
+                  type: array
+                  items:
+                    type: object
+                    required: [departure_date, adult_price, total_stock]
+                    properties:
+                      departure_date:
+                        type: string
+                        format: date
+                      return_date:
+                        type: string
+                        format: date
+                      adult_price:
+                        type: integer
+                        description: Price in cents
+                      child_price:
+                        type: integer
+                      infant_price:
+                        type: integer
+                      single_supplement:
+                        type: integer
+                      total_stock:
+                        type: integer
+                      cutoff_days:
+                        type: integer
+                        default: 1
+      responses:
+        '200':
+          description: Departures saved
+
+  /admin/products/{id}/departures/batch-price:
+    put:
+      tags: [admin-products]
+      summary: Batch price update
+      description: >
+        Batch update prices for selected departure dates. Supports multiple modes:
+        - fixed: Set exact prices for selected dates
+        - percentage: Adjust prices by +/- N%
+        - amount: Adjust prices by +/- N (in cents)
+        - follow: Copy prices from reference dates to target dates
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode, target_dates]
+              properties:
+                mode:
+                  type: string
+                  enum: [fixed, percentage, amount, follow]
+                target_dates:
+                  type: array
+                  items:
+                    type: string
+                    format: date
+                  description: Dates to update
+                adult_price:
+                  type: integer
+                  description: For fixed mode
+                child_price:
+                  type: integer
+                infant_price:
+                  type: integer
+                single_supplement:
+                  type: integer
+                percentage:
+                  type: number
+                  description: For percentage mode (e.g., 10 = +10%, -10 = -10%)
+                amount:
+                  type: integer
+                  description: For amount mode (in cents)
+                reference_dates:
+                  type: array
+                  items:
+                    type: string
+                    format: date
+                  description: For follow mode - dates to copy prices from
+      responses:
+        '200':
+          description: Prices updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          updated_count:
+                            type: integer
+
+  /admin/orders:
+    get:
+      tags: [admin-orders]
+      summary: List orders (admin view)
+      description: Returns orders with admin-level detail and filtering. Supplier users see only orders for their products.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: order_no
+          in: query
+          schema:
+            type: string
+        - name: user_phone
+          in: query
+          schema:
+            type: string
+          description: Search by user phone
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: product_type
+          in: query
+          schema:
+            type: string
+        - name: supplier_id
+          in: query
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Order list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/AdminOrder'
+                          total:
+                            type: integer
+
+  /admin/orders/{id}:
+    get:
+      tags: [admin-orders]
+      summary: Order detail (admin view)
+      description: Returns complete order detail including travellers, payment records, and operation logs.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Order detail
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        description: Full order detail with travellers, payments, and logs
+
+  /admin/refunds:
+    get:
+      tags: [admin-refunds]
+      summary: List refund requests
+      description: Returns refund requests with filtering. Shows calculated refund amounts based on cancellation rules.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, approved, processing, success, failed]
+        - name: order_no
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Refund list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/RefundRequest'
+                          total:
+                            type: integer
+
+  /admin/refunds/{id}/approve:
+    put:
+      tags: [admin-refunds]
+      summary: Approve refund
+      description: >
+        Approves a refund request. Tiered approval based on amount:
+        - <=1000 yuan: operator can approve directly
+        - 1000-5000 yuan: requires finance_director role
+        - >5000 yuan: requires director role
+
+        On approval, the system calls the payment channel refund API.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note:
+                  type: string
+                  description: Approval note
+      responses:
+        '200':
+          description: Refund approved
+        '403':
+          description: Insufficient approval authority (amount exceeds role threshold)
+
+  /admin/refunds/{id}/reject:
+    put:
+      tags: [admin-refunds]
+      summary: Reject refund
+      description: Rejects a refund request. Order status reverts from refunding to previous status.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+                  description: Rejection reason (required)
+                  maxLength: 500
+      responses:
+        '200':
+          description: Refund rejected
+
+  /admin/users:
+    get:
+      tags: [admin-users]
+      summary: List admin users
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: keyword
+          in: query
+          schema:
+            type: string
+          description: Search by username or real_name
+        - name: role_code
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: User list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/AdminUser'
+                          total:
+                            type: integer
+
+    post:
+      tags: [admin-users]
+      summary: Create admin user
+      description: Creates a new admin user with initial password. User must change password on first login.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, real_name, role_ids]
+              properties:
+                username:
+                  type: string
+                  maxLength: 50
+                real_name:
+                  type: string
+                phone:
+                  type: string
+                email:
+                  type: string
+                role_ids:
+                  type: array
+                  items:
+                    type: integer
+                supplier_id:
+                  type: integer
+                  description: Required for supplier role users
+                initial_password:
+                  type: string
+                  description: Auto-generated if not provided
+      responses:
+        '200':
+          description: User created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                          username:
+                            type: string
+                          initial_password:
+                            type: string
+                            description: Generated password (show to admin once)
+
+  /admin/users/{id}/status:
+    put:
+      tags: [admin-users]
+      summary: Update user status (freeze/activate)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [active, locked, disabled]
+      responses:
+        '200':
+          description: Status updated
+
+  /admin/roles:
+    get:
+      tags: [admin-roles]
+      summary: List roles
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Role list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Role'
+
+    post:
+      tags: [admin-roles]
+      summary: Create role
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role_name, role_code]
+              properties:
+                role_name:
+                  type: string
+                role_code:
+                  type: string
+                description:
+                  type: string
+                permission_ids:
+                  type: array
+                  items:
+                    type: integer
+                menu_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: Role created
+
+  /admin/roles/{id}:
+    put:
+      tags: [admin-roles]
+      summary: Update role permissions
+      description: Updates a role's permission and menu assignments. System roles cannot have their core permissions removed.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role_name:
+                  type: string
+                description:
+                  type: string
+                permission_ids:
+                  type: array
+                  items:
+                    type: integer
+                menu_ids:
+                  type: array
+                  items:
+                    type: integer
+                status:
+                  type: string
+                  enum: [active, disabled]
+      responses:
+        '200':
+          description: Role updated
+
+  /admin/menus:
+    get:
+      tags: [admin-roles]
+      summary: Get menu tree
+      description: Returns the complete menu tree for admin sidebar rendering. Includes permission codes for frontend button-level control.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Menu tree
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Menu'
+
+  /admin/cancellation-rules:
+    get:
+      tags: [admin-config]
+      summary: List cancellation rule templates
+      description: Returns reusable cancellation rule templates.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: product_id
+          in: query
+          schema:
+            type: integer
+          description: Get rules for specific product
+      responses:
+        '200':
+          description: Rule list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/CancellationRuleTemplate'
+
+    post:
+      tags: [admin-config]
+      summary: Create cancellation rule template
+      description: Creates a reusable cancellation rule template or assigns rules to a specific product.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rules]
+              properties:
+                product_id:
+                  type: integer
+                  description: If set, rules apply to this product. If null, creates a template.
+                rules:
+                  type: array
+                  items:
+                    type: object
+                    required: [rule_name, days_before_min, refund_percentage]
+                    properties:
+                      rule_name:
+                        type: string
+                      days_before_min:
+                        type: integer
+                      days_before_max:
+                        type: integer
+                        nullable: true
+                      refund_percentage:
+                        type: number
+                        minimum: 0
+                        maximum: 100
+                      description:
+                        type: string
+      responses:
+        '200':
+          description: Rules created

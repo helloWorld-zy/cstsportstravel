@@ -1,0 +1,522 @@
+openapi: 3.0.3
+info:
+  title: User & Auth API
+  description: User registration, login, profile management, and frequent traveller APIs for the domestic group tour MVP.
+  version: 1.0.0
+
+servers:
+  - url: https://localhost:8443/api/v1
+    description: Local development
+
+tags:
+  - name: auth
+    description: Authentication endpoints
+  - name: users
+    description: User profile endpoints
+  - name: travellers
+    description: Frequent traveller endpoints
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: Error code (0 = success)
+          example: 0
+        message:
+          type: string
+          example: success
+        data:
+          type: object
+        trace_id:
+          type: string
+          format: uuid
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        phone:
+          type: string
+          description: Masked phone (e.g., 138****8000)
+          example: "138****8000"
+        nickname:
+          type: string
+          example: 旅行者001
+        avatar_url:
+          type: string
+          format: uri
+        real_name_status:
+          type: string
+          enum: [unverified, pending, verified, rejected]
+        member_level:
+          type: integer
+          minimum: 1
+          maximum: 5
+        status:
+          type: string
+          enum: [active, frozen, deleted]
+        created_at:
+          type: string
+          format: date-time
+
+    Traveller:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        real_name:
+          type: string
+          description: Masked name (e.g., 张*三)
+          example: 张*三
+        id_card_no:
+          type: string
+          description: Masked ID (e.g., 110***********1234)
+          example: "110***********1234"
+        phone:
+          type: string
+        birth_date:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum: [male, female]
+        is_default:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+paths:
+  /auth/sms-code:
+    post:
+      tags: [auth]
+      summary: Send SMS verification code
+      description: Sends a 6-digit verification code to the specified phone number. Code is valid for 5 minutes. Rate limited to 1 per 60s per phone, 10 per hour per IP.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone]
+              properties:
+                phone:
+                  type: string
+                  pattern: '^1[3-9]\d{9}$'
+                  example: "13800138000"
+      responses:
+        '200':
+          description: Code sent successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          expires_in:
+                            type: integer
+                            description: Code validity in seconds
+                            example: 300
+        '429':
+          description: Rate limited (too many requests or 60s cooldown)
+
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Login or register with phone + SMS code
+      description: >
+        If the phone number is not registered, a new account is created automatically.
+        Returns JWT access token (15min) and refresh token (7 days).
+        Account locks for 15 minutes after 5 consecutive failed attempts.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, code]
+              properties:
+                phone:
+                  type: string
+                  example: "13800138000"
+                code:
+                  type: string
+                  pattern: '^\d{6}$'
+                  example: "123456"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          user:
+                            $ref: '#/components/schemas/User'
+                          access_token:
+                            type: string
+                            description: JWT access token (RS256, 15min expiry)
+                          refresh_token:
+                            type: string
+                            description: Refresh token (7 day expiry)
+                          is_new_user:
+                            type: boolean
+                            description: True if account was just created
+        '401':
+          description: Invalid verification code
+        '423':
+          description: Account locked due to too many failed attempts
+
+  /auth/wechat:
+    post:
+      tags: [auth]
+      summary: WeChat OAuth login
+      description: >
+        Exchanges WeChat OAuth code for user login. If the WeChat OpenID is already
+        linked to an account, logs in directly. If new, returns need_bindphone flag.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+                  description: WeChat OAuth code from wx.login() or web OAuth
+                bind_phone:
+                  type: string
+                  description: Phone number to bind (provided in second step if need_bindphone was true)
+                  example: "13800138000"
+                bind_code:
+                  type: string
+                  description: SMS verification code for phone binding
+                  example: "123456"
+      responses:
+        '200':
+          description: Login successful or needs phone binding
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          user:
+                            $ref: '#/components/schemas/User'
+                          access_token:
+                            type: string
+                          refresh_token:
+                            type: string
+                          need_bindphone:
+                            type: boolean
+                            description: True if this WeChat account is not yet linked to a phone number
+
+  /auth/admin/login:
+    post:
+      tags: [auth]
+      summary: Admin user login
+      description: Username + password login for admin users. Passwords are validated with Argon2id. First login requires password change.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                  example: admin
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          user:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                              username:
+                                type: string
+                              real_name:
+                                type: string
+                              must_change_password:
+                                type: boolean
+                          access_token:
+                            type: string
+                          permissions:
+                            type: array
+                            items:
+                              type: string
+                            description: List of permission codes
+                          menus:
+                            type: array
+                            items:
+                              type: object
+                            description: Menu tree for frontend rendering
+
+  /users/me:
+    get:
+      tags: [users]
+      summary: Get current user profile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+
+    put:
+      tags: [users]
+      summary: Update user profile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nickname:
+                  type: string
+                  maxLength: 50
+                avatar_url:
+                  type: string
+                  format: uri
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+
+  /users/me/real-name:
+    post:
+      tags: [users]
+      summary: Submit real-name verification
+      description: >
+        Submits name and ID card number for verification. ID card format is validated
+        in real-time (ISO 7064:1983.MOD 11-2 check digit). Limited to 3 attempts per day.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [real_name, id_card_no]
+              properties:
+                real_name:
+                  type: string
+                  example: 张三
+                id_card_no:
+                  type: string
+                  pattern: '^\d{17}[\dXx]$'
+                  example: "110101199001011234"
+      responses:
+        '200':
+          description: Verification submitted
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          status:
+                            type: string
+                            enum: [verified, pending, rejected]
+        '400':
+          description: Invalid ID card format (check digit mismatch)
+        '429':
+          description: Daily verification attempt limit exceeded (3/day)
+
+  /users/me/travellers:
+    get:
+      tags: [travellers]
+      summary: List frequent travellers
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Traveller list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Traveller'
+
+    post:
+      tags: [travellers]
+      summary: Add frequent traveller
+      description: Adds a new frequent traveller. Maximum 20 per user.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [real_name, id_card_no]
+              properties:
+                real_name:
+                  type: string
+                  example: 张三
+                id_card_no:
+                  type: string
+                  example: "110101199001011234"
+                phone:
+                  type: string
+                birth_date:
+                  type: string
+                  format: date
+                gender:
+                  type: string
+                  enum: [male, female]
+                is_default:
+                  type: boolean
+      responses:
+        '200':
+          description: Traveller added
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Traveller'
+        '400':
+          description: Invalid ID card format or max limit (20) reached
+
+  /users/me/travellers/{id}:
+    put:
+      tags: [travellers]
+      summary: Update frequent traveller
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                real_name:
+                  type: string
+                id_card_no:
+                  type: string
+                phone:
+                  type: string
+                birth_date:
+                  type: string
+                  format: date
+                gender:
+                  type: string
+                  enum: [male, female]
+                is_default:
+                  type: boolean
+      responses:
+        '200':
+          description: Traveller updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Traveller'
+        '404':
+          description: Traveller not found or does not belong to user
+
+    delete:
+      tags: [travellers]
+      summary: Delete frequent traveller
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Traveller deleted
+        '404':
+          description: Traveller not found

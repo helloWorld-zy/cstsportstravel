@@ -1,0 +1,563 @@
+openapi: 3.0.3
+info:
+  title: Product API
+  description: Product listing, detail, search, departure calendar, and review APIs for the domestic group tour MVP.
+  version: 1.0.0
+
+servers:
+  - url: https://localhost:8443/api/v1
+    description: Local development
+
+tags:
+  - name: products
+    description: Product browsing endpoints
+  - name: search
+    description: Search and autocomplete endpoints
+
+components:
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: success
+        data:
+          type: object
+        trace_id:
+          type: string
+          format: uuid
+
+    ProductSummary:
+      type: object
+      description: Product card info for list view
+      properties:
+        id:
+          type: integer
+          format: int64
+        product_no:
+          type: string
+          example: DOM-DOM-20260619-0001
+        product_name:
+          type: string
+          example: 云南丽江大理5日跟团游
+        cover_image:
+          type: string
+          format: uri
+        origin_city:
+          type: string
+          example: 上海
+        destination_cities:
+          type: array
+          items:
+            type: string
+          example: ["丽江", "大理"]
+        days:
+          type: integer
+          example: 5
+        nights:
+          type: integer
+          example: 4
+        min_price:
+          type: integer
+          description: Lowest adult price in yuan
+          example: 3999
+        product_grade:
+          type: string
+          example: comfort
+        satisfaction_rate:
+          type: number
+          format: float
+          example: 4.8
+        order_count:
+          type: integer
+          example: 156
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["纯玩无购物", "含机票"]
+
+    ProductDetail:
+      allOf:
+        - $ref: '#/components/schemas/ProductSummary'
+        - type: object
+          properties:
+            summary:
+              type: string
+            description:
+              type: string
+            transport_mode:
+              type: string
+              example: flight
+            min_group_size:
+              type: integer
+            max_group_size:
+              type: integer
+            fee_included:
+              type: string
+              description: Included fees markdown
+            fee_excluded:
+              type: string
+              description: Excluded fees markdown
+            booking_notes:
+              type: string
+            itinerary:
+              type: array
+              items:
+                $ref: '#/components/schemas/ItineraryDay'
+            cancellation_rules:
+              type: array
+              items:
+                $ref: '#/components/schemas/CancellationRule'
+            images:
+              type: array
+              items:
+                type: string
+                format: uri
+            review_summary:
+              $ref: '#/components/schemas/ReviewSummary'
+
+    ItineraryDay:
+      type: object
+      properties:
+        day_no:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: 上海 - 丽江（飞机）
+        description:
+          type: string
+        meals:
+          type: object
+          properties:
+            breakfast:
+              type: boolean
+            lunch:
+              type: boolean
+            dinner:
+              type: boolean
+        hotel:
+          type: string
+          example: 丽江古城客栈（四钻）
+        transport:
+          type: string
+          example: 上海浦东-丽江三义 航班MU1234
+        spots:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+              duration:
+                type: string
+              image:
+                type: string
+                format: uri
+
+    DepartureDate:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        departure_date:
+          type: string
+          format: date
+        return_date:
+          type: string
+          format: date
+        adult_price:
+          type: integer
+          description: Price in yuan
+          example: 3999
+        child_price:
+          type: integer
+          example: 2999
+        infant_price:
+          type: integer
+          example: 500
+        single_supplement:
+          type: integer
+          example: 800
+        available_stock:
+          type: integer
+          description: Remaining seats
+          example: 12
+        stock_status:
+          type: string
+          enum: [sufficient, tight, sold_out]
+          description: sufficient (>=10), tight (1-9), sold_out (0)
+        cutoff_days:
+          type: integer
+          description: Booking cutoff days before departure
+
+    CancellationRule:
+      type: object
+      properties:
+        id:
+          type: integer
+        rule_name:
+          type: string
+          example: 出发前7天以上
+        days_before_min:
+          type: integer
+        days_before_max:
+          type: integer
+          nullable: true
+        refund_percentage:
+          type: number
+          description: Percentage (0-100)
+          example: 80
+        description:
+          type: string
+          example: 出发前7天及以上取消，退还80%费用
+
+    ReviewSummary:
+      type: object
+      properties:
+        total_count:
+          type: integer
+        average_rating:
+          type: number
+          format: float
+          example: 4.7
+        rating_distribution:
+          type: object
+          properties:
+            "5":
+              type: integer
+            "4":
+              type: integer
+            "3":
+              type: integer
+            "2":
+              type: integer
+            "1":
+              type: integer
+
+    ProductReview:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_nickname:
+          type: string
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        content:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+        is_anonymous:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    PaginatedProducts:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductSummary'
+        total:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+
+paths:
+  /products:
+    get:
+      tags: [products]
+      summary: List products with filters
+      description: Returns paginated product list with optional filters. Supports sorting by price, satisfaction, sales, and days.
+      parameters:
+        - name: destination
+          in: query
+          schema:
+            type: string
+          description: Destination city name
+          example: 云南
+        - name: origin
+          in: query
+          schema:
+            type: string
+          description: Departure city name
+          example: 上海
+        - name: days_min
+          in: query
+          schema:
+            type: integer
+          description: Minimum trip days
+        - name: days_max
+          in: query
+          schema:
+            type: integer
+          description: Maximum trip days
+        - name: price_min
+          in: query
+          schema:
+            type: integer
+          description: Minimum price in yuan
+        - name: price_max
+          in: query
+          schema:
+            type: integer
+          description: Maximum price in yuan
+        - name: departure_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Desired departure date
+        - name: category_id
+          in: query
+          schema:
+            type: integer
+        - name: product_grade
+          in: query
+          schema:
+            type: string
+          description: Product grade filter
+        - name: keyword
+          in: query
+          schema:
+            type: string
+          description: Search keyword
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [recommended, price_asc, price_desc, satisfaction, sales, days_asc, days_desc]
+            default: recommended
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Product list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PaginatedProducts'
+
+  /products/{id}:
+    get:
+      tags: [products]
+      summary: Get product detail
+      description: Returns complete product information including itinerary, fees, cancellation rules, and review summary.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Product detail
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProductDetail'
+        '404':
+          description: Product not found or not approved
+
+  /products/{id}/departures:
+    get:
+      tags: [products]
+      summary: Get departure calendar
+      description: Returns departure dates with pricing and stock status for a given month range.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}$'
+          description: Month in YYYY-MM format
+          example: "2026-07"
+        - name: months
+          in: query
+          schema:
+            type: integer
+            default: 3
+            minimum: 1
+            maximum: 6
+          description: Number of months to return
+      responses:
+        '200':
+          description: Departure calendar
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DepartureDate'
+
+  /products/{id}/itinerary:
+    get:
+      tags: [products]
+      summary: Get itinerary details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Itinerary details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ItineraryDay'
+
+  /products/{id}/reviews:
+    get:
+      tags: [products]
+      summary: Get product reviews
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: rating
+          in: query
+          schema:
+            type: integer
+            enum: [1, 2, 3, 4, 5]
+          description: Filter by rating
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Review list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/ProductReview'
+                          total:
+                            type: integer
+                          summary:
+                            $ref: '#/components/schemas/ReviewSummary'
+
+  /products/search/suggest:
+    get:
+      tags: [search]
+      summary: Search autocomplete
+      description: Returns real-time search suggestions as user types. Suggests hot destinations, product names, and scenic spots.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          description: Search prefix
+          example: 丽江
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+            maximum: 20
+      responses:
+        '200':
+          description: Suggestion list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            text:
+                              type: string
+                              example: 丽江古城
+                            type:
+                              type: string
+                              enum: [destination, product, spot]
+                            id:
+                              type: integer
+                              description: Entity ID (for direct navigation)

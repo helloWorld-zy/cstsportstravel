@@ -1,0 +1,72 @@
+server:
+  port: 8080
+  mode: debug
+  read_timeout: 30
+  write_timeout: 30
+
+database:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: ""
+  dbname: travel_booking
+  sslmode: disable
+  max_open_conns: 25
+  max_idle_conns: 5
+  max_lifetime: 30
+
+redis:
+  addr: localhost:6379
+  password: ""
+  db: 0
+  pool_size: 10
+
+jwt:
+  private_key_path: ""
+  public_key_path: ""
+  access_expiry: 15
+  refresh_expiry: 10080
+  issuer: travel-booking
+
+payment:
+  timeout: 30
+  alipay:
+    app_id: ""
+    private_key: ""
+    public_key: ""
+    notify_url: ""
+    return_url: ""
+  wechat:
+    app_id: ""
+    mch_id: ""
+    api_key: ""
+    notify_url: ""
+    cert_path: ""
+
+sms:
+  access_key_id: ""
+  access_secret: ""
+  sign_name: ""
+  template_code: ""
+
+log:
+  level: info
+  file_path: logs/app.log
+  max_size: 100
+  max_backups: 7
+  max_age: 7
+
+consul:
+  addr: localhost:8500
+  key_prefix: travel-booking/
+
+encryption:
+  key: ""  # 32-byte hex-encoded key; set via TRAVEL_ENCRYPTION_KEY env var
+
+mfa:
+  issuer: TravelBooking
+
+signing:
+  secret: ""  # HMAC-SHA256 signing secret; set via TRAVEL_SIGNING_SECRET env var
+  tolerance: 5  # timestamp tolerance in minutes
+  nonce_ttl: 5   # nonce dedup TTL in minutes

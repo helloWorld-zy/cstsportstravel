@@ -1,0 +1,45 @@
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+vendor/
+logs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# Node.js
+node_modules/
+dist/
+build/
+.nuxt/
+.output/
+*.local
+
+# Coverage
+coverage/
+.coverage
+
+# Temporary
+*.tmp
+*.temp
