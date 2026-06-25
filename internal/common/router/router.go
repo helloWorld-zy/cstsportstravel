@@ -22,6 +22,9 @@ import (
 	"github.com/travel-booking/server/internal/common/encrypt"
 	"github.com/travel-booking/server/internal/common/middleware"
 	"github.com/travel-booking/server/internal/common/response"
+	producthandler "github.com/travel-booking/server/internal/product/handler"
+	productrepo "github.com/travel-booking/server/internal/product/repository"
+	productservice "github.com/travel-booking/server/internal/product/service"
 	userhandler "github.com/travel-booking/server/internal/user/handler"
 	userrepo "github.com/travel-booking/server/internal/user/repository"
 	userservice "github.com/travel-booking/server/internal/user/service"
@@ -122,6 +125,15 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 	adminUserRepo := adminrepo.NewAdminUserRepository(r.DB)
 	adminAuthH := adminhandler.NewAdminAuthHandler(adminUserRepo, r.JWTManager, r.Logger)
 
+	// Product domain services and handlers
+	catRepo := productrepo.NewCategoryRepository(r.DB)
+	prodRepo := productrepo.NewProductRepository(r.DB)
+	revRepo := productrepo.NewReviewRepository(r.DB)
+	revSvc := productservice.NewReviewService(revRepo, r.Logger)
+	prodSvc := productservice.NewProductService(prodRepo, catRepo, revRepo, revSvc, r.Logger)
+	prodH := producthandler.NewProductHandler(prodSvc, revSvc, r.Logger)
+	homeH := producthandler.NewHomepageHandler(prodRepo, catRepo, r.Logger)
+
 	v1 := r.Engine.Group("/api/v1")
 	{
 		// Auth routes (no JWT required)
@@ -152,12 +164,12 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 		product := v1.Group("/products")
 		product.Use(middleware.AuthOptional(r.JWTManager))
 		{
-			product.GET("", placeholder("list products"))
-			product.GET("/:id", placeholder("get product"))
-			product.GET("/:id/departures", placeholder("get departures"))
-			product.GET("/:id/itinerary", placeholder("get itinerary"))
-			product.GET("/:id/reviews", placeholder("get reviews"))
-			product.GET("/search/suggest", placeholder("search suggest"))
+			product.GET("", prodH.ListProducts)
+			product.GET("/search/suggest", prodH.SearchSuggest)
+			product.GET("/:id", prodH.GetProduct)
+			product.GET("/:id/departures", prodH.GetDepartures)
+			product.GET("/:id/itinerary", prodH.GetItinerary)
+			product.GET("/:id/reviews", prodH.GetReviews)
 		}
 
 		// Order routes (JWT required)
@@ -191,8 +203,8 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 		}
 
 		// Homepage data (public)
-		v1.GET("/homepage", placeholder("homepage data"))
-		v1.GET("/search/autocomplete", placeholder("search autocomplete"))
+		v1.GET("/homepage", homeH.GetHomepageData)
+		v1.GET("/search/autocomplete", prodH.SearchSuggest)
 	}
 
 	// Admin routes (JWT + RBAC required)

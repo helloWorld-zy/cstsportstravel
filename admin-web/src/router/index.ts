@@ -48,6 +48,12 @@ const dynamicRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/system/RoleManage.vue'),
         meta: { title: '角色管理', permission: 'role:manage' },
       },
+      {
+        path: 'config/homepage',
+        name: 'HomepageConfig',
+        component: () => import('@/views/config/HomepageConfig.vue'),
+        meta: { title: '首页配置', permission: 'config:manage' },
+      },
     ],
   },
 ]

@@ -121,32 +121,32 @@
 
 ### Backend API
 
-- [ ] T057 [US2] Implement category and destination repository in `internal/product/repository/category_repo.go` — tree structure queries, FindAll, FindByParentID
-- [ ] T058 [US2] Implement product repository in `internal/product/repository/product_repo.go` — FindWithFilters (destination/city/days/price/status), FindByID with preloads (itinerary/departures/reviews), full-text search with PostgreSQL
-- [ ] T059 [US2] Implement product service in `internal/product/service/product.go` — ListProducts (filters/sort/pagination), GetProductDetail, GetDepartureCalendar, Search autocomplete
-- [ ] T060 [US2] Implement product handler in `internal/product/handler/product.go` — GET /api/v1/products (list with filters), GET /api/v1/products/:id (detail), GET /api/v1/products/:id/departures (calendar), GET /api/v1/products/:id/itinerary, GET /api/v1/products/:id/reviews, GET /api/v1/search/autocomplete per product-api.yaml
-- [ ] T061 [US2] Implement product review repository and service in `internal/product/repository/review_repo.go` and `internal/product/service/review.go` — list reviews by product with pagination, rating statistics
-- [ ] T062 [US2] Implement homepage data API in `internal/product/handler/homepage.go` — GET /api/v1/homepage returning banner list, popular destinations, recommended products (rule-based: hot products for new users, same-destination for returning users)
+- [x] T057 [US2] Implement category and destination repository in `internal/product/repository/category_repo.go` — tree structure queries, FindAll, FindByParentID
+- [x] T058 [US2] Implement product repository in `internal/product/repository/product_repo.go` — FindWithFilters (destination/city/days/price/status), FindByID with preloads (itinerary/departures/reviews), full-text search with PostgreSQL
+- [x] T059 [US2] Implement product service in `internal/product/service/product.go` — ListProducts (filters/sort/pagination), GetProductDetail, GetDepartureCalendar, Search autocomplete
+- [x] T060 [US2] Implement product handler in `internal/product/handler/product.go` — GET /api/v1/products (list with filters), GET /api/v1/products/:id (detail), GET /api/v1/products/:id/departures (calendar), GET /api/v1/products/:id/itinerary, GET /api/v1/products/:id/reviews, GET /api/v1/search/autocomplete per product-api.yaml
+- [x] T061 [US2] Implement product review repository and service in `internal/product/repository/review_repo.go` and `internal/product/service/review.go` — list reviews by product with pagination, rating statistics
+- [x] T062 [US2] Implement homepage data API in `internal/product/handler/homepage.go` — GET /api/v1/homepage returning banner list, popular destinations, recommended products (rule-based: hot products for new users, same-destination for returning users)
 
 ### Frontend - Web (Nuxt.js 3)
 
-- [ ] T063 [US2] Create homepage at `web/pages/index.vue` — search box with autocomplete, 金刚区 icon grid (8 entries), Banner carousel (3-5s auto-rotate), popular destinations tabs, "猜你喜欢" recommendation section, loading skeleton
-- [ ] T064 [US2] Create product list page at `web/pages/products/index.vue` — filter bar (top tags: destination/city/days/price + side drawer: accommodation/theme/grade/transport), sort dropdown (6 options), product card grid/list toggle, pagination, empty state, loading skeleton
-- [ ] T065 [US2] Create product card component in `web/components/ProductCard.vue` — product image, name, price (起), days, departure cities, satisfaction score, tags (热销/新品/特价), sold-out overlay
-- [ ] T066 [US2] Create product detail page at `web/pages/products/[id].vue` — image carousel (lazy load), product info, itinerary timeline (Day 1/2/3 with spots/meals/hotel/transport), fee included/excluded, crowd pricing (adult/child/infant), single supplement note, cancellation policy (always visible, not collapsible), review section (5-star + dimension scores + filter), departure calendar (heatmap: green=adequate/orange=tight/grey=sold-out), fixed bottom booking bar
-- [ ] T067 [US2] Create departure calendar component in `web/components/DepartureCalendar.vue` — 3-month calendar grid, daily adult price, stock status indicator (adequate/tight/sold-out), date selection handler, past dates disabled
-- [ ] T068 [US2] Create product detail composable in `web/composables/useProduct.ts` — fetch product detail, departure calendar, reviews with caching (@tanstack/vue-query)
+- [x] T063 [US2] Create homepage at `web/pages/index.vue` — search box with autocomplete, 金刚区 icon grid (8 entries), Banner carousel (3-5s auto-rotate), popular destinations tabs, "猜你喜欢" recommendation section, loading skeleton
+- [x] T064 [US2] Create product list page at `web/pages/products/index.vue` — filter bar (top tags: destination/city/days/price + side drawer: accommodation/theme/grade/transport), sort dropdown (6 options), product card grid/list toggle, pagination, empty state, loading skeleton
+- [x] T065 [US2] Create product card component in `web/components/ProductCard.vue` — product image, name, price (起), days, departure cities, satisfaction score, tags (热销/新品/特价), sold-out overlay
+- [x] T066 [US2] Create product detail page at `web/pages/products/[id].vue` — image carousel (lazy load), product info, itinerary timeline (Day 1/2/3 with spots/meals/hotel/transport), fee included/excluded, crowd pricing (adult/child/infant), single supplement note, cancellation policy (always visible, not collapsible), review section (5-star + dimension scores + filter), departure calendar (heatmap: green=adequate/orange=tight/grey=sold-out), fixed bottom booking bar
+- [x] T067 [US2] Create departure calendar component in `web/components/DepartureCalendar.vue` — 3-month calendar grid, daily adult price, stock status indicator (adequate/tight/sold-out), date selection handler, past dates disabled
+- [x] T068 [US2] Create product detail composable in `web/composables/useProduct.ts` — fetch product detail, departure calendar, reviews with caching (@tanstack/vue-query)
 
 ### Frontend - Mini Program (Uni-App)
 
-- [ ] T069 [P] [US2] Create mini-program homepage at `miniapp/pages/index.vue` — search bar, 金刚区 icons, banner swiper, product recommendations, loading state
-- [ ] T070 [P] [US2] Create mini-program product list at `miniapp/pages/products/list.vue` — filter tabs, product card list, pull-down refresh, infinite scroll, empty state
-- [ ] T071 [US2] Create mini-program product detail at `miniapp/pages/products/detail.vue` — swiper images, itinerary, pricing, departure calendar, booking button, share capability
+- [x] T069 [P] [US2] Create mini-program homepage at `miniapp/pages/index.vue` — search bar, 金刚区 icons, banner swiper, product recommendations, loading state
+- [x] T070 [P] [US2] Create mini-program product list at `miniapp/pages/products/list.vue` — filter tabs, product card list, pull-down refresh, infinite scroll, empty state
+- [x] T071 [US2] Create mini-program product detail at `miniapp/pages/products/detail.vue` — swiper images, itinerary, pricing, departure calendar, booking button, share capability
 
 ### Frontend - Admin (Vue 3)
 
-- [ ] T072 [P] [US2] Create admin product list page at `admin-web/src/views/product/ProductList.vue` — product table (name/destination/status/supplier), filters (status/destination/supplier), actions (edit/review/suspend), pagination
-- [ ] T073 [US2] Create admin homepage config page at `admin-web/src/views/config/HomepageConfig.vue` — banner management (image/upload/link/position/sort/status), popular destination config
+- [x] T072 [P] [US2] Create admin product list page at `admin-web/src/views/product/ProductList.vue` — product table (name/destination/status/supplier), filters (status/destination/supplier), actions (edit/review/suspend), pagination
+- [x] T073 [US2] Create admin homepage config page at `admin-web/src/views/config/HomepageConfig.vue` — banner management (image/upload/link/position/sort/status), popular destination config
 
 **Checkpoint**: Homepage displays content, product list with filters works, product detail shows all information, departure calendar shows prices and stock. Works on both Web and Mini Program.
 
