@@ -154,8 +154,8 @@ func (s *WechatService) Login(req WechatLoginRequest) (*WechatLoginResponse, err
 		RealNameStatus: model.RNStatusUnverified,
 		MemberLevel:    1,
 		Status:         model.UserStatusActive,
-		WechatOpenID:   wxUser.OpenID,
-		WechatUnionID:  wxUser.UnionID,
+		WechatOpenID:   &wxUser.OpenID,
+		WechatUnionID:  &wxUser.UnionID,
 	}
 	if err := s.repo.Create(newUser); err != nil {
 		return nil, fmt.Errorf("create user: %w", err)

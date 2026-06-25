@@ -160,34 +160,34 @@
 
 ### Backend API
 
-- [ ] T074 [US3] Implement inventory service in `internal/product/service/inventory.go` — LockStock (Redis DECR + DB SELECT FOR UPDATE), ReleaseStock (Redis INCR), GetAvailableStock, stock warning levels (adequate/tight/full) per research.md
-- [ ] T075 [US3] Implement order repository in `internal/order/repository/order_repo.go` — Create, FindByID, FindByUserID (with filters), UpdateStatus, CreateStatusLog
-- [ ] T076 [US3] Implement order service in `internal/order/service/order.go` — CreateOrder (validate real-name, lock inventory, calculate price with single room supplement/child pricing, create order+travellers+status log), CancelOrder, GetOrderList, GetOrderDetail
-- [ ] T077 [US3] Implement single room supplement calculation in `internal/order/service/pricing.go` — auto-add when adult count is odd, per-date pricing from departure_date.single_supplement field per PRD §4.2.5
-- [ ] T078 [US3] Implement child pricing rules in `internal/order/service/pricing.go` — child (2-12yr, no bed) uses child_price, infant (<2yr) uses infant_price, child must link to adult, max 1 infant per adult per PRD §4.2.5
-- [ ] T079 [US3] Implement order handler in `internal/order/handler/order.go` — POST /api/v1/orders (create), GET /api/v1/orders (list), GET /api/v1/orders/:id (detail), POST /api/v1/orders/:id/cancel per order-api.yaml
-- [ ] T080 [US3] Implement payment repository in `internal/payment/repository/payment_repo.go` — Create, FindByID, FindByOrderID, UpdateStatus
-- [ ] T081 [US3] Implement Alipay payment integration in `internal/payment/service/alipay.go` — using smartwalle/alipay/v3 SDK, CreatePayment (page pay + wap pay), VerifyNotification, QueryOrder per payment-api.yaml and PRD §5.1.1
-- [ ] T082 [US3] Implement WeChat payment integration in `internal/payment/service/wechat.go` — using wechatpay-go SDK, CreatePayment (Native + JSAPI), VerifyNotification, QueryOrder per payment-api.yaml and PRD §5.1.2
-- [ ] T083 [US3] Implement payment service in `internal/payment/service/payment.go` — CreatePayment (route to channel), HandleCallback (idempotent with DB unique constraint + Redis dedup per research.md), QueryPaymentStatus
-- [ ] T084 [US3] Implement payment handler in `internal/payment/handler/payment.go` — POST /api/v1/orders/:id/payment (create), POST /api/v1/payment/alipay/notify (callback), POST /api/v1/payment/wechat/notify (callback), GET /api/v1/payment/:id/status (query) per payment-api.yaml
-- [ ] T085 [US3] Implement order auto-cancel task in `internal/order/service/timeout.go` — using Asynq delayed task (30min), cancel order + release inventory + update status per research.md
-- [ ] T086 [US3] Implement payment success flow in `internal/order/service/payment_callback.go` — update order status to paid_full, send confirmation notification (SMS + in-app), record payment transaction
+- [x] T074 [US3] Implement inventory service in `internal/product/service/inventory.go` — LockStock (Redis DECR + DB SELECT FOR UPDATE), ReleaseStock (Redis INCR), GetAvailableStock, stock warning levels (adequate/tight/full) per research.md
+- [x] T075 [US3] Implement order repository in `internal/order/repository/order_repo.go` — Create, FindByID, FindByUserID (with filters), UpdateStatus, CreateStatusLog
+- [x] T076 [US3] Implement order service in `internal/order/service/order.go` — CreateOrder (validate real-name, lock inventory, calculate price with single room supplement/child pricing, create order+travellers+status log), CancelOrder, GetOrderList, GetOrderDetail
+- [x] T077 [US3] Implement single room supplement calculation in `internal/order/service/pricing.go` — auto-add when adult count is odd, per-date pricing from departure_date.single_supplement field per PRD §4.2.5
+- [x] T078 [US3] Implement child pricing rules in `internal/order/service/pricing.go` — child (2-12yr, no bed) uses child_price, infant (<2yr) uses infant_price, child must link to adult, max 1 infant per adult per PRD §4.2.5
+- [x] T079 [US3] Implement order handler in `internal/order/handler/order.go` — POST /api/v1/orders (create), GET /api/v1/orders (list), GET /api/v1/orders/:id (detail), POST /api/v1/orders/:id/cancel per order-api.yaml
+- [x] T080 [US3] Implement payment repository in `internal/payment/repository/payment_repo.go` — Create, FindByID, FindByOrderID, UpdateStatus
+- [x] T081 [US3] Implement Alipay payment integration in `internal/payment/service/alipay.go` — using smartwalle/alipay/v3 SDK, CreatePayment (page pay + wap pay), VerifyNotification, QueryOrder per payment-api.yaml and PRD §5.1.1
+- [x] T082 [US3] Implement WeChat payment integration in `internal/payment/service/wechat.go` — using wechatpay-go SDK, CreatePayment (Native + JSAPI), VerifyNotification, QueryOrder per payment-api.yaml and PRD §5.1.2
+- [x] T083 [US3] Implement payment service in `internal/payment/service/payment.go` — CreatePayment (route to channel), HandleCallback (idempotent with DB unique constraint + Redis dedup per research.md), QueryPaymentStatus
+- [x] T084 [US3] Implement payment handler in `internal/payment/handler/payment.go` — POST /api/v1/orders/:id/payment (create), POST /api/v1/payment/alipay/notify (callback), POST /api/v1/payment/wechat/notify (callback), GET /api/v1/payment/:id/status (query) per payment-api.yaml
+- [x] T085 [US3] Implement order auto-cancel task in `internal/order/service/timeout.go` — using Asynq delayed task (30min), cancel order + release inventory + update status per research.md
+- [x] T086 [US3] Implement payment success flow in `internal/order/service/payment_callback.go` — update order status to paid_full, send confirmation notification (SMS + in-app), record payment transaction
 
 ### Frontend - Web (Nuxt.js 3)
 
-- [ ] T087 [US3] Create booking wizard page at `web/pages/booking/[productId].vue` — 4-step wizard (departure→travellers→addons→confirm), step progress bar, real-time price summary footer, back/next navigation
-- [ ] T088 [US3] Create departure selection step component in `web/components/booking/DepartureStep.vue` — departure calendar, adult/child/infant counters with min/max limits, live price calculation (single supplement auto-add), available seats display, group size hint
-- [ ] T089 [US3] Create traveller form step component in `web/components/booking/TravellerStep.vue` — per-traveller form (name/id_card/phone/birth/gender), "select from frequent travellers" button, real-time ID card validation, child-adult linking, form validation
-- [ ] T090 [US3] Create addon selection step component in `web/components/booking/AddonStep.vue` — insurance/transfer checkboxes with prices, price updates on toggle
-- [ ] T091 [US3] Create order confirmation step component in `web/components/booking/ConfirmStep.vue` — product summary, traveller list, fee breakdown (product+supplement+addons=total), cancellation policy summary, "agree to policy" checkbox (required), submit button
-- [ ] T092 [US3] Create payment page at `web/pages/payment/[orderId].vue` — Alipay/WeChat payment selection, 30-minute countdown timer (mm:ss), payment status polling, success redirect, timeout alert
-- [ ] T093 [US3] Create payment countdown component in `web/components/PaymentCountdown.vue` — countdown timer with mm:ss display, color change at 5min warning, timeout callback
+- [x] T087 [US3] Create booking wizard page at `web/pages/booking/[productId].vue` — 4-step wizard (departure→travellers→addons→confirm), step progress bar, real-time price summary footer, back/next navigation
+- [x] T088 [US3] Create departure selection step component in `web/components/booking/DepartureStep.vue` — departure calendar, adult/child/infant counters with min/max limits, live price calculation (single supplement auto-add), available seats display, group size hint
+- [x] T089 [US3] Create traveller form step component in `web/components/booking/TravellerStep.vue` — per-traveller form (name/id_card/phone/birth/gender), "select from frequent travellers" button, real-time ID card validation, child-adult linking, form validation
+- [x] T090 [US3] Create addon selection step component in `web/components/booking/AddonStep.vue` — insurance/transfer checkboxes with prices, price updates on toggle
+- [x] T091 [US3] Create order confirmation step component in `web/components/booking/ConfirmStep.vue` — product summary, traveller list, fee breakdown (product+supplement+addons=total), cancellation policy summary, "agree to policy" checkbox (required), submit button
+- [x] T092 [US3] Create payment page at `web/pages/payment/[orderId].vue` — Alipay/WeChat payment selection, 30-minute countdown timer (mm:ss), payment status polling, success redirect, timeout alert
+- [x] T093 [US3] Create payment countdown component in `web/components/PaymentCountdown.vue` — countdown timer with mm:ss display, color change at 5min warning, timeout callback
 
 ### Frontend - Mini Program (Uni-App)
 
-- [ ] T094 [US3] Create mini-program booking flow at `miniapp/pages/booking/index.vue` — 4-step wizard adapted for mini-program, same business logic as web
-- [ ] T095 [US3] Create mini-program payment at `miniapp/pages/payment/index.vue` — wx.requestPayment integration for WeChat pay, countdown timer, conditional compilation
+- [x] T094 [US3] Create mini-program booking flow at `miniapp/pages/booking/index.vue` — 4-step wizard adapted for mini-program, same business logic as web
+- [x] T095 [US3] Create mini-program payment at `miniapp/pages/payment/index.vue` — wx.requestPayment integration for WeChat pay, countdown timer, conditional compilation
 
 ### Frontend - Admin (Vue 3)
 

@@ -15,8 +15,8 @@ type UserAccount struct {
 	RealNameStatus    string     `gorm:"column:real_name_status;size:20;not null;default:unverified" json:"real_name_status"`
 	MemberLevel       int        `gorm:"column:member_level;not null;default:1" json:"member_level"`
 	Status            string     `gorm:"column:status;size:20;not null;default:active" json:"status"`
-	WechatOpenID      string     `gorm:"column:wechat_openid;size:100;uniqueIndex" json:"-"`
-	WechatUnionID     string     `gorm:"column:wechat_unionid;size:100" json:"-"`
+	WechatOpenID      *string    `gorm:"column:wechat_openid;size:100;uniqueIndex" json:"-"`
+	WechatUnionID     *string    `gorm:"column:wechat_unionid;size:100" json:"-"`
 	SMSCode           string     `gorm:"column:sms_code;size:6" json:"-"`
 	SMSCodeExpiresAt  *time.Time `gorm:"column:sms_code_expires_at" json:"-"`
 	SMSSendCountToday int        `gorm:"column:sms_send_count_today;not null;default:0" json:"-"`

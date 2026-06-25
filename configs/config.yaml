@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8088
   mode: debug
   read_timeout: 30
   write_timeout: 30
@@ -61,7 +61,7 @@ consul:
   key_prefix: travel-booking/
 
 encryption:
-  key: ""  # 32-byte hex-encoded key; set via TRAVEL_ENCRYPTION_KEY env var
+  key: "eb51453ddba15b908f79579aa8d774e4b1c775d9e2b24ce00cb6695cee8e74fa"  # 32-byte hex-encoded key
 
 mfa:
   issuer: TravelBooking

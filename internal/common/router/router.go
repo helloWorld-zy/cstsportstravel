@@ -22,6 +22,12 @@ import (
 	"github.com/travel-booking/server/internal/common/encrypt"
 	"github.com/travel-booking/server/internal/common/middleware"
 	"github.com/travel-booking/server/internal/common/response"
+	orderhandler "github.com/travel-booking/server/internal/order/handler"
+	orderrepo "github.com/travel-booking/server/internal/order/repository"
+	orderservice "github.com/travel-booking/server/internal/order/service"
+	paymenthandler "github.com/travel-booking/server/internal/payment/handler"
+	paymentrepo "github.com/travel-booking/server/internal/payment/repository"
+	paymentservice "github.com/travel-booking/server/internal/payment/service"
 	producthandler "github.com/travel-booking/server/internal/product/handler"
 	productrepo "github.com/travel-booking/server/internal/product/repository"
 	productservice "github.com/travel-booking/server/internal/product/service"
@@ -134,6 +140,22 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 	prodH := producthandler.NewProductHandler(prodSvc, revSvc, r.Logger)
 	homeH := producthandler.NewHomepageHandler(prodRepo, catRepo, r.Logger)
 
+	// Inventory service (Redis + DB two-phase locking)
+	inventorySvc := productservice.NewInventoryService(r.DB, r.Redis.Client(), r.Logger)
+
+	// Order domain services and handlers
+	ordRepo := orderrepo.NewOrderRepository(r.DB)
+	ordSvc := orderservice.NewOrderService(ordRepo, prodRepo, userRepo, inventorySvc, enc, r.Logger)
+	ordH := orderhandler.NewOrderHandler(ordSvc, r.Logger)
+
+	// Payment domain services and handlers
+	payRepo := paymentrepo.NewPaymentRepository(r.DB)
+	alipayPaySvc := paymentservice.NewAlipayService(r.Config.Payment.Alipay, r.Logger)
+	wechatPaySvc := paymentservice.NewWechatPayService(r.Config.Payment.Wechat, r.Logger)
+	callbackBaseURL := fmt.Sprintf("https://localhost:%d", r.Config.Server.Port)
+	paySvc := paymentservice.NewPaymentService(payRepo, ordRepo, inventorySvc, alipayPaySvc, wechatPaySvc, r.Redis.Client(), r.Logger, callbackBaseURL)
+	payH := paymenthandler.NewPaymentHandler(paySvc, alipayPaySvc, wechatPaySvc, r.Logger)
+
 	v1 := r.Engine.Group("/api/v1")
 	{
 		// Auth routes (no JWT required)
@@ -177,29 +199,34 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 		order.Use(middleware.AuthRequired(r.JWTManager))
 		order.Use(middleware.PerUserRateLimit(rateLimiter))
 		{
-			order.POST("", placeholder("create order"))
-			order.GET("", placeholder("list orders"))
-			order.GET("/:id", placeholder("get order"))
-			order.POST("/:id/cancel", placeholder("cancel order"))
-			order.POST("/:id/refund", placeholder("request refund"))
-			order.POST("/:id/confirm", placeholder("confirm travel"))
+			order.POST("", ordH.CreateOrder)
+			order.GET("", ordH.ListOrders)
+			order.GET("/:id", ordH.GetOrder)
+			order.POST("/:id/cancel", ordH.CancelOrder)
+			order.POST("/:id/refund", placeholder("request refund"))  // US4
+			order.POST("/:id/confirm", placeholder("confirm travel")) // US4
 		}
 
 		// Payment routes (JWT required for most, signature for callbacks)
 		payment := v1.Group("/payments")
 		{
 			// Callback endpoints (signature verified, no JWT)
-			payment.POST("/notify/alipay", placeholder("alipay callback"))
-			payment.POST("/notify/wechat", placeholder("wechat callback"))
+			payment.POST("/notify/alipay", payH.AlipayNotify)
+			payment.POST("/notify/wechat", payH.WechatNotify)
 
 			// Authenticated endpoints
 			authed := payment.Group("")
 			authed.Use(middleware.AuthRequired(r.JWTManager))
 			{
-				authed.POST("/create", placeholder("create payment"))
-				authed.GET("/:id/status", placeholder("payment status"))
-				authed.POST("/:id/query", placeholder("query payment"))
+				authed.POST("/create", payH.CreatePayment)
+				authed.GET("/:id/status", payH.GetPaymentStatus)
+				authed.POST("/:id/query", payH.QueryPayment)
 			}
+		}
+
+		// Test-only payment simulation (test mode only)
+		if r.Config.Server.Mode == "test" {
+			v1.POST("/test/payments/simulate-callback", payH.SimulateCallback)
 		}
 
 		// Homepage data (public)
