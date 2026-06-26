@@ -87,3 +87,18 @@ func (r *ReviewRepository) GetReviewSummary(productID int64) (*ReviewSummary, er
 
 	return &summary, nil
 }
+
+// FindByOrderID returns a review by order ID (for duplicate check).
+func (r *ReviewRepository) FindByOrderID(orderID int64) (*model.ProductReview, error) {
+	var review model.ProductReview
+	err := r.db.Where("order_id = ?", orderID).First(&review).Error
+	if err != nil {
+		return nil, err
+	}
+	return &review, nil
+}
+
+// Create creates a new product review.
+func (r *ReviewRepository) Create(review *model.ProductReview) error {
+	return r.db.Create(review).Error
+}

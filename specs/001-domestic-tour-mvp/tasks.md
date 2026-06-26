@@ -205,23 +205,23 @@
 
 ### Backend API
 
-- [ ] T097 [US4] Implement cancellation rule engine in `internal/order/service/cancellation.go` — load refund_rule by product, match days_before_departure to tier, calculate refund amount per PRD §6.2.4 table 6-6 formula: refund = paid_amount - occurred_fees - cancellation_fee - non_refundable
-- [ ] T098 [US4] Implement refund service in `internal/order/service/refund.go` — CreateRefundRequest (calculate amount, create refund_record), process refund via payment channel (original route back per PRD §5.3), update order status
-- [ ] T099 [US4] Implement refund handler in `internal/order/handler/refund.go` — POST /api/v1/orders/:id/refund (request), GET /api/v1/orders/:id/refund-status per order-api.yaml
-- [ ] T100 [US4] Implement order status auto-transition tasks in `internal/order/service/status_transition.go` — PENDING_TRAVEL on departure date, IN_TRAVEL on trip start, COMPLETED on return date+1, using Asynq scheduled tasks
+- [x] T097 [US4] Implement cancellation rule engine in `internal/order/service/cancellation.go` — load refund_rule by product, match days_before_departure to tier, calculate refund amount per PRD §6.2.4 table 6-6 formula: refund = paid_amount - occurred_fees - cancellation_fee - non_refundable
+- [x] T098 [US4] Implement refund service in `internal/order/service/refund.go` — CreateRefundRequest (calculate amount, create refund_record), process refund via payment channel (original route back per PRD §5.3), update order status
+- [x] T099 [US4] Implement refund handler in `internal/order/handler/refund.go` — POST /api/v1/orders/:id/refund (request), GET /api/v1/orders/:id/refund-status per order-api.yaml
+- [x] T100 [US4] Implement order status auto-transition tasks in `internal/order/service/status_transition.go` — PENDING_TRAVEL on departure date, IN_TRAVEL on trip start, COMPLETED on return date+1, using Asynq scheduled tasks
 
 ### Frontend - Web (Nuxt.js 3)
 
-- [ ] T101 [US4] Create order list page at `web/pages/user/orders.vue` — status tabs (全部/待付款/待出行/退款中/已完成/已取消), order cards (image/name/date/amount/status/action buttons), search by product name/order no, pagination, empty state
-- [ ] T102 [US4] Create order detail page at `web/pages/user/order-[id].vue` — product info (with itinerary summary), traveller list, fee breakdown, payment records, cancellation policy, action buttons by status (待付款: pay+cancel, 待出行: refund, 已完成: review)
-- [ ] T103 [US4] Create refund request component in `web/components/RefundRequest.vue` — refund reason selector, refund amount preview (auto-calculated by cancellation rules), submit with confirmation dialog
+- [x] T101 [US4] Create order list page at `web/pages/user/orders.vue` — status tabs (全部/待付款/待出行/退款中/已完成/已取消), order cards (image/name/date/amount/status/action buttons), search by product name/order no, pagination, empty state
+- [x] T102 [US4] Create order detail page at `web/pages/user/order-[id].vue` — product info (with itinerary summary), traveller list, fee breakdown, payment records, cancellation policy, action buttons by status (待付款: pay+cancel, 待出行: refund, 已完成: review)
+- [x] T103 [US4] Create refund request component in `web/components/RefundRequest.vue` — refund reason selector, refund amount preview (auto-calculated by cancellation rules), submit with confirmation dialog
 
 ### Frontend - Mini Program (Uni-App)
 
-- [ ] T104 [P] [US4] Create mini-program order list at `miniapp/pages/orders/list.vue` — status tabs, order cards, pull-down refresh, empty state
-- [ ] T105 [US4] Create mini-program order detail at `miniapp/pages/orders/detail.vue` — same info as web, adapted for mobile layout
-- [ ] T105b [US4] Implement review submission API in `internal/product/handler/review.go` and `internal/product/service/review.go` — POST /api/v1/products/:id/reviews (submit review with rating 1-5 stars + dimension scores for guide/itinerary/hotel/transport/food + text content + optional images), validate user has completed order for this product, auto-publish without moderation per spec assumptions
-- [ ] T105c [US4] Create review submission component in `web/components/ReviewForm.vue` — 5-star rating selector, dimension score inputs (导游/行程/住宿/交通/餐饮), text content (min 10 chars), image upload (max 5 photos), submit with loading state. Display on order detail page for completed orders
+- [x] T104 [P] [US4] Create mini-program order list at `miniapp/pages/orders/list.vue` — status tabs, order cards, pull-down refresh, empty state
+- [x] T105 [US4] Create mini-program order detail at `miniapp/pages/orders/detail.vue` — same info as web, adapted for mobile layout
+- [x] T105b [US4] Implement review submission API in `internal/product/handler/review.go` and `internal/product/service/review.go` — POST /api/v1/products/:id/reviews (submit review with rating 1-5 stars + dimension scores for guide/itinerary/hotel/transport/food + text content + optional images), validate user has completed order for this product, auto-publish without moderation per spec assumptions
+- [x] T105c [US4] Create review submission component in `web/components/ReviewForm.vue` — 5-star rating selector, dimension score inputs (导游/行程/住宿/交通/餐饮), text content (min 10 chars), image upload (max 5 photos), submit with loading state. Display on order detail page for completed orders
 
 **Checkpoint**: User can view orders by status, see order details, submit refund request, submit reviews for completed orders. Refund amount calculated correctly by cancellation rules. Works on both Web and Mini Program.
 

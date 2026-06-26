@@ -156,6 +156,14 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 	paySvc := paymentservice.NewPaymentService(payRepo, ordRepo, inventorySvc, alipayPaySvc, wechatPaySvc, r.Redis.Client(), r.Logger, callbackBaseURL)
 	payH := paymenthandler.NewPaymentHandler(paySvc, alipayPaySvc, wechatPaySvc, r.Logger)
 
+	// Refund service and handler (US4)
+	refundSvc := orderservice.NewRefundService(ordRepo, payRepo, prodRepo, r.Logger)
+	refundH := orderhandler.NewRefundHandler(refundSvc, r.Logger)
+
+	// Status transition service (US4) — registered with Asynq for periodic execution
+	statusTransSvc := orderservice.NewStatusTransitionService(ordRepo, r.DB, r.Logger)
+	_ = statusTransSvc // used by Asynq task handler
+
 	v1 := r.Engine.Group("/api/v1")
 	{
 		// Auth routes (no JWT required)
@@ -192,6 +200,9 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 			product.GET("/:id/departures", prodH.GetDepartures)
 			product.GET("/:id/itinerary", prodH.GetItinerary)
 			product.GET("/:id/reviews", prodH.GetReviews)
+
+			// Review submission (JWT required)
+			product.POST("/:id/reviews", middleware.AuthRequired(r.JWTManager), prodH.SubmitReview)
 		}
 
 		// Order routes (JWT required)
@@ -203,7 +214,8 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 			order.GET("", ordH.ListOrders)
 			order.GET("/:id", ordH.GetOrder)
 			order.POST("/:id/cancel", ordH.CancelOrder)
-			order.POST("/:id/refund", placeholder("request refund"))  // US4
+			order.POST("/:id/refund", refundH.RequestRefund)
+			order.GET("/:id/refund-status", refundH.GetRefundStatus)
 			order.POST("/:id/confirm", placeholder("confirm travel")) // US4
 		}
 

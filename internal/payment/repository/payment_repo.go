@@ -3,6 +3,7 @@ package repository
 
 import (
 	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -89,4 +90,44 @@ func (r *PaymentRepository) HasActivePayment(orderID int64) (bool, error) {
 // CreateRefundRecord creates a new refund record.
 func (r *PaymentRepository) CreateRefundRecord(record *paymentmodel.RefundRecord) error {
 	return r.db.Create(record).Error
+}
+
+// FindRefundByID returns a refund record by ID.
+func (r *PaymentRepository) FindRefundByID(id int64) (*paymentmodel.RefundRecord, error) {
+	var record paymentmodel.RefundRecord
+	if err := r.db.First(&record, id).Error; err != nil {
+		return nil, err
+	}
+	return &record, nil
+}
+
+// FindRefundByOrderID returns the latest refund record for an order.
+func (r *PaymentRepository) FindRefundByOrderID(orderID int64) (*paymentmodel.RefundRecord, error) {
+	var record paymentmodel.RefundRecord
+	err := r.db.Where("order_id = ?", orderID).
+		Order("created_at DESC").
+		First(&record).Error
+	if err != nil {
+		return nil, err
+	}
+	return &record, nil
+}
+
+// UpdateRefundStatus updates the refund record status and related fields.
+func (r *PaymentRepository) UpdateRefundStatus(id int64, status string, extra map[string]interface{}) error {
+	updates := map[string]interface{}{
+		"status":     status,
+		"updated_at": time.Now(),
+	}
+	for k, v := range extra {
+		updates[k] = v
+	}
+
+	result := r.db.Model(&paymentmodel.RefundRecord{}).
+		Where("id = ?", id).
+		Updates(updates)
+	if result.Error != nil {
+		return fmt.Errorf("update refund status: %w", result.Error)
+	}
+	return nil
 }

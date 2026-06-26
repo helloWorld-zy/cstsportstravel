@@ -3,17 +3,27 @@ package service
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 
 	"github.com/travel-booking/server/internal/product/model"
 	"github.com/travel-booking/server/internal/product/repository"
 )
 
+// Review errors.
+var (
+	ErrReviewAlreadyExists = errors.New("review already exists for this order")
+	ErrOrderNotCompleted   = errors.New("order must be completed before submitting a review")
+	ErrInvalidRating       = errors.New("rating must be between 1 and 5")
+)
+
 // ReviewService provides business logic for product reviews.
 type ReviewService struct {
 	reviewRepo *repository.ReviewRepository
+	orderDB    *gorm.DB // for checking order status
 	logger     *zap.Logger
 }
 
@@ -23,6 +33,11 @@ func NewReviewService(reviewRepo *repository.ReviewRepository, logger *zap.Logge
 		reviewRepo: reviewRepo,
 		logger:     logger,
 	}
+}
+
+// SetOrderDB sets the order database for order validation.
+func (s *ReviewService) SetOrderDB(db *gorm.DB) {
+	s.orderDB = db
 }
 
 // ReviewResponse represents a single review in API responses.
@@ -117,4 +132,85 @@ func toReviewResponse(r model.ProductReview) ReviewResponse {
 		IsAnonymous: r.IsAnonymous,
 		CreatedAt:   r.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
 	}
+}
+
+// SubmitReviewInput is the request body for submitting a review.
+type SubmitReviewInput struct {
+	Rating      int      `json:"rating" binding:"required,min=1,max=5"`
+	Content     string   `json:"content"`
+	Images      []string `json:"images"`
+	IsAnonymous bool     `json:"is_anonymous"`
+}
+
+// SubmitReview creates a new product review.
+// Validates: user has a completed order for this product, no duplicate review per order.
+func (s *ReviewService) SubmitReview(userID, productID, orderID int64, input SubmitReviewInput) (*ReviewResponse, error) {
+	// Validate rating
+	if input.Rating < 1 || input.Rating > 5 {
+		return nil, ErrInvalidRating
+	}
+
+	// Validate content length
+	if len(input.Content) < 10 {
+		return nil, fmt.Errorf("review content must be at least 10 characters")
+	}
+
+	// Check if review already exists for this order
+	existing, _ := s.reviewRepo.FindByOrderID(orderID)
+	if existing != nil {
+		return nil, ErrReviewAlreadyExists
+	}
+
+	// Validate order is completed and belongs to user
+	if s.orderDB != nil {
+		var order struct {
+			ID          int64  `gorm:"column:id"`
+			UserID      int64  `gorm:"column:user_id"`
+			OrderStatus string `gorm:"column:order_status"`
+		}
+		err := s.orderDB.Table("main_order").
+			Where("id = ? AND user_id = ?", orderID, userID).
+			First(&order).Error
+		if err != nil {
+			return nil, fmt.Errorf("order not found or access denied")
+		}
+		if order.OrderStatus != "completed" {
+			return nil, ErrOrderNotCompleted
+		}
+	}
+
+	// Marshal images
+	var imagesJSON json.RawMessage
+	if len(input.Images) > 0 {
+		b, err := json.Marshal(input.Images)
+		if err != nil {
+			return nil, fmt.Errorf("marshal images: %w", err)
+		}
+		imagesJSON = b
+	}
+
+	// Create review
+	review := &model.ProductReview{
+		ProductID:   productID,
+		UserID:      userID,
+		OrderID:     orderID,
+		Rating:      input.Rating,
+		Content:     input.Content,
+		Images:      imagesJSON,
+		IsAnonymous: input.IsAnonymous,
+	}
+
+	if err := s.reviewRepo.Create(review); err != nil {
+		return nil, fmt.Errorf("create review: %w", err)
+	}
+
+	s.logger.Info("review submitted",
+		zap.Int64("review_id", review.ID),
+		zap.Int64("product_id", productID),
+		zap.Int64("order_id", orderID),
+		zap.Int("rating", input.Rating),
+	)
+
+	resp := toReviewResponse(*review)
+	return &resp, nil
 }

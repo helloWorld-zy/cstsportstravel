@@ -2,11 +2,13 @@
 package handler
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
+	"github.com/travel-booking/server/internal/common/middleware"
 	"github.com/travel-booking/server/internal/common/response"
 	"github.com/travel-booking/server/internal/product/service"
 )
@@ -159,4 +161,55 @@ func (h *ProductHandler) SearchSuggest(c *gin.Context) {
 // parseID extracts an int64 path parameter.
 func parseID(c *gin.Context, param string) (int64, error) {
 	return strconv.ParseInt(c.Param(param), 10, 64)
+}
+
+// SubmitReview handles POST /api/v1/products/:id/reviews.
+func (h *ProductHandler) SubmitReview(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		response.Unauthorized(c, "authentication required")
+		return
+	}
+
+	productID, err := parseID(c, "id")
+	if err != nil {
+		response.BadRequest(c, "invalid product id")
+		return
+	}
+
+	// Parse order_id from query parameter
+	orderIDStr := c.Query("order_id")
+	if orderIDStr == "" {
+		response.BadRequest(c, "order_id parameter required")
+		return
+	}
+	orderID, err := strconv.ParseInt(orderIDStr, 10, 64)
+	if err != nil {
+		response.BadRequest(c, "invalid order_id")
+		return
+	}
+
+	var req service.SubmitReviewInput
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "invalid request: "+err.Error())
+		return
+	}
+
+	result, err := h.reviewSvc.SubmitReview(userID, productID, orderID, req)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrReviewAlreadyExists):
+			response.BadRequest(c, "review already exists for this order")
+		case errors.Is(err, service.ErrOrderNotCompleted):
+			response.BadRequest(c, "order must be completed before submitting a review")
+		case errors.Is(err, service.ErrInvalidRating):
+			response.BadRequest(c, "rating must be between 1 and 5")
+		default:
+			h.logger.Error("failed to submit review", zap.Error(err))
+			response.ServerError(c, "failed to submit review")
+		}
+		return
+	}
+
+	response.OK(c, result)
 }
