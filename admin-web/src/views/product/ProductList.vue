@@ -92,8 +92,11 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { adminApi } from '@/api/request'
+
+const router = useRouter()
 
 interface Product {
   id: number
@@ -162,13 +165,11 @@ async function loadProducts() {
 }
 
 function handleCreate() {
-  // TODO: navigate to product form
-  ElMessage.info('产品创建功能开发中')
+  router.push('/products/create')
 }
 
 function handleEdit(row: Product) {
-  // TODO: navigate to product edit form
-  ElMessage.info(`编辑产品 ${row.product_no}`)
+  router.push(`/products/edit/${row.id}`)
 }
 
 async function handleSubmitReview(row: Product) {

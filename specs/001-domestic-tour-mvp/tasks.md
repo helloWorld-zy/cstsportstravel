@@ -235,20 +235,20 @@
 
 ### Backend API
 
-- [ ] T106 [US5] Implement admin product repository in `internal/admin/repository/product_repo.go` — Create, Update, FindByID (with all relations), FindWithFilters, UpdateStatus
-- [ ] T107 [US5] Implement admin product service in `internal/admin/service/product.go` — CreateProduct (validates required fields, generates product_no DOM-{code}-{date}-{seq}), UpdateProduct (triggers re-review for key fields per PRD §6.1.1), SubmitForReview, ApproveProduct, RejectProduct
-- [ ] T108 [US5] Implement itinerary service in `internal/admin/service/itinerary.go` — SaveItinerary (per-day cards with spots/meals/hotel/transport), load from template
-- [ ] T109 [US5] Implement price calendar service in `internal/admin/service/price_calendar.go` — SetDailyPrice (adult/child/infant/single_supplement), BatchUpdatePrices (5 modes: fixed/percent/amount/formula/follow per PRD §6.1.9), holiday template management
-- [ ] T110 [US5] Implement departure/inventory service in `internal/admin/service/departure.go` — CreateDeparture, UpdateStock, GetStockStatus, manual stock adjustment with reason
-- [ ] T111 [US5] Implement admin product handler in `internal/admin/handler/product.go` — CRUD endpoints + review workflow + departure management + batch pricing per admin-api.yaml
-- [ ] T112 [US5] Implement product review workflow in `internal/admin/service/review.go` — submit review, approve (status→approved), reject (require reason), change review for key field edits
+- [x] T106 [US5] Implement admin product repository in `internal/admin/repository/product_repo.go` — Create, Update, FindByID (with all relations), FindWithFilters, UpdateStatus
+- [x] T107 [US5] Implement admin product service in `internal/admin/service/product.go` — CreateProduct (validates required fields, generates product_no DOM-{code}-{date}-{seq}), UpdateProduct (triggers re-review for key fields per PRD §6.1.1), SubmitForReview, ApproveProduct, RejectProduct
+- [x] T108 [US5] Implement itinerary service in `internal/admin/service/itinerary.go` — SaveItinerary (per-day cards with spots/meals/hotel/transport), load from template
+- [x] T109 [US5] Implement price calendar service in `internal/admin/service/price_calendar.go` — SetDailyPrice (adult/child/infant/single_supplement), BatchUpdatePrices (5 modes: fixed/percent/amount/formula/follow per PRD §6.1.9), holiday template management
+- [x] T110 [US5] Implement departure/inventory service in `internal/admin/service/departure.go` — CreateDeparture, UpdateStock, GetStockStatus, manual stock adjustment with reason
+- [x] T111 [US5] Implement admin product handler in `internal/admin/handler/product.go` — CRUD endpoints + review workflow + departure management + batch pricing per admin-api.yaml
+- [x] T112 [US5] Implement product review workflow in `internal/admin/service/review.go` — submit review, approve (status→approved), reject (require reason), change review for key field edits
 
 ### Frontend - Admin (Vue 3)
 
-- [ ] T113 [US5] Create product form page at `admin-web/src/views/product/ProductForm.vue` — multi-step form (基础信息→行程编辑→价格配置→退改规则→库存设置), step validation, save draft
-- [ ] T114 [US5] Create itinerary editor component in `admin-web/src/components/ItineraryEditor.vue` — day cards (auto-generated from days count), per-day form (title/description/spots selector/meals/hotel/transport/images), drag-to-reorder, template save/load
-- [ ] T115 [US5] Create price calendar component in `admin-web/src/components/PriceCalendar.vue` — month grid view, per-cell display (adult price/stock status/special marker), inline edit, batch update dialog (5 modes), holiday template application
-- [ ] T116 [US5] Create product review page at `admin-web/src/views/product/ProductReview.vue` — review queue list, product detail preview, approve/reject actions with reason input
+- [x] T113 [US5] Create product form page at `admin-web/src/views/product/ProductForm.vue` — multi-step form (基础信息→行程编辑→价格配置→退改规则→库存设置), step validation, save draft
+- [x] T114 [US5] Create itinerary editor component in `admin-web/src/components/ItineraryEditor.vue` — day cards (auto-generated from days count), per-day form (title/description/spots selector/meals/hotel/transport/images), drag-to-reorder, template save/load
+- [x] T115 [US5] Create price calendar component in `admin-web/src/components/PriceCalendar.vue` — month grid view, per-cell display (adult price/stock status/special marker), inline edit, batch update dialog (5 modes), holiday template application
+- [x] T116 [US5] Create product review page at `admin-web/src/views/product/ProductReview.vue` — review queue list, product detail preview, approve/reject actions with reason input
 
 **Checkpoint**: Supplier can create product with itinerary and pricing, submit for review. Operator can review and approve. Price calendar and batch pricing work. Approved product visible on C端.
 

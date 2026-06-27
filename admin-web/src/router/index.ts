@@ -31,6 +31,24 @@ const dynamicRoutes: RouteRecordRaw[] = [
         meta: { title: '产品管理', permission: 'product:list' },
       },
       {
+        path: 'products/create',
+        name: 'ProductCreate',
+        component: () => import('@/views/product/ProductForm.vue'),
+        meta: { title: '发布产品', permission: 'product:create' },
+      },
+      {
+        path: 'products/edit/:id',
+        name: 'ProductEdit',
+        component: () => import('@/views/product/ProductForm.vue'),
+        meta: { title: '编辑产品', permission: 'product:update' },
+      },
+      {
+        path: 'products/review',
+        name: 'ProductReview',
+        component: () => import('@/views/product/ProductReview.vue'),
+        meta: { title: '产品审核', permission: 'product:approve' },
+      },
+      {
         path: 'orders',
         name: 'OrderList',
         component: () => import('@/views/order/OrderList.vue'),

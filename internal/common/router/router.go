@@ -17,6 +17,7 @@ import (
 
 	adminhandler "github.com/travel-booking/server/internal/admin/handler"
 	adminrepo "github.com/travel-booking/server/internal/admin/repository"
+	adminservice "github.com/travel-booking/server/internal/admin/service"
 	"github.com/travel-booking/server/internal/common/cache"
 	"github.com/travel-booking/server/internal/common/config"
 	"github.com/travel-booking/server/internal/common/encrypt"
@@ -130,6 +131,17 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 	// Admin domain handlers
 	adminUserRepo := adminrepo.NewAdminUserRepository(r.DB)
 	adminAuthH := adminhandler.NewAdminAuthHandler(adminUserRepo, r.JWTManager, r.Logger)
+
+	// Admin product management services and handler (US5 - Phase 7)
+	adminProdRepo := adminrepo.NewAdminProductRepository(r.DB)
+	adminProdSvc := adminservice.NewAdminProductService(adminProdRepo, r.Logger)
+	adminItinSvc := adminservice.NewItineraryService(adminProdRepo, r.Logger)
+	adminPriceSvc := adminservice.NewPriceCalendarService(adminProdRepo, r.Logger)
+	adminDeptSvc := adminservice.NewDepartureService(adminProdRepo, r.Logger)
+	adminReviewSvc := adminservice.NewReviewService(adminProdRepo, r.Logger)
+	adminProdH := adminhandler.NewAdminProductHandler(
+		adminProdSvc, adminItinSvc, adminPriceSvc, adminDeptSvc, adminReviewSvc, r.Logger,
+	)
 
 	// Product domain services and handlers
 	catRepo := productrepo.NewCategoryRepository(r.DB)
@@ -258,15 +270,21 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 		adminProd := admin.Group("/products")
 		adminProd.Use(middleware.RBACAny("product:list", "product:manage"))
 		{
-			adminProd.GET("", placeholder("admin list products"))
-			adminProd.POST("", middleware.RBACRequired("product:create"), placeholder("admin create product"))
-			adminProd.PUT("/:id", middleware.RBACRequired("product:update"), placeholder("admin update product"))
-			adminProd.POST("/:id/submit-review", middleware.RBACRequired("product:submit"), placeholder("submit for review"))
-			adminProd.PUT("/:id/approve", middleware.RBACRequired("product:approve"), placeholder("approve product"))
-			adminProd.PUT("/:id/reject", middleware.RBACRequired("product:reject"), placeholder("reject product"))
-			adminProd.PUT("/:id/suspend", middleware.RBACRequired("product:suspend"), placeholder("suspend product"))
-			adminProd.GET("/:id/departures", placeholder("admin list departures"))
-			adminProd.PUT("/:id/departures/batch-price", middleware.RBACRequired("product:price"), placeholder("batch price update"))
+			// Review queue (must be before /:id routes to avoid conflict)
+			adminProd.GET("/review-queue", middleware.RBACAny("product:approve", "product:manage"), adminProdH.ListReviewQueue)
+
+			adminProd.GET("", adminProdH.ListProducts)
+			adminProd.POST("", middleware.RBACRequired("product:create"), adminProdH.CreateProduct)
+			adminProd.PUT("/:id", middleware.RBACRequired("product:update"), adminProdH.UpdateProduct)
+			adminProd.POST("/:id/submit-review", middleware.RBACRequired("product:submit"), adminProdH.SubmitForReview)
+			adminProd.PUT("/:id/approve", middleware.RBACRequired("product:approve"), adminProdH.ApproveProduct)
+			adminProd.PUT("/:id/reject", middleware.RBACRequired("product:reject"), adminProdH.RejectProduct)
+			adminProd.PUT("/:id/suspend", middleware.RBACRequired("product:suspend"), adminProdH.SuspendProduct)
+			adminProd.GET("/:id/departures", adminProdH.ListDepartures)
+			adminProd.POST("/:id/departures", middleware.RBACRequired("product:update"), adminProdH.CreateDepartures)
+			adminProd.PUT("/:id/departures/batch-price", middleware.RBACRequired("product:price"), adminProdH.BatchPriceUpdate)
+			adminProd.GET("/:id/itinerary", adminProdH.GetItinerary)
+			adminProd.POST("/:id/itinerary", middleware.RBACRequired("product:update"), adminProdH.SaveItinerary)
 		}
 
 		// Order management
