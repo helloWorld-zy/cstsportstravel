@@ -13,8 +13,11 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "@tanstack/vue-query": "^5.0.0",
+    "@element-plus/nuxt": "^1.1.5",
+    "@pinia/nuxt": "^0.11.3",
+    "@tanstack/vue-query": "^5.101.1",
     "@vueuse/core": "^12.0.0",
+    "@vueuse/nuxt": "^14.3.0",
     "axios": "^1.7.0",
     "dayjs": "^1.11.0",
     "element-plus": "^2.9.0",
@@ -25,7 +28,7 @@
   },
   "devDependencies": {
     "@nuxt/devtools": "^2.0.0",
-    "@nuxtjs/eslint-config-typescript": "^13.0.0",
+    "@nuxtjs/eslint-config-typescript": "^12.1.0",
     "eslint": "^9.0.0",
     "prettier": "^3.4.0",
     "typescript": "^5.7.0"

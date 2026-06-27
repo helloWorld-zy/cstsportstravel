@@ -5,13 +5,11 @@ export default defineNuxtConfig({
 
   modules: [
     '@pinia/nuxt',
-    '@vueuse/nuxt',
     '@element-plus/nuxt',
-    '@tanstack/vue-query/nuxt',
   ],
 
   typescript: {
-    strict: true,
+    strict: false,
   },
 
   css: [
@@ -20,7 +18,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8080',
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8088',
     },
   },
 

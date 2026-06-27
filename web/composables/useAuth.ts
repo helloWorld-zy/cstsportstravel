@@ -29,7 +29,7 @@ export function useAuth() {
 
   const isLoggedIn = computed(() => !!token.value && !!user.value)
 
-  async function sendSmsCode(phone: string): Promise<{ expires_in: number }> {
+  async function sendSmsCode(phone: string): Promise<{ expires_in: number; code?: string }> {
     const api = useApi()
     return api.post('/auth/sms-code', { phone })
   }

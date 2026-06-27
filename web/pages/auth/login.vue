@@ -79,8 +79,14 @@ async function sendCode() {
 
   sendingCode.value = true
   try {
-    await sendSmsCode(form.phone)
-    ElMessage.success('验证码已发送')
+    const result = await sendSmsCode(form.phone)
+    if (result.code) {
+      // Dev/test mode: code returned directly
+      ElMessage({ message: `验证码: ${result.code}`, type: 'success', duration: 10000 })
+      form.code = result.code
+    } else {
+      ElMessage.success('验证码已发送')
+    }
     countdown.value = 60
     timer = setInterval(() => {
       countdown.value--
