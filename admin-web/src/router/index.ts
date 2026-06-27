@@ -55,6 +55,24 @@ const dynamicRoutes: RouteRecordRaw[] = [
         meta: { title: '订单管理', permission: 'order:list' },
       },
       {
+        path: 'orders/:id',
+        name: 'OrderDetail',
+        component: () => import('@/views/order/OrderDetail.vue'),
+        meta: { title: '订单详情', permission: 'order:list' },
+      },
+      {
+        path: 'refunds',
+        name: 'RefundReview',
+        component: () => import('@/views/order/RefundReview.vue'),
+        meta: { title: '退款审核', permission: 'refund:list' },
+      },
+      {
+        path: 'config/cancellation-rules',
+        name: 'CancellationRule',
+        component: () => import('@/views/config/CancellationRule.vue'),
+        meta: { title: '退改规则', permission: 'cancel_rule:list' },
+      },
+      {
         path: 'system/users',
         name: 'UserManage',
         component: () => import('@/views/system/UserManage.vue'),

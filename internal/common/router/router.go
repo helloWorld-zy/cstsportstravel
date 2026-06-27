@@ -143,6 +143,12 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 		adminProdSvc, adminItinSvc, adminPriceSvc, adminDeptSvc, adminReviewSvc, r.Logger,
 	)
 
+	// Admin order/refund management services and handler (US6 - Phase 8)
+	adminOrdSvc := adminservice.NewAdminOrderService(r.DB, r.Logger)
+	adminRefundSvc := adminservice.NewAdminRefundReviewService(r.DB, r.Logger)
+	adminCancelSvc := adminservice.NewCancellationRuleService(r.DB, r.Logger)
+	adminOrdH := adminhandler.NewAdminOrderHandler(adminOrdSvc, adminRefundSvc, adminCancelSvc, r.Logger)
+
 	// Product domain services and handlers
 	catRepo := productrepo.NewCategoryRepository(r.DB)
 	prodRepo := productrepo.NewProductRepository(r.DB)
@@ -291,17 +297,18 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 		adminOrder := admin.Group("/orders")
 		adminOrder.Use(middleware.RBACAny("order:list", "order:manage"))
 		{
-			adminOrder.GET("", placeholder("admin list orders"))
-			adminOrder.GET("/:id", placeholder("admin get order"))
+			adminOrder.GET("", adminOrdH.ListOrders)
+			adminOrder.GET("/:id", adminOrdH.GetOrderDetail)
 		}
 
 		// Refund management
 		adminRefund := admin.Group("/refunds")
 		adminRefund.Use(middleware.RBACAny("refund:list", "refund:manage"))
 		{
-			adminRefund.GET("", placeholder("admin list refunds"))
-			adminRefund.PUT("/:id/approve", middleware.RBACRequired("refund:approve"), placeholder("approve refund"))
-			adminRefund.PUT("/:id/reject", middleware.RBACRequired("refund:reject"), placeholder("reject refund"))
+			adminRefund.GET("", adminOrdH.ListRefunds)
+			adminRefund.GET("/:id", adminOrdH.GetRefundDetail)
+			adminRefund.PUT("/:id/approve", middleware.RBACRequired("refund:approve"), adminOrdH.ApproveRefund)
+			adminRefund.PUT("/:id/reject", middleware.RBACRequired("refund:reject"), adminOrdH.RejectRefund)
 		}
 
 		// User management
@@ -329,8 +336,10 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 		adminCancel := admin.Group("/cancellation-rules")
 		adminCancel.Use(middleware.RBACAny("cancel_rule:list", "cancel_rule:manage"))
 		{
-			adminCancel.GET("", placeholder("list cancellation rules"))
-			adminCancel.POST("", middleware.RBACRequired("cancel_rule:create"), placeholder("create cancellation rule"))
+			adminCancel.GET("", adminOrdH.ListCancellationRules)
+			adminCancel.GET("/defaults", adminOrdH.GetDefaultCancellationRules)
+			adminCancel.POST("", middleware.RBACRequired("cancel_rule:create"), adminOrdH.CreateCancellationRules)
+			adminCancel.POST("/assign", middleware.RBACRequired("cancel_rule:manage"), adminOrdH.AssignCancellationTemplate)
 		}
 	}
 }

@@ -262,17 +262,17 @@
 
 ### Backend API
 
-- [ ] T117 [US6] Implement admin order service in `internal/admin/service/order.go` — ListOrders (multi-dimension filters), GetOrderDetail (with all relations), ExportOrders (async for >1000 rows)
-- [ ] T118 [US6] Implement admin refund review service in `internal/admin/service/refund_review.go` — ListRefundRequests, ReviewRefund (approve/reject), tiered approval logic (≤1000: operator, 1000-5000: finance supervisor, >5000: director per spec clarification)
-- [ ] T119 [US6] Implement cancellation rule template service in `internal/admin/service/cancellation_rule.go` — CRUD for refund_rule templates, assign template to product
-- [ ] T120 [US6] Implement admin order handler in `internal/admin/handler/order.go` — order list/detail/export, refund list/approve/reject, cancellation rule CRUD per admin-api.yaml
+- [x] T117 [US6] Implement admin order service in `internal/admin/service/order.go` — ListOrders (multi-dimension filters), GetOrderDetail (with all relations), ExportOrders (async for >1000 rows)
+- [x] T118 [US6] Implement admin refund review service in `internal/admin/service/refund_review.go` — ListRefundRequests, ReviewRefund (approve/reject), tiered approval logic (≤1000: operator, 1000-5000: finance supervisor, >5000: director per spec clarification)
+- [x] T119 [US6] Implement cancellation rule template service in `internal/admin/service/cancellation_rule.go` — CRUD for refund_rule templates, assign template to product
+- [x] T120 [US6] Implement admin order handler in `internal/admin/handler/order.go` — order list/detail/export, refund list/approve/reject, cancellation rule CRUD per admin-api.yaml
 
 ### Frontend - Admin (Vue 3)
 
-- [ ] T121 [US6] Create admin order list page at `admin-web/src/views/order/OrderList.vue` — order table with multi-dimension filters (order no/phone/status/date/product/supplier), sort, pagination, export button
-- [ ] T122 [US6] Create admin order detail page at `admin-web/src/views/order/OrderDetail.vue` — full order info (product/travellers/fees/payments/status log), refund section
-- [ ] T123 [US6] Create refund review page at `admin-web/src/views/order/RefundReview.vue` — refund request list, detail view (refund amount calculation/cancellation rule match/occurred fees), approve/reject with reason, tiered approval indicator
-- [ ] T124 [US6] Create cancellation rule editor at `admin-web/src/views/config/CancellationRule.vue` — tiered rate editor (days range → refund percentage rows), template save/load, assign to products
+- [x] T121 [US6] Create admin order list page at `admin-web/src/views/order/OrderList.vue` — order table with multi-dimension filters (order no/phone/status/date/product/supplier), sort, pagination, export button
+- [x] T122 [US6] Create admin order detail page at `admin-web/src/views/order/OrderDetail.vue` — full order info (product/travellers/fees/payments/status log), refund section
+- [x] T123 [US6] Create refund review page at `admin-web/src/views/order/RefundReview.vue` — refund request list, detail view (refund amount calculation/cancellation rule match/occurred fees), approve/reject with reason, tiered approval indicator
+- [x] T124 [US6] Create cancellation rule editor at `admin-web/src/views/config/CancellationRule.vue` — tiered rate editor (days range → refund percentage rows), template save/load, assign to products
 
 **Checkpoint**: Operator can search orders, review refunds with correct approval tiers, configure cancellation rule templates.
 
