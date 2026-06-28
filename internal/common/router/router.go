@@ -130,7 +130,13 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 
 	// Admin domain handlers
 	adminUserRepo := adminrepo.NewAdminUserRepository(r.DB)
+	adminRoleRepo := adminrepo.NewRoleRepository(r.DB)
+	adminPermRepo := adminrepo.NewPermissionRepository(r.DB)
 	adminAuthH := adminhandler.NewAdminAuthHandler(adminUserRepo, r.JWTManager, r.Logger)
+
+	// RBAC service and handler (US7 - Phase 9)
+	rbacSvc := adminservice.NewRBACService(adminUserRepo, adminRoleRepo, adminPermRepo, r.Logger)
+	rbacH := adminhandler.NewRBACHandler(rbacSvc, r.Logger)
 
 	// Admin product management services and handler (US5 - Phase 7)
 	adminProdRepo := adminrepo.NewAdminProductRepository(r.DB)
@@ -272,9 +278,10 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 		// Admin user info
 		admin.GET("/users/me", adminAuthH.GetAdminMe)
 
-		// Product management
+		// Product management (with supplier data isolation)
 		adminProd := admin.Group("/products")
 		adminProd.Use(middleware.RBACAny("product:list", "product:manage"))
+		adminProd.Use(middleware.SupplierDataIsolation())
 		{
 			// Review queue (must be before /:id routes to avoid conflict)
 			adminProd.GET("/review-queue", middleware.RBACAny("product:approve", "product:manage"), adminProdH.ListReviewQueue)
@@ -293,9 +300,10 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 			adminProd.POST("/:id/itinerary", middleware.RBACRequired("product:update"), adminProdH.SaveItinerary)
 		}
 
-		// Order management
+		// Order management (with supplier data isolation)
 		adminOrder := admin.Group("/orders")
 		adminOrder.Use(middleware.RBACAny("order:list", "order:manage"))
+		adminOrder.Use(middleware.SupplierDataIsolation())
 		{
 			adminOrder.GET("", adminOrdH.ListOrders)
 			adminOrder.GET("/:id", adminOrdH.GetOrderDetail)
@@ -311,26 +319,35 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 			adminRefund.PUT("/:id/reject", middleware.RBACRequired("refund:reject"), adminOrdH.RejectRefund)
 		}
 
-		// User management
+		// User management (US7)
 		adminUser := admin.Group("/users")
 		adminUser.Use(middleware.RBACRequired("user:manage"))
 		{
-			adminUser.GET("", placeholder("admin list users"))
-			adminUser.POST("", placeholder("admin create user"))
-			adminUser.PUT("/:id/status", placeholder("admin update user status"))
+			adminUser.GET("", rbacH.ListUsers)
+			adminUser.POST("", rbacH.CreateUser)
+			adminUser.PUT("/:id/status", rbacH.UpdateUserStatus)
+			adminUser.PUT("/:id/roles", rbacH.UpdateUserRoles)
 		}
 
-		// Role management
+		// Role management (US7)
 		adminRole := admin.Group("/roles")
 		adminRole.Use(middleware.RBACRequired("role:manage"))
 		{
-			adminRole.GET("", placeholder("admin list roles"))
-			adminRole.POST("", placeholder("admin create role"))
-			adminRole.PUT("/:id", placeholder("admin update role"))
+			adminRole.GET("", rbacH.ListRoles)
+			adminRole.POST("", rbacH.CreateRole)
+			adminRole.PUT("/:id", rbacH.UpdateRole)
 		}
 
-		// Menu management
-		admin.GET("/menus", middleware.RBACRequired("menu:list"), placeholder("admin get menus"))
+		// Menu and permission tree (US7)
+		admin.GET("/menus", middleware.RBACRequired("menu:list"), rbacH.GetMenuTree)
+		admin.GET("/permissions", middleware.RBACRequired("permission:list"), rbacH.GetPermissionTree)
+
+		// MFA enrollment and verification (US7 - FR-030)
+		adminMfa := admin.Group("/mfa")
+		{
+			adminMfa.POST("/setup", rbacH.MFASetup)
+			adminMfa.POST("/verify", rbacH.MFAVerify)
+		}
 
 		// Cancellation rule management
 		adminCancel := admin.Group("/cancellation-rules")

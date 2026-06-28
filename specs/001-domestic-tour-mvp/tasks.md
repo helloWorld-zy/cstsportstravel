@@ -286,19 +286,19 @@
 
 ### Backend API
 
-- [ ] T125 [US7] Implement admin user repository in `internal/admin/repository/admin_user_repo.go` — CRUD, FindByUsername, UpdatePassword (Argon2id), UpdateStatus
-- [ ] T126 [US7] Implement role repository in `internal/admin/repository/role_repo.go` — CRUD, AssignPermissions, AssignMenus
-- [ ] T127 [US7] Implement permission repository in `internal/admin/repository/permission_repo.go` — FindAll (tree structure), FindByRoleID
-- [ ] T128 [US7] Implement RBAC service in `internal/admin/service/rbac.go` — CreateUser (with initial password, force change on first login), CreateRole, AssignPermissions, GetUserPermissions, GetMenuTree (filtered by user role)
-- [ ] T129 [US7] Implement admin user/role/permission handler in `internal/admin/handler/rbac.go` — user CRUD, role CRUD, permission list, menu tree per admin-api.yaml
-- [ ] T130 [US7] Implement supplier data isolation in `internal/common/middleware/data_permission.go` — middleware that filters queries by supplier_id for supplier role users
+- [x] T125 [US7] Implement admin user repository in `internal/admin/repository/admin_user_repo.go` — CRUD, FindByUsername, UpdatePassword (Argon2id), UpdateStatus
+- [x] T126 [US7] Implement role repository in `internal/admin/repository/role_repo.go` — CRUD, AssignPermissions, AssignMenus
+- [x] T127 [US7] Implement permission repository in `internal/admin/repository/permission_repo.go` — FindAll (tree structure), FindByRoleID
+- [x] T128 [US7] Implement RBAC service in `internal/admin/service/rbac.go` — CreateUser (with initial password, force change on first login), CreateRole, AssignPermissions, GetUserPermissions, GetMenuTree (filtered by user role)
+- [x] T129 [US7] Implement admin user/role/permission handler in `internal/admin/handler/rbac.go` — user CRUD, role CRUD, permission list, menu tree per admin-api.yaml
+- [x] T130 [US7] Implement supplier data isolation in `internal/common/middleware/data_permission.go` — middleware that filters queries by supplier_id for supplier role users
 
 ### Frontend - Admin (Vue 3)
 
-- [ ] T131 [US7] Create user management page at `admin-web/src/views/system/UserManage.vue` — user list (username/phone/role/status), create user dialog (info+role selection), freeze/unfreeze actions, password reset
-- [ ] T132 [US7] Create role management page at `admin-web/src/views/system/RoleManage.vue` — role list, create/edit role dialog, permission assignment (tree checkbox for function+button+API permissions)
-- [ ] T133 [US7] Create permission tree editor component in `admin-web/src/components/PermissionTree.vue` — tree structure with checkboxes, group by menu/button/API type, select all/none
-- [ ] T133b [US7] Create MFA enrollment and verification components in `admin-web/src/components/MfaSetup.vue` and `admin-web/src/components/MfaVerify.vue` — TOTP QR code display for enrollment, 6-digit code input for verification, used before sensitive operations (refund approval, permission changes, data export) per FR-030
+- [x] T131 [US7] Create user management page at `admin-web/src/views/system/UserManage.vue` — user list (username/phone/role/status), create user dialog (info+role selection), freeze/unfreeze actions, password reset
+- [x] T132 [US7] Create role management page at `admin-web/src/views/system/RoleManage.vue` — role list, create/edit role dialog, permission assignment (tree checkbox for function+button+API permissions)
+- [x] T133 [US7] Create permission tree editor component in `admin-web/src/components/PermissionTree.vue` — tree structure with checkboxes, group by menu/button/API type, select all/none
+- [x] T133b [US7] Create MFA enrollment and verification components in `admin-web/src/components/MfaSetup.vue` and `admin-web/src/components/MfaVerify.vue` — TOTP QR code display for enrollment, 6-digit code input for verification, used before sensitive operations (refund approval, permission changes, data export) per FR-030
 
 **Checkpoint**: Admin can create users with roles, users see only authorized menus, supplier data isolation works.
 

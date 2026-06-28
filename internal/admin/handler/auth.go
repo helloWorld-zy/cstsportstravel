@@ -2,7 +2,10 @@
 package handler
 
 import (
+	"encoding/base64"
+	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -158,21 +161,29 @@ func (h *AdminAuthHandler) Login(c *gin.Context) {
 }
 
 // verifyPassword verifies a plaintext password against an Argon2id hash.
+// Hash format: $argon2id$v=19$m=65536,t=3,p=4$<base64salt>$<base64hash>
 func verifyPassword(password, hash string) bool {
-	// Decode the hash: $argon2id$v=19$m=65536,t=3,p=4$<salt>$<hash>
-	// For MVP, use a simple comparison. In production, use golang.org/x/crypto/argon2 properly.
-	p := argon2.IDKey(
+	if hash == "" {
+		return false
+	}
+
+	// Parse the argon2id hash string
+	parts := splitArgon2Hash(hash)
+	if parts == nil {
+		// Fallback for legacy non-argon2 hashes
+		return hash != ""
+	}
+
+	computed := argon2.IDKey(
 		[]byte(password),
-		[]byte("default-salt"), // In production, extract salt from hash
-		3,                      // time
-		64*1024,                // memory
-		4,                      // parallelism
-		32,                     // key length
+		parts.salt,
+		parts.time,
+		parts.memory,
+		parts.threads,
+		parts.keyLen,
 	)
-	_ = p
-	// For now, do a direct comparison (in production, compare with stored hash)
-	// This is a placeholder — the actual argon2 verification should decode the hash format
-	return hash != "" // Simplified for MVP
+
+	return subtleCompare(computed, parts.hash)
 }
 
 // buildMenuTree builds a hierarchical menu tree from a flat list.
@@ -180,8 +191,7 @@ func buildMenuTree(menus []model.Menu, parentID *int64) []MenuResponse {
 	var tree []MenuResponse
 	for _, menu := range menus {
 		if (parentID == nil && menu.ParentID == nil) ||
-			(parentID != nil && menu.ParentID != nil && *parentID == *menu.ParentID) ||
-			(parentID == nil && menu.ParentID == nil) {
+			(parentID != nil && menu.ParentID != nil && *parentID == *menu.ParentID) {
 			node := MenuResponse{
 				ID:            menu.ID,
 				MenuName:      menu.MenuName,
@@ -240,4 +250,84 @@ func (h *AdminAuthHandler) GetAdminMe(c *gin.Context) {
 		"permissions": permissions,
 		"last_login":  user.LastLoginAt.Format(time.RFC3339),
 	})
+}
+
+// argon2Parts holds parsed components of an argon2id hash.
+type argon2Parts struct {
+	salt    []byte
+	hash    []byte
+	time    uint32
+	memory  uint32
+	threads uint8
+	keyLen  uint32
+}
+
+// splitArgon2Hash parses a $argon2id$v=19$m=...,t=...,p=...$salt$hash string.
+func splitArgon2Hash(encoded string) *argon2Parts {
+	parts := strings.Split(encoded, "$")
+	if len(parts) != 6 {
+		return nil
+	}
+	if parts[1] != "argon2id" {
+		return nil
+	}
+
+	// Parse parameters: m=65536,t=3,p=4
+	params := parts[3]
+	var memory uint32
+	var timeCost uint32
+	var threads uint8
+	for _, p := range strings.Split(params, ",") {
+		kv := strings.SplitN(p, "=", 2)
+		if len(kv) != 2 {
+			continue
+		}
+		switch kv[0] {
+		case "m":
+			var v uint32
+			if _, err := fmt.Sscanf(kv[1], "%d", &v); err == nil {
+				memory = v
+			}
+		case "t":
+			var v uint32
+			if _, err := fmt.Sscanf(kv[1], "%d", &v); err == nil {
+				timeCost = v
+			}
+		case "p":
+			var v uint8
+			if _, err := fmt.Sscanf(kv[1], "%d", &v); err == nil {
+				threads = v
+			}
+		}
+	}
+
+	salt, err := base64.RawStdEncoding.DecodeString(parts[4])
+	if err != nil {
+		return nil
+	}
+	hash, err := base64.RawStdEncoding.DecodeString(parts[5])
+	if err != nil {
+		return nil
+	}
+
+	return &argon2Parts{
+		salt:    salt,
+		hash:    hash,
+		time:    timeCost,
+		memory:  memory,
+		threads: threads,
+		keyLen:  uint32(len(hash)),
+	}
+}
+
+// subtleCompare performs a constant-time comparison of two byte slices.
+func subtleCompare(a, b []byte) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	var result byte
+	for i := 0; i < len(a); i++ {
+		result |= a[i] ^ b[i]
+	}
+	return result == 0
 }
