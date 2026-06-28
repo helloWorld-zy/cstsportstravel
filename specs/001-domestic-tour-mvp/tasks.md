@@ -323,15 +323,15 @@
 
 **Purpose**: End-to-end verification, security compliance, performance baseline
 
-- [ ] T140 Write integration test for user registration→login→real-name flow in `tests/integration/user_test.go`
-- [ ] T141 Write integration test for product listing→detail→booking→payment flow in `tests/integration/booking_test.go`
-- [ ] T142 Write integration test for order→refund flow with cancellation rule calculation in `tests/integration/refund_test.go`
-- [ ] T143 Write integration test for payment callback idempotency in `tests/integration/payment_test.go`
-- [ ] T144 [P] Verify TLS 1.3 configuration in Traefik config, ensure all HTTP redirects to HTTPS
-- [ ] T145 [P] Verify AES-256-GCM field encryption for id_card_no and phone in user_account and order_traveller tables — check encrypted storage and masked API responses
-- [ ] T146 [P] Verify audit log coverage — ensure all POST/PUT/DELETE operations generate audit_log entries with correct fields
-- [ ] T147 [P] Verify password policy — Argon2id hashing, 8+ chars with complexity, 90-day expiry, 5-failure lockout
-- [ ] T148 Run quickstart.md validation scenarios VS1-VS8 and verify all pass
+- [x] T140 Write integration test for user registration→login→real-name flow in `tests/integration/user_test.go`
+- [x] T141 Write integration test for product listing→detail→booking→payment flow in `tests/integration/booking_test.go`
+- [x] T142 Write integration test for order→refund flow with cancellation rule calculation in `tests/integration/refund_test.go`
+- [x] T143 Write integration test for payment callback idempotency in `tests/integration/payment_test.go`
+- [x] T144 [P] Verify TLS 1.3 configuration in Traefik config, ensure all HTTP redirects to HTTPS
+- [x] T145 [P] Verify AES-256-GCM field encryption for id_card_no and phone in user_account and order_traveller tables — check encrypted storage and masked API responses
+- [x] T146 [P] Verify audit log coverage — ensure all POST/PUT/DELETE operations generate audit_log entries with correct fields
+- [x] T147 [P] Verify password policy — Argon2id hashing, 8+ chars with complexity, 90-day expiry, 5-failure lockout
+- [x] T148 Run quickstart.md validation scenarios VS1-VS8 and verify all pass
 
 **Checkpoint**: All integration tests pass, security checklist complete, quickstart scenarios verified
 
