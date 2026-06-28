@@ -341,15 +341,15 @@
 
 **Purpose**: Production deployment setup
 
-- [ ] T149 Create WinSW service configuration `deploy/winsw/travel-api-service.xml` with auto-start, auto-restart on failure, log capture
-- [ ] T150 Create Traefik configuration `deploy/traefik/traefik.yml` with TLS 1.3, route rules for API/Web/Admin, rate limiting, health checks
-- [ ] T151 Create GitHub Actions CI/CD pipeline `.github/workflows/ci.yml` — Go build (CGO_ENABLED=0), lint (golangci-lint), test, frontend build, artifact upload
-- [ ] T152 Create deployment script `deploy/scripts/deploy.ps1` — download artifact, stop service, replace binary, start service, health check verification
-- [ ] T153 [P] Create Prometheus metrics endpoint in `internal/common/middleware/metrics.go` — HTTP request duration, count, error rate, business metrics (order count, payment success rate)
-- [ ] T154 [P] Create database backup script `deploy/scripts/backup.ps1` — pg_basebackup daily, WAL archival every 15min, encrypted storage
-- [ ] T155 [P] Create Grafana dashboard configuration `deploy/grafana/dashboards/` — infrastructure dashboard (CPU/memory/disk/network per node), application dashboard (QPS/P99 latency/error rate/goroutine count per service), business dashboard (order volume/payment success rate/refund rate/active users) per PRD §10.4.2
-- [ ] T156 [P] Create Prometheus alerting rules `deploy/prometheus/alert-rules.yml` — P1 alerts (DB connection >80%, replication lag >5s, error rate >1% for 5min, payment success <95% for 10min) with phone+SMS+DingTalk notification; P2 alerts (CPU >80% for 10min, memory >85% for 10min, disk >80%) with SMS+DingTalk notification per PRD §10.4.2 table 9-5
-- [ ] T157 [P] Create Windows Exporter installation script `deploy/scripts/setup-exporter.ps1` — install Windows Exporter (MSI, port 9182) for system-level metrics collection by Prometheus
+- [x] T149 Create WinSW service configuration `deploy/winsw/travel-api-service.xml` with auto-start, auto-restart on failure, log capture
+- [x] T150 Create Traefik configuration `deploy/traefik/traefik.yml` with TLS 1.3, route rules for API/Web/Admin, rate limiting, health checks
+- [x] T151 Create GitHub Actions CI/CD pipeline `.github/workflows/ci.yml` — Go build (CGO_ENABLED=0), lint (golangci-lint), test, frontend build, artifact upload
+- [x] T152 Create deployment script `deploy/scripts/deploy.ps1` — download artifact, stop service, replace binary, start service, health check verification
+- [x] T153 [P] Create Prometheus metrics endpoint in `internal/common/middleware/metrics.go` — HTTP request duration, count, error rate, business metrics (order count, payment success rate)
+- [x] T154 [P] Create database backup script `deploy/scripts/backup.ps1` — pg_basebackup daily, WAL archival every 15min, encrypted storage
+- [x] T155 [P] Create Grafana dashboard configuration `deploy/grafana/dashboards/` — infrastructure dashboard (CPU/memory/disk/network per node), application dashboard (QPS/P99 latency/error rate/goroutine count per service), business dashboard (order volume/payment success rate/refund rate/active users) per PRD §10.4.2
+- [x] T156 [P] Create Prometheus alerting rules `deploy/prometheus/alert-rules.yml` — P1 alerts (DB connection >80%, replication lag >5s, error rate >1% for 5min, payment success <95% for 10min) with phone+SMS+DingTalk notification; P2 alerts (CPU >80% for 10min, memory >85% for 10min, disk >80%) with SMS+DingTalk notification per PRD §10.4.2 table 9-5
+- [x] T157 [P] Create Windows Exporter installation script `deploy/scripts/setup-exporter.ps1` — install Windows Exporter (MSI, port 9182) for system-level metrics collection by Prometheus
 
 **Checkpoint**: Service runs as Windows service, Traefik routes correctly, CI/CD pipeline builds and deploys, monitoring operational
 

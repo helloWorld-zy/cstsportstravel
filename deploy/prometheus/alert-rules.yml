@@ -1,0 +1,242 @@
+# Prometheus Alert Rules — Travel Booking OTA Platform
+#
+# Covers all 16 monitoring metrics from PRD §10.4.2 Table 9-5.
+#
+# Alert Levels:
+#   P1 (Critical): Phone + SMS + DingTalk notification
+#     - Directly impacts user experience / service availability
+#   P2 (Warning): SMS + DingTalk notification
+#     - Requires attention but not yet affecting service
+#
+# Layers:
+#   Infrastructure: CPU, Memory, Disk
+#   Middleware: Database, Cache, Message Queue
+#   Application: QPS, P99 latency, Error rate
+#   Business: Orders, Payment success, Refund rate, Security
+
+groups:
+  # ──────────────────────────────────────────────
+  # P1 Critical Alerts — Phone + SMS + DingTalk
+  # ──────────────────────────────────────────────
+  - name: travel-booking-p1-critical
+    interval: 15s
+    rules:
+      # Middleware: Database — Active connections > 80%
+      - alert: DatabaseConnectionPoolHigh
+        expr: travel_active_connections > 80
+        for: 1m
+        labels:
+          severity: critical
+          team: backend
+          alert_level: P1
+        annotations:
+          summary: "数据库连接池使用率超过 80%"
+          description: "当前活跃连接数: {{ $value }}，超过阈值 80%。可能导致请求排队或超时。"
+          runbook_url: "https://wiki.travel-booking.example.com/runbooks/db-connection-pool"
+
+      # Middleware: Database — Replication lag > 5s
+      - alert: DatabaseReplicationLag
+        expr: pg_replication_lag_seconds > 5
+        for: 15s
+        labels:
+          severity: critical
+          team: backend
+          alert_level: P1
+        annotations:
+          summary: "数据库主从复制延迟超过 5 秒"
+          description: "当前复制延迟: {{ $value }}s。读取数据可能不一致。"
+          runbook_url: "https://wiki.travel-booking.example.com/runbooks/db-replication-lag"
+
+      # Middleware: Message Queue — NATS consumer backlog > 1000 for 5min
+      - alert: NATSConsumerBacklog
+        expr: nats_consumer_pending_messages > 1000
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+          alert_level: P1
+        annotations:
+          summary: "NATS 消费者积压消息超过 1000"
+          description: "当前积压: {{ $value }} 条消息，持续 5 分钟。消息处理可能延迟。"
+          runbook_url: "https://wiki.travel-booking.example.com/runbooks/nats-backlog"
+
+      # Application: Performance — Service QPS < 50% baseline for 5min
+      - alert: ServiceQPSCrash
+        expr: sum(rate(travel_http_requests_total[5m])) < 25
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+          alert_level: P1
+        annotations:
+          summary: "服务 QPS 异常下降至基线 50% 以下"
+          description: "当前 QPS: {{ $value | printf \"%.1f\" }}，持续 5 分钟低于基线。可能存在服务故障。"
+          runbook_url: "https://wiki.travel-booking.example.com/runbooks/qps-crash"
+
+      # Application: Performance — P99 response time > 1s for 5min
+      - alert: HighP99Latency
+        expr: histogram_quantile(0.99, sum(rate(travel_http_request_duration_seconds_bucket[5m])) by (le)) > 1
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+          alert_level: P1
+        annotations:
+          summary: "P99 响应时间超过 1 秒"
+          description: "当前 P99: {{ $value | printf \"%.2f\" }}s，持续 5 分钟。用户体验严重受损。"
+          runbook_url: "https://wiki.travel-booking.example.com/runbooks/high-latency"
+
+      # Application: Stability — Error rate > 1% for 5min
+      - alert: HighErrorRate
+        expr: sum(rate(travel_http_request_errors_total[5m])) / sum(rate(travel_http_requests_total[5m])) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+          alert_level: P1
+        annotations:
+          summary: "5xx 错误率超过 1%"
+          description: "当前错误率: {{ $value | humanizePercentage }}，持续 5 分钟。可能存在严重故障。"
+          runbook_url: "https://wiki.travel-booking.example.com/runbooks/high-error-rate"
+
+      # Business: Transactions — Orders per minute < 50% baseline for 15min
+      - alert: OrderVolumeDrop
+        expr: sum(rate(travel_orders_total[1m])) < 0.5
+        for: 15m
+        labels:
+          severity: critical
+          team: business
+          alert_level: P1
+        annotations:
+          summary: "每分钟订单量异常下降"
+          description: "当前每分钟订单数: {{ $value | printf \"%.1f\" }}，持续 15 分钟低于基线。可能存在下单流程故障。"
+          runbook_url: "https://wiki.travel-booking.example.com/runbooks/order-volume-drop"
+
+      # Business: Transactions — Payment success rate < 95% for 10min
+      - alert: PaymentSuccessRateLow
+        expr: >
+          sum(rate(travel_payments_success_total[10m]))
+          / (sum(rate(travel_payments_success_total[10m])) + sum(rate(travel_payments_failure_total[10m])))
+          < 0.95
+        for: 10m
+        labels:
+          severity: critical
+          team: business
+          alert_level: P1
+        annotations:
+          summary: "支付成功率低于 95%"
+          description: "当前支付成功率: {{ $value | humanizePercentage }}，持续 10 分钟。直接影响资金安全。"
+          runbook_url: "https://wiki.travel-booking.example.com/runbooks/payment-success-rate"
+
+  # ──────────────────────────────────────────────
+  # P2 Warning Alerts — SMS + DingTalk
+  # ──────────────────────────────────────────────
+  - name: travel-booking-p2-warning
+    interval: 15s
+    rules:
+      # Infrastructure: CPU — > 80% for 10min
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(windows_cpu_time_total{mode="idle"}[5m])) * 100) > 80
+        for: 10m
+        labels:
+          severity: warning
+          team: infra
+          alert_level: P2
+        annotations:
+          summary: "CPU 使用率超过 80%"
+          description: "主机 {{ $labels.instance }} CPU 使用率: {{ $value | printf \"%.1f\" }}%，持续 10 分钟。"
+          runbook_url: "https://wiki.travel-booking.example.com/runbooks/high-cpu"
+
+      # Infrastructure: Memory — > 85% for 10min
+      - alert: HighMemoryUsage
+        expr: (1 - (windows_memory_available_bytes / windows_os_physical_memory_bytes)) * 100 > 85
+        for: 10m
+        labels:
+          severity: warning
+          team: infra
+          alert_level: P2
+        annotations:
+          summary: "内存使用率超过 85%"
+          description: "主机 {{ $labels.instance }} 内存使用率: {{ $value | printf \"%.1f\" }}%，持续 10 分钟。"
+          runbook_url: "https://wiki.travel-booking.example.com/runbooks/high-memory"
+
+      # Infrastructure: Disk — > 80%
+      - alert: HighDiskUsage
+        expr: (1 - (windows_logical_disk_free_bytes / windows_logical_disk_size_bytes)) * 100 > 80
+        for: 1m
+        labels:
+          severity: warning
+          team: infra
+          alert_level: P2
+        annotations:
+          summary: "磁盘使用率超过 80%"
+          description: "主机 {{ $labels.instance }} 卷 {{ $labels.volume }} 使用率: {{ $value | printf \"%.1f\" }}%。"
+          runbook_url: "https://wiki.travel-booking.example.com/runbooks/high-disk"
+
+      # Middleware: Database — Slow queries > 10/min
+      - alert: DatabaseSlowQueries
+        expr: rate(pg_slow_queries_total[1m]) > 10
+        for: 1m
+        labels:
+          severity: warning
+          team: backend
+          alert_level: P2
+        annotations:
+          summary: "数据库慢查询超过 10 次/分钟"
+          description: "当前慢查询速率: {{ $value | printf \"%.0f\" }} 次/分钟。请检查查询优化和索引。"
+          runbook_url: "https://wiki.travel-booking.example.com/runbooks/slow-queries"
+
+      # Middleware: Cache — Redis memory usage > 85%
+      - alert: RedisMemoryHigh
+        expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 85
+        for: 1m
+        labels:
+          severity: warning
+          team: backend
+          alert_level: P2
+        annotations:
+          summary: "Redis 内存使用率超过 85%"
+          description: "当前 Redis 内存使用率: {{ $value | printf \"%.1f\" }}%。"
+          runbook_url: "https://wiki.travel-booking.example.com/runbooks/redis-memory"
+
+      # Business: Transactions — Refund rate > 20% for 30min
+      - alert: HighRefundRate
+        expr: >
+          sum(rate(travel_refunds_total[30m]))
+          / sum(rate(travel_orders_total[30m]))
+          > 0.20
+        for: 30m
+        labels:
+          severity: warning
+          team: business
+          alert_level: P2
+        annotations:
+          summary: "退款率超过 20%"
+          description: "当前退款率: {{ $value | humanizePercentage }}，持续 30 分钟。可能存在产品或供应商问题。"
+          runbook_url: "https://wiki.travel-booking.example.com/runbooks/high-refund-rate"
+
+      # Business: Security — Login failures > 100 in 5min
+      - alert: HighLoginFailures
+        expr: sum(increase(travel_http_requests_total{path=~".*login.*",status=~"4.."}[5m])) > 100
+        for: 1m
+        labels:
+          severity: warning
+          team: security
+          alert_level: P2
+        annotations:
+          summary: "5 分钟内登录失败超过 100 次"
+          description: "可能遭受暴力破解攻击。当前失败次数: {{ $value | printf \"%.0f\" }}。"
+          runbook_url: "https://wiki.travel-booking.example.com/runbooks/login-attacks"
+
+      # Business: Security — ERROR logs > 100 in 5min
+      - alert: HighErrorLogRate
+        expr: sum(increase(travel_http_request_errors_total[5m])) > 100
+        for: 1m
+        labels:
+          severity: warning
+          team: backend
+          alert_level: P2
+        annotations:
+          summary: "5 分钟内 ERROR 日志超过 100 条"
+          description: "当前错误日志数: {{ $value | printf \"%.0f\" }}。可能存在系统异常。"
+          runbook_url: "https://wiki.travel-booking.example.com/runbooks/error-logs"

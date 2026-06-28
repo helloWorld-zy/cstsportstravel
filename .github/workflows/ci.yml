@@ -1,0 +1,281 @@
+# GitHub Actions CI/CD Pipeline
+# Travel Booking OTA Platform
+#
+# Triggers on push/PR to main branch.
+# Jobs: lint → test → build → artifact upload
+# Go binary built with CGO_ENABLED=0 for static linking (Constitution constraint).
+
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  GO_VERSION: "1.26"
+  NODE_VERSION: "20"
+
+permissions:
+  contents: read
+
+jobs:
+  # ──────────────────────────────────────────────
+  # Lint — Go + Frontend
+  # ──────────────────────────────────────────────
+  lint:
+    name: Lint
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download Go dependencies
+        run: go mod download
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout=5m
+
+      - name: Set up Node.js (for web frontend lint)
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Lint web frontend
+        working-directory: web
+        run: |
+          npm ci
+          npm run lint
+
+      - name: Lint admin frontend
+        working-directory: admin-web
+        run: |
+          npm ci
+          npm run lint
+
+  # ──────────────────────────────────────────────
+  # Test — Go unit + integration tests
+  # ──────────────────────────────────────────────
+  test:
+    name: Test
+    runs-on: windows-latest
+    needs: lint
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: travel_booking_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis:
+        image: redis:7.2
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download Go dependencies
+        run: go mod download
+
+      - name: Run database migrations
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/travel_booking_test?sslmode=disable
+        run: |
+          go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+          migrate -path migrations -database "$env:DATABASE_URL" up
+        shell: pwsh
+
+      - name: Run unit tests
+        env:
+          TRAVEL_DB_HOST: localhost
+          TRAVEL_DB_PORT: "5432"
+          TRAVEL_DB_USER: postgres
+          TRAVEL_DB_PASSWORD: postgres
+          TRAVEL_DB_NAME: travel_booking_test
+          TRAVEL_DB_SSLMODE: disable
+          TRAVEL_REDIS_ADDR: localhost:6379
+          TRAVEL_SERVER_MODE: test
+        run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.out
+          retention-days: 7
+
+  # ──────────────────────────────────────────────
+  # Build — Go binary + Frontend assets
+  # ──────────────────────────────────────────────
+  build:
+    name: Build
+    runs-on: windows-latest
+    needs: test
+    strategy:
+      matrix:
+        include:
+          - goos: windows
+            goarch: amd64
+            suffix: ".exe"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download Go dependencies
+        run: go mod download
+
+      - name: Build Go binary (static, CGO_ENABLED=0)
+        env:
+          CGO_ENABLED: "0"
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          go build -ldflags="-s -w" -trimpath -o build/travel-api${{ matrix.suffix }} ./cmd/server
+        shell: bash
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Build web frontend
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build admin frontend
+        working-directory: admin-web
+        run: |
+          npm ci
+          npm run build
+
+      - name: Prepare deployment artifact
+        shell: pwsh
+        run: |
+          $artifactDir = "build/artifact"
+          New-Item -ItemType Directory -Force -Path $artifactDir
+
+          # Binary
+          Copy-Item "build/travel-api${{ matrix.suffix }}" $artifactDir
+
+          # Config
+          Copy-Item -Recurse "configs" "$artifactDir/configs"
+
+          # Migrations
+          Copy-Item -Recurse "migrations" "$artifactDir/migrations"
+
+          # WinSW config
+          Copy-Item -Recurse "deploy/winsw" "$artifactDir/winsw"
+
+          # Deploy scripts
+          Copy-Item -Recurse "deploy/scripts" "$artifactDir/scripts"
+
+          # Monitoring configs
+          Copy-Item -Recurse "deploy/prometheus" "$artifactDir/prometheus" -ErrorAction SilentlyContinue
+          Copy-Item -Recurse "deploy/grafana" "$artifactDir/grafana" -ErrorAction SilentlyContinue
+
+          # Frontend build outputs
+          Copy-Item -Recurse "web/.output" "$artifactDir/web-output" -ErrorAction SilentlyContinue
+          Copy-Item -Recurse "admin-web/dist" "$artifactDir/admin-dist" -ErrorAction SilentlyContinue
+
+      - name: Upload deployment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: travel-api-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: build/artifact
+          retention-days: 30
+
+  # ──────────────────────────────────────────────
+  # Deploy — production deployment (main branch only)
+  # ──────────────────────────────────────────────
+  deploy:
+    name: Deploy
+    runs-on: windows-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    steps:
+      - name: Download deployment artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: travel-api-windows-amd64
+          path: artifact
+
+      - name: Deploy to production
+        shell: pwsh
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PASSWORD: ${{ secrets.DEPLOY_PASSWORD }}
+        run: |
+          # Copy artifact to deploy host and run deploy script
+          # In production, use SSH/WinRM or a deployment agent
+          Write-Host "Deploying to production..."
+          # Placeholder: actual deployment logic depends on infrastructure
+          # See deploy/scripts/deploy.ps1 for the deployment script
+          Write-Host "Deployment complete."

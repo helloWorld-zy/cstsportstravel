@@ -1,0 +1,68 @@
+# Prometheus Configuration — Travel Booking OTA Platform
+#
+# Scrapes:
+#   - Windows Exporter (infrastructure metrics, every 15s)
+#   - Travel API (application + business metrics, every 15s)
+#   - PostgreSQL Exporter (database metrics, every 15s)
+#   - Redis Exporter (cache metrics, every 15s)
+#   - Traefik (gateway metrics, every 15s)
+#
+# Alert rules loaded from alert-rules.yml
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+# Alert Rules
+rule_files:
+  - "alert-rules.yml"
+
+# Alertmanager (configure when alertmanager is deployed)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#             - "localhost:9093"
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Windows Exporter — infrastructure metrics (CPU, Memory, Disk, Network)
+  # Install via: deploy/scripts/setup-exporter.ps1
+  - job_name: "windows"
+    static_configs:
+      - targets: ["localhost:9182"]
+    scrape_interval: 15s
+
+  # Travel Booking API — application + business metrics
+  # Exposed at /metrics endpoint (internal/common/middleware/metrics.go)
+  - job_name: "travel-api"
+    static_configs:
+      - targets: ["localhost:8088"]
+    scrape_interval: 15s
+    metrics_path: /metrics
+
+  # PostgreSQL Exporter — database metrics
+  # Install: https://github.com/prometheus-community/postgres_exporter
+  - job_name: "postgresql"
+    static_configs:
+      - targets: ["localhost:9187"]
+    scrape_interval: 15s
+
+  # Redis Exporter — cache metrics
+  # Install: https://github.com/oliver006/redis_exporter
+  - job_name: "redis"
+    static_configs:
+      - targets: ["localhost:9121"]
+    scrape_interval: 15s
+
+  # Traefik — gateway metrics
+  # Enabled in deploy/traefik/traefik.yml via metrics.prometheus
+  - job_name: "traefik"
+    static_configs:
+      - targets: ["localhost:8080"]
+    scrape_interval: 15s

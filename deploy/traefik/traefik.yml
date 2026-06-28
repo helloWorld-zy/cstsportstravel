@@ -1,0 +1,101 @@
+# Traefik v3.x Static Configuration
+# Travel Booking OTA Platform - API Gateway
+#
+# TLS 1.3 enforced, HTTP→HTTPS redirect, rate limiting, health checks
+
+# API and Dashboard (disable in production or secure with auth)
+api:
+  dashboard: false
+  insecure: false
+
+# Entry Points
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    address: ":443"
+    http:
+      tls:
+        certResolver: letsencrypt
+        # Enforce TLS 1.3 minimum
+        options: default
+    # Rate limiting at entry point level
+    http:
+      middlewares:
+        - rate-limit@file
+
+# TLS Options — enforce TLS 1.3
+tls:
+  options:
+    default:
+      minVersion: VersionTLS13
+      maxVersion: VersionTLS13
+      cipherSuites:
+        - TLS_AES_256_GCM_SHA384
+        - TLS_CHACHA20_POLY1305_SHA256
+        - TLS_AES_128_GCM_SHA256
+      sniStrict: true
+      curvePreferences:
+        - X25519
+        - CurveP384
+
+# Certificate Resolvers — Let's Encrypt (production)
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: admin@travel-booking.example.com
+      storage: /etc/traefik/acme/acme.json
+      httpChallenge:
+        entryPoint: web
+      # Uncomment for testing (avoid rate limits)
+      # caServer: https://acme-staging-v02.api.letsencrypt.org/directory
+
+# Providers — file-based configuration for services and middlewares
+providers:
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+# Health Check (Traefik itself)
+ping:
+  entryPoint: websecure
+
+# Access Logging
+accessLog:
+  filePath: /var/log/traefik/access.log
+  format:
+    json: true
+  filters:
+    statusCodes:
+      - "200-299"
+      - "400-599"
+    retryAttempts: true
+
+# Logging
+log:
+  level: INFO
+  filePath: /var/log/traefik/traefik.log
+  format:
+    json: true
+
+# Metrics — Prometheus endpoint for Traefik's own metrics
+metrics:
+  prometheus:
+    entryPoint: websecure
+    addEntryPointsLabels: true
+    addRoutersLabels: true
+    addServicesLabels: true
+    buckets:
+      - 0.01
+      - 0.05
+      - 0.1
+      - 0.3
+      - 0.5
+      - 1.0
+      - 5.0

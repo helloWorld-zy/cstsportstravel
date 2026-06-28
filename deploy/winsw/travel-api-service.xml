@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  WinSW service configuration for Travel Booking API Server.
+  Install:  travel-api-service.exe install
+  Uninstall: travel-api-service.exe uninstall
+  Start:    travel-api-service.exe start
+  Stop:     travel-api-service.exe stop
+-->
+<service>
+  <!-- Service identification -->
+  <id>travel-api</id>
+  <name>Travel Booking API Server</name>
+  <description>Travel Booking OTA Platform - API Server (Go monolith)</description>
+
+  <!-- Executable and arguments -->
+  <executable>%BASE%\travel-api.exe</executable>
+  <arguments>--config %BASE%\configs\config.production.yaml</arguments>
+  <workingdirectory>%BASE%</workingdirectory>
+
+  <!-- Startup type: automatic (starts with Windows) -->
+  <starttype>automatic</starttype>
+
+  <!-- Service account: LocalSystem for minimum privilege setup -->
+  <!-- For production, consider a dedicated service account with DB/network access -->
+  <serviceaccount>
+    <domain>NT AUTHORITY</domain>
+    <user>LocalService</user>
+    <allowservicelogon>true</allowservicelogon>
+  </serviceaccount>
+
+  <!-- Auto-restart on failure: restart after 10s, 30s, 60s (exponential backoff) -->
+  <onfailure action="restart" delay="10 sec" />
+  <onfailure action="restart" delay="30 sec" />
+  <onfailure action="restart" delay="60 sec" />
+  <onfailure action="none" />
+  <resetfailure>1 hour</resetfailure>
+
+  <!-- Logging: capture stdout/stderr to rolling log files -->
+  <log mode="roll-by-size">
+    <sizeThreshold>10240</sizeThreshold>
+    <keepFiles>10</keepFiles>
+  </log>
+  <logpath>%BASE%\logs\service</logpath>
+
+  <!-- Environment variables for production -->
+  <env name="TRAVEL_SERVER_MODE" value="production" />
+  <env name="TRAVEL_DB_HOST" value="%TRAVEL_DB_HOST%" />
+  <env name="TRAVEL_DB_PORT" value="%TRAVEL_DB_PORT%" />
+  <env name="TRAVEL_DB_PASSWORD" value="%TRAVEL_DB_PASSWORD%" />
+  <env name="TRAVEL_REDIS_ADDR" value="%TRAVEL_REDIS_ADDR%" />
+  <env name="TRAVEL_REDIS_PASSWORD" value="%TRAVEL_REDIS_PASSWORD%" />
+  <env name="TRAVEL_JWT_PRIVATE_KEY_PATH" value="%BASE%\certs\jwt_private.pem" />
+  <env name="TRAVEL_JWT_PUBLIC_KEY_PATH" value="%BASE%\certs\jwt_public.pem" />
+  <env name="TRAVEL_ENCRYPTION_KEY" value="%TRAVEL_ENCRYPTION_KEY%" />
+  <env name="TRAVEL_SIGNING_SECRET" value="%TRAVEL_SIGNING_SECRET%" />
+</service>

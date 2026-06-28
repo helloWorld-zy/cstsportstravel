@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
@@ -41,12 +43,14 @@ import (
 
 // Router holds all route groups and shared dependencies.
 type Router struct {
-	Engine      *gin.Engine
-	JWTManager  *middleware.JWTManager
-	DB          *gorm.DB
-	Redis       *cache.Redis
-	Config      *config.Config
-	Logger      *zap.Logger
+	Engine          *gin.Engine
+	JWTManager      *middleware.JWTManager
+	DB              *gorm.DB
+	Redis           *cache.Redis
+	Config          *config.Config
+	Logger          *zap.Logger
+	MetricsRegistry *prometheus.Registry
+	BusinessMetrics *middleware.BusinessMetrics
 }
 
 // New creates a new Router with all middleware and route groups configured.
@@ -71,6 +75,16 @@ func New(cfg *config.Config, db *gorm.DB, rdb *cache.Redis, jwtManager *middlewa
 		Logger:     log,
 	}
 
+	// Prometheus metrics registry
+	metricsRegistry := prometheus.NewRegistry()
+	metricsMW := middleware.NewMetricsMiddleware(metricsRegistry)
+	businessMetrics := middleware.NewBusinessMetrics(metricsRegistry)
+	rr.MetricsRegistry = metricsRegistry
+	rr.BusinessMetrics = businessMetrics
+
+	// Apply metrics middleware globally (before other middleware)
+	engine.Use(metricsMW.Handler())
+
 	// Health check endpoints (no auth, no rate limit)
 	rr.setupHealthRoutes()
 
@@ -80,8 +94,16 @@ func New(cfg *config.Config, db *gorm.DB, rdb *cache.Redis, jwtManager *middlewa
 	return rr
 }
 
-// setupHealthRoutes registers /health and /ready endpoints.
+// setupHealthRoutes registers /health, /ready, and /metrics endpoints.
 func (r *Router) setupHealthRoutes() {
+	// Prometheus metrics endpoint (internal access only)
+	r.Engine.GET("/metrics", gin.WrapH(promhttp.HandlerFor(
+		r.MetricsRegistry,
+		promhttp.HandlerOpts{
+			EnableOpenMetrics: true,
+		},
+	)))
+
 	r.Engine.GET("/health", func(c *gin.Context) {
 		ctx := c.Request.Context()
 		if err := r.Redis.HealthCheck(ctx); err != nil {

@@ -1,0 +1,208 @@
+# Traefik Dynamic Configuration — Service Routes & Middlewares
+# Travel Booking OTA Platform
+
+http:
+  # ──────────────────────────────────────────────
+  # Middlewares
+  # ──────────────────────────────────────────────
+  middlewares:
+    # Rate limiting: 100 req/s per client IP, burst 200
+    rate-limit:
+      rateLimit:
+        average: 100
+        burst: 200
+        period: 1s
+        sourceCriterion:
+          ipStrategy:
+            depth: 1  # trust 1 proxy (Traefik itself)
+
+    # Rate limiting for auth endpoints: stricter (10 req/s)
+    rate-limit-auth:
+      rateLimit:
+        average: 10
+        burst: 20
+        period: 1s
+        sourceCriterion:
+          ipStrategy:
+            depth: 1
+
+    # Rate limiting for payment endpoints: moderate (50 req/s)
+    rate-limit-payment:
+      rateLimit:
+        average: 50
+        burst: 100
+        period: 1s
+        sourceCriterion:
+          ipStrategy:
+            depth: 1
+
+    # Security headers
+    security-headers:
+      headers:
+        frameDeny: true
+        contentTypeNosniff: true
+        browserXssFilter: true
+        referrerPolicy: strict-origin-when-cross-origin
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        customResponseHeaders:
+          X-Powered-By: ""
+          Server: ""
+
+    # CORS for API endpoints
+    cors-api:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - PATCH
+          - OPTIONS
+        accessControlAllowHeaders:
+          - Content-Type
+          - Authorization
+          - X-Trace-ID
+          - X-TOTP-Code
+          - X-SMS-Code
+          - X-Signature
+          - X-Timestamp
+          - X-Nonce
+        accessControlAllowOriginList:
+          - "https://www.travel-booking.example.com"
+          - "https://admin.travel-booking.example.com"
+        accessControlMaxAge: 86400
+        accessControlExposeHeaders:
+          - X-Trace-ID
+
+    # Health check for backend services
+    health-check:
+      circuitBreaker:
+        expression: "LatencyAtQuantileMS(50.0) > 1000 || NetworkErrorRatio() > 0.30"
+
+  # ──────────────────────────────────────────────
+  # Routers
+  # ──────────────────────────────────────────────
+  routers:
+    # API Server — all /api/* routes
+    api-router:
+      rule: "Host(`api.travel-booking.example.com`) && PathPrefix(`/api`)"
+      service: api-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - rate-limit
+        - security-headers
+        - cors-api
+        - health-check
+      tls:
+        certResolver: letsencrypt
+
+    # API Auth endpoints — stricter rate limit
+    api-auth-router:
+      rule: "Host(`api.travel-booking.example.com`) && PathPrefix(`/api/v1/auth`)"
+      service: api-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - rate-limit-auth
+        - security-headers
+        - cors-api
+      tls:
+        certResolver: letsencrypt
+
+    # API Payment endpoints — moderate rate limit
+    api-payment-router:
+      rule: "Host(`api.travel-booking.example.com`) && PathPrefix(`/api/v1/payments`)"
+      service: api-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - rate-limit-payment
+        - security-headers
+        - cors-api
+      tls:
+        certResolver: letsencrypt
+
+    # Web Sales Platform (Nuxt.js SSR)
+    web-router:
+      rule: "Host(`www.travel-booking.example.com`) || Host(`travel-booking.example.com`)"
+      service: web-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - security-headers
+      tls:
+        certResolver: letsencrypt
+
+    # Admin System (Vue 3 SPA)
+    admin-router:
+      rule: "Host(`admin.travel-booking.example.com`)"
+      service: admin-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - rate-limit
+        - security-headers
+      tls:
+        certResolver: letsencrypt
+
+    # Health check endpoint (no auth, accessible from internal network)
+    health-router:
+      rule: "Host(`api.travel-booking.example.com`) && (Path(`/health`) || Path(`/ready`))"
+      service: api-service
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+
+    # Prometheus metrics endpoint (internal only)
+    metrics-router:
+      rule: "Host(`api.travel-booking.example.com`) && Path(`/metrics`)"
+      service: api-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - security-headers
+      tls:
+        certResolver: letsencrypt
+
+  # ──────────────────────────────────────────────
+  # Services
+  # ──────────────────────────────────────────────
+  services:
+    # Go API server (travel-api Windows service)
+    api-service:
+      loadBalancer:
+        servers:
+          - url: "http://localhost:8088"
+        healthCheck:
+          path: /health
+          interval: 10s
+          timeout: 3s
+        sticky:
+          cookie:
+            name: api-sticky
+            secure: true
+            httpOnly: true
+
+    # Nuxt.js web platform
+    web-service:
+      loadBalancer:
+        servers:
+          - url: "http://localhost:3000"
+        healthCheck:
+          path: /
+          interval: 15s
+          timeout: 5s
+
+    # Vue 3 admin system
+    admin-service:
+      loadBalancer:
+        servers:
+          - url: "http://localhost:3001"
+        healthCheck:
+          path: /
+          interval: 15s
+          timeout: 5s

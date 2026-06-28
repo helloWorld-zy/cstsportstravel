@@ -1,0 +1,15 @@
+# Grafana Dashboard Provisioning
+# Auto-loads dashboard JSON files from the dashboards directory
+
+apiVersion: 1
+
+providers:
+  - name: "Travel Booking"
+    orgId: 1
+    folder: "Travel Booking"
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 60
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: false

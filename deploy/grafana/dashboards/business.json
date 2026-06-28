@@ -1,0 +1,321 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Business metrics: Order volume, Payment success rate, Refund rate, Active users (PRD §10.4.2)",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "title": "Orders per Minute",
+      "description": "Order creation rate. Alert: <50% baseline for 15min (P1)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "lineWidth": 1
+          },
+          "unit": "cpm"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(travel_orders_total[1m]))",
+          "legendFormat": "Orders/min",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Payment Success Rate",
+      "description": "Successful payments / Total payments. Alert: <95% for 10min (P1)",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 90 },
+              { "color": "yellow", "value": 95 },
+              { "color": "green", "value": 99 }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(travel_payments_success_total[10m])) / (sum(rate(travel_payments_success_total[10m])) + sum(rate(travel_payments_failure_total[10m]))) * 100",
+          "legendFormat": "Success Rate",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Refund Rate",
+      "description": "Refund requests as % of orders. Alert: >20% for 30min (P2)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "thresholdsStyle": { "mode": "line" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 20 }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(travel_refunds_total[30m])) / sum(rate(travel_orders_total[30m])) * 100",
+          "legendFormat": "Refund Rate %",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Payment Channels",
+      "description": "Success/failure by payment channel (Alipay, WeChat)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "stacking": { "mode": "normal" }
+          },
+          "unit": "short"
+        }
+      },
+      "targets": [
+        {
+          "expr": "increase(travel_payments_success_total[1h])",
+          "legendFormat": "success {{channel}}",
+          "refId": "A"
+        },
+        {
+          "expr": "increase(travel_payments_failure_total[1h])",
+          "legendFormat": "failure {{channel}}",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "title": "Payment Processing Duration",
+      "description": "Time to complete payment operations",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2
+          },
+          "unit": "s"
+        }
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(travel_payment_duration_seconds_bucket[5m])) by (le, channel))",
+          "legendFormat": "p95 {{channel}}",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(travel_payment_duration_seconds_bucket[5m])) by (le, channel))",
+          "legendFormat": "p50 {{channel}}",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "title": "Orders by Product Type",
+      "description": "Order distribution by product category",
+      "type": "piechart",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right" },
+        "pieType": "donut"
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(travel_orders_total[24h])) by (product_type)",
+          "legendFormat": "{{product_type}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Refund Reasons",
+      "description": "Refund requests by reason category",
+      "type": "piechart",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right" },
+        "pieType": "donut"
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(travel_refunds_total[24h])) by (reason)",
+          "legendFormat": "{{reason}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Cumulative Orders (24h)",
+      "description": "Total orders in the last 24 hours",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(travel_orders_total[24h]))",
+          "legendFormat": "Orders",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Cumulative Revenue (24h)",
+      "description": "Successful payments in the last 24 hours",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(travel_payments_success_total[24h]))",
+          "legendFormat": "Payments",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Login Failures (5min)",
+      "description": "Failed login attempts. Alert: >100 in 5min (P2)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "lineWidth": 1,
+            "thresholdsStyle": { "mode": "line" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 100 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(travel_http_requests_total{path=~\".*login.*\",status=~\"4..\"}[5m]))",
+          "legendFormat": "Login Failures",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "ERROR Logs (5min)",
+      "description": "ERROR log entries. Alert: >100 in 5min (P2)",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 100 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(travel_http_request_errors_total[5m]))",
+          "legendFormat": "Errors",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": ["business", "orders", "payments", "travel-booking"],
+  "templating": { "list": [] },
+  "time": { "from": "now-24h", "to": "now" },
+  "timepicker": {},
+  "timezone": "Asia/Shanghai",
+  "title": "Business - Travel Booking",
+  "uid": "travel-business",
+  "version": 1
+}
