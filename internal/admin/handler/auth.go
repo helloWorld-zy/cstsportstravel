@@ -2,7 +2,9 @@
 package handler
 
 import (
+	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"strings"
@@ -14,6 +16,7 @@ import (
 
 	"github.com/travel-booking/server/internal/admin/model"
 	"github.com/travel-booking/server/internal/admin/repository"
+	"github.com/travel-booking/server/internal/admin/service"
 	"github.com/travel-booking/server/internal/common/middleware"
 	"github.com/travel-booking/server/internal/common/response"
 )
@@ -46,10 +49,13 @@ type LoginRequest struct {
 
 // LoginResponse is the response for a successful admin login.
 type LoginResponse struct {
-	User        *AdminUserResponse `json:"user"`
-	AccessToken string             `json:"access_token"`
-	Permissions []string           `json:"permissions"`
-	Menus       []MenuResponse     `json:"menus"`
+	User                 *AdminUserResponse `json:"user"`
+	AccessToken          string             `json:"access_token"`
+	Permissions          []string           `json:"permissions"`
+	Menus                []MenuResponse     `json:"menus"`
+	PasswordChangeRequired bool             `json:"password_change_required"`
+	PasswordDaysLeft     int                `json:"password_days_left,omitempty"`
+	PasswordWarning      bool               `json:"password_warning,omitempty"`
 }
 
 // AdminUserResponse is the public representation of an admin user.
@@ -90,8 +96,17 @@ func (h *AdminAuthHandler) Login(c *gin.Context) {
 
 	// Check status
 	if user.Status == model.AdminStatusLocked {
-		response.Fail(c, http.StatusLocked, response.CodeTooManyReq, "account is locked")
-		return
+		// Check if lock period has expired (auto-unlock)
+		if user.LockedUntil != nil && time.Now().After(*user.LockedUntil) {
+			// Lock expired — auto-unlock
+			user.Status = model.AdminStatusActive
+			user.LoginFailCount = 0
+			user.LockedUntil = nil
+			h.repo.Update(user)
+		} else {
+			response.Fail(c, http.StatusLocked, response.CodeTooManyReq, "account is locked")
+			return
+		}
 	}
 	if user.Status == model.AdminStatusDisabled {
 		response.Unauthorized(c, "account is disabled")
@@ -101,8 +116,43 @@ func (h *AdminAuthHandler) Login(c *gin.Context) {
 	// Verify password using Argon2id
 	if !verifyPassword(req.Password, user.PasswordHash) {
 		h.logger.Warn("admin login failed: wrong password", zap.String("username", req.Username))
+
+		// Increment login failure counter (FR-006)
+		failCount, incrErr := h.repo.IncrementLoginFailCount(
+			user.ID, service.MaxLoginAttempts, service.LoginLockDuration,
+		)
+		if incrErr != nil {
+			h.logger.Error("failed to increment login fail count", zap.Error(incrErr))
+		}
+
+		if service.ShouldLockAccount(failCount, service.MaxLoginAttempts) {
+			h.logger.Warn("admin account locked due to too many failed attempts",
+				zap.String("username", req.Username),
+				zap.Int("fail_count", failCount),
+			)
+			response.Fail(c, http.StatusLocked, response.CodeTooManyReq,
+				"account locked due to too many failed attempts, try again in 15 minutes")
+			return
+		}
+
 		response.Unauthorized(c, "invalid username or password")
 		return
+	}
+
+	// Reset login failure counter on successful login (FR-006)
+	if err := h.repo.ResetLoginFailCount(user.ID); err != nil {
+		h.logger.Error("failed to reset login fail count", zap.Error(err))
+	}
+
+	// Check password expiry and must_change_password flag (FR-005)
+	expiryResult := service.CheckPasswordExpiry(user.PasswordChangedAt, user.MustChangePassword)
+	if expiryResult.Expired || expiryResult.ForceChange {
+		// Still issue token but flag that password change is required
+		h.logger.Info("admin login: password change required",
+			zap.Int64("user_id", user.ID),
+			zap.Bool("expired", expiryResult.Expired),
+			zap.Bool("force_change", expiryResult.ForceChange),
+		)
 	}
 
 	// Collect permissions and roles from all assigned roles
@@ -147,17 +197,22 @@ func (h *AdminAuthHandler) Login(c *gin.Context) {
 	// Build menu tree
 	menuTree := buildMenuTree(menus, nil)
 
-	response.OK(c, LoginResponse{
+	resp := LoginResponse{
 		User: &AdminUserResponse{
 			ID:                user.ID,
 			Username:          user.Username,
 			RealName:          user.RealName,
 			MustChangePassword: user.MustChangePassword,
 		},
-		AccessToken: accessToken,
-		Permissions: permissions,
-		Menus:       menuTree,
-	})
+		AccessToken:            accessToken,
+		Permissions:            permissions,
+		Menus:                  menuTree,
+		PasswordChangeRequired: expiryResult.Expired || expiryResult.ForceChange,
+		PasswordDaysLeft:       expiryResult.DaysLeft,
+		PasswordWarning:        expiryResult.Warning,
+	}
+
+	response.OK(c, resp)
 }
 
 // verifyPassword verifies a plaintext password against an Argon2id hash.
@@ -318,6 +373,74 @@ func splitArgon2Hash(encoded string) *argon2Parts {
 		threads: threads,
 		keyLen:  uint32(len(hash)),
 	}
+}
+
+// ChangePassword handles POST /api/v1/auth/admin/change-password.
+// Allows an authenticated admin to change their password.
+// Validates new password complexity per FR-005.
+func (h *AdminAuthHandler) ChangePassword(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		response.Unauthorized(c, "authentication required")
+		return
+	}
+
+	var req struct {
+		OldPassword string `json:"old_password" binding:"required"`
+		NewPassword string `json:"new_password" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "old_password and new_password are required")
+		return
+	}
+
+	// Validate new password complexity (FR-005)
+	if err := service.ValidatePasswordComplexity(req.NewPassword); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	// Find user
+	user, err := h.repo.FindByID(userID)
+	if err != nil {
+		response.NotFound(c, "user not found")
+		return
+	}
+
+	// Verify old password
+	if !verifyPassword(req.OldPassword, user.PasswordHash) {
+		response.Unauthorized(c, "old password is incorrect")
+		return
+	}
+
+	// Hash new password and update
+	newHash := hashPasswordForHandler(req.NewPassword)
+	now := time.Now()
+	user.PasswordHash = newHash
+	user.MustChangePassword = false
+	user.PasswordChangedAt = &now
+	user.LoginFailCount = 0
+	user.LockedUntil = nil
+
+	if err := h.repo.Update(user); err != nil {
+		h.logger.Error("failed to update password", zap.Int64("user_id", userID), zap.Error(err))
+		response.ServerError(c, "failed to update password")
+		return
+	}
+
+	h.logger.Info("admin password changed", zap.Int64("user_id", userID))
+	response.OKMessage(c, "password changed successfully")
+}
+
+// hashPasswordForHandler hashes a password using Argon2id.
+func hashPasswordForHandler(password string) string {
+	salt := make([]byte, 16)
+	if _, err := rand.Read(salt); err != nil {
+		panic(fmt.Sprintf("generate salt: %v", err))
+	}
+	hash := argon2.IDKey([]byte(password), salt, 3, 64*1024, 4, 32)
+	return fmt.Sprintf("$argon2id$v=19$m=65536,t=3,p=4$%s$%s",
+		hex.EncodeToString(salt), hex.EncodeToString(hash))
 }
 
 // subtleCompare performs a constant-time comparison of two byte slices.

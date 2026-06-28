@@ -29,6 +29,7 @@
       />
       <AddonStep
         v-if="currentStep === 2"
+        :product-id="productId"
         @update="onAddonUpdate"
         @next="nextStep"
         @back="prevStep"

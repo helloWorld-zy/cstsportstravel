@@ -242,6 +242,12 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 			auth.POST("/wechat", wechatH.Login)
 			auth.POST("/admin/login", adminAuthH.Login)
 			auth.POST("/refresh-token", userH.RefreshToken)
+
+			// Admin password change (JWT required)
+			auth.POST("/admin/change-password",
+				middleware.AuthRequired(r.JWTManager),
+				adminAuthH.ChangePassword,
+			)
 		}
 
 		// User routes (JWT required)
@@ -285,7 +291,7 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 			order.POST("/:id/cancel", ordH.CancelOrder)
 			order.POST("/:id/refund", refundH.RequestRefund)
 			order.GET("/:id/refund-status", refundH.GetRefundStatus)
-			order.POST("/:id/confirm", placeholder("confirm travel")) // US4
+			order.POST("/:id/confirm", ordH.ConfirmOrder)
 		}
 
 		// Payment routes (JWT required for most, signature for callbacks)
@@ -387,6 +393,7 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 			adminRole.GET("", rbacH.ListRoles)
 			adminRole.POST("", rbacH.CreateRole)
 			adminRole.PUT("/:id", rbacH.UpdateRole)
+			adminRole.DELETE("/:id", rbacH.DeleteRole)
 		}
 
 		// Menu and permission tree (US7)

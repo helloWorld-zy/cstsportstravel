@@ -164,6 +164,28 @@ func (h *OrderHandler) GetOrderStats(c *gin.Context) {
 	response.OK(c, stats)
 }
 
+// ConfirmOrder handles POST /api/v1/orders/:id/confirm.
+func (h *OrderHandler) ConfirmOrder(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		response.Unauthorized(c, "authentication required")
+		return
+	}
+
+	orderID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "invalid order id")
+		return
+	}
+
+	if err := h.orderService.ConfirmOrder(userID, orderID); err != nil {
+		h.handleOrderError(c, err)
+		return
+	}
+
+	response.OKMessage(c, "travel confirmed")
+}
+
 // handleOrderError maps order service errors to HTTP responses.
 func (h *OrderHandler) handleOrderError(c *gin.Context, err error) {
 	switch {

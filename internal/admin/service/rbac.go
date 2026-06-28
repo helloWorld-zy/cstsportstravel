@@ -92,6 +92,11 @@ func (s *RBACService) CreateUser(input CreateUserInput) (*CreateUserOutput, erro
 		if err != nil {
 			return nil, fmt.Errorf("generate password: %w", err)
 		}
+	} else {
+		// Validate provided password complexity (FR-005)
+		if err := ValidatePasswordComplexity(initPwd); err != nil {
+			return nil, fmt.Errorf("invalid initial password: %w", err)
+		}
 	}
 
 	// Hash password with Argon2id
@@ -274,6 +279,38 @@ func (s *RBACService) GetPermissionTree() ([]repository.PermissionTreeNode, erro
 // ListRoles returns all roles.
 func (s *RBACService) ListRoles() ([]model.Role, error) {
 	return s.roleRepo.List()
+}
+
+// CanDeleteRole checks if a role can be deleted.
+// System roles cannot be deleted.
+func CanDeleteRole(role *model.Role) error {
+	if role.IsSystem {
+		return fmt.Errorf("cannot delete system role '%s'", role.RoleCode)
+	}
+	return nil
+}
+
+// DeleteRole soft-deletes a role after validation.
+func (s *RBACService) DeleteRole(roleID int64) error {
+	role, err := s.roleRepo.FindByID(roleID)
+	if err != nil {
+		return fmt.Errorf("find role: %w", err)
+	}
+
+	if err := CanDeleteRole(role); err != nil {
+		return err
+	}
+
+	if err := s.roleRepo.Delete(roleID); err != nil {
+		return fmt.Errorf("delete role: %w", err)
+	}
+
+	s.logger.Info("role deleted",
+		zap.Int64("role_id", roleID),
+		zap.String("role_code", role.RoleCode),
+	)
+
+	return nil
 }
 
 // ListUsers returns a paginated list of admin users.

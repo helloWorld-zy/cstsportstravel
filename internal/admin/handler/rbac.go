@@ -227,6 +227,23 @@ func (h *RBACHandler) UpdateRole(c *gin.Context) {
 	})
 }
 
+// DeleteRole handles DELETE /api/v1/admin/roles/:id.
+func (h *RBACHandler) DeleteRole(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "invalid role id")
+		return
+	}
+
+	if err := h.rbacSvc.DeleteRole(id); err != nil {
+		h.logger.Error("delete role failed", zap.Error(err))
+		response.BusinessError(c, response.CodeBadRequest, err.Error())
+		return
+	}
+
+	response.OKMessage(c, "role deleted")
+}
+
 // ---------- Menu & Permission Tree Endpoints ----------
 
 // GetMenuTree handles GET /api/v1/admin/menus.

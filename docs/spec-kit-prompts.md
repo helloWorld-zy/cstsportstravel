@@ -1633,7 +1633,7 @@ Phase 12 包含：WinSW 服务配置、Traefik 配置（TLS 1.3）、GitHub Acti
 请评估当前代码实现与 spec.md、plan.md、tasks.md 的对齐程度。
 
 执行前请先阅读以下文档：
-1. specs/<当前阶段>/spec.md, plan.md, tasks.md
+1. specs/001-domestic-tour-mvp/spec.md, plan.md, tasks.md
 2. .specify/memory/constitution.md（项目宪法）
 3. docs/travel_booking_system_v3.agent.final.md 的对应章节（按阶段参照目录表）
 

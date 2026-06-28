@@ -8,19 +8,22 @@ import (
 
 // AdminUser represents an administrator or supplier user.
 type AdminUser struct {
-	ID                int64      `gorm:"primaryKey;autoIncrement" json:"id"`
-	Username          string     `gorm:"column:username;size:50;uniqueIndex;not null" json:"username"`
-	PasswordHash      string     `gorm:"column:password_hash;size:255;not null" json:"-"`
-	RealName          string     `gorm:"column:real_name;size:100;not null" json:"real_name"`
-	Phone             string     `gorm:"column:phone;size:20" json:"phone,omitempty"`
-	Email             string     `gorm:"column:email;size:200" json:"email,omitempty"`
-	SupplierID        *int64     `gorm:"column:supplier_id;index" json:"supplier_id,omitempty"`
-	Status            string     `gorm:"column:status;size:20;not null;default:active" json:"status"`
-	MustChangePassword bool      `gorm:"column:must_change_password;not null;default:true" json:"must_change_password"`
-	TOTPSecret        string     `gorm:"column:totp_secret;size:255" json:"-"` // TOTP MFA secret (encrypted)
-	LastLoginAt       *time.Time `gorm:"column:last_login_at" json:"last_login_at,omitempty"`
-	CreatedAt         time.Time  `gorm:"column:created_at;not null;default:now()" json:"created_at"`
-	UpdatedAt         time.Time  `gorm:"column:updated_at;not null;default:now()" json:"updated_at"`
+	ID                 int64      `gorm:"primaryKey;autoIncrement" json:"id"`
+	Username           string     `gorm:"column:username;size:50;uniqueIndex;not null" json:"username"`
+	PasswordHash       string     `gorm:"column:password_hash;size:255;not null" json:"-"`
+	RealName           string     `gorm:"column:real_name;size:100;not null" json:"real_name"`
+	Phone              string     `gorm:"column:phone;size:20" json:"phone,omitempty"`
+	Email              string     `gorm:"column:email;size:200" json:"email,omitempty"`
+	SupplierID         *int64     `gorm:"column:supplier_id;index" json:"supplier_id,omitempty"`
+	Status             string     `gorm:"column:status;size:20;not null;default:active" json:"status"`
+	MustChangePassword bool       `gorm:"column:must_change_password;not null;default:true" json:"must_change_password"`
+	TOTPSecret         string     `gorm:"column:totp_secret;size:255" json:"-"` // TOTP MFA secret (encrypted)
+	PasswordChangedAt  *time.Time `gorm:"column:password_changed_at" json:"password_changed_at,omitempty"`
+	LoginFailCount     int        `gorm:"column:login_fail_count;not null;default:0" json:"-"`
+	LockedUntil        *time.Time `gorm:"column:locked_until" json:"-"`
+	LastLoginAt        *time.Time `gorm:"column:last_login_at" json:"last_login_at,omitempty"`
+	CreatedAt          time.Time  `gorm:"column:created_at;not null;default:now()" json:"created_at"`
+	UpdatedAt          time.Time  `gorm:"column:updated_at;not null;default:now()" json:"updated_at"`
 
 	// Relations
 	Roles []Role `gorm:"many2many:admin_user_role" json:"roles,omitempty"`

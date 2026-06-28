@@ -8,6 +8,8 @@ import (
 	"math/big"
 	"time"
 
+	dysmsapi "github.com/alibabacloud-go/dysmsapi-20170525/v3/client"
+	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
@@ -185,13 +187,62 @@ func (s *SMSService) GetCode(ctx context.Context, phone string) (string, error) 
 
 // sendViaProvider sends SMS via the configured provider (Alibaba Cloud SMS).
 func (s *SMSService) sendViaProvider(ctx context.Context, phone, code string) error {
-	// TODO: Integrate with Alibaba Cloud SMS SDK
-	// aliyun dysmsapi.SendSmsRequest with:
-	//   PhoneNumbers: phone
-	//   SignName: s.cfg.SignName
-	//   TemplateCode: s.cfg.TemplateCode
-	//   TemplateParam: {"code": code}
-	s.logger.Info("SMS sent via provider", zap.String("phone", phone))
+	if s.cfg.AccessKeyID == "" || s.cfg.AccessSecret == "" {
+		return fmt.Errorf("SMS provider credentials not configured")
+	}
+
+	// Create Alibaba Cloud SMS client
+	config := &openapi.Config{
+		AccessKeyId:     &s.cfg.AccessKeyID,
+		AccessKeySecret: &s.cfg.AccessSecret,
+	}
+	// Use cn-hangzhou endpoint for SMS service
+	endpoint := "dysmsapi.aliyuncs.com"
+	config.Endpoint = &endpoint
+
+	client, err := dysmsapi.NewClient(config)
+	if err != nil {
+		return fmt.Errorf("create SMS client: %w", err)
+	}
+
+	// Build SMS request
+	templateParam := fmt.Sprintf(`{"code":"%s"}`, code)
+	sendReq := &dysmsapi.SendSmsRequest{
+		PhoneNumbers:  &phone,
+		SignName:      &s.cfg.SignName,
+		TemplateCode:  &s.cfg.TemplateCode,
+		TemplateParam: &templateParam,
+	}
+
+	// Send SMS
+	resp, err := client.SendSms(sendReq)
+	if err != nil {
+		return fmt.Errorf("send SMS: %w", err)
+	}
+
+	if resp.Body == nil || *resp.Body.Code != "OK" {
+		code := "unknown"
+		message := "unknown error"
+		if resp.Body != nil {
+			if resp.Body.Code != nil {
+				code = *resp.Body.Code
+			}
+			if resp.Body.Message != nil {
+				message = *resp.Body.Message
+			}
+		}
+		return fmt.Errorf("SMS send failed: code=%s, message=%s", code, message)
+	}
+
+	s.logger.Info("SMS sent via provider",
+		zap.String("phone", phone),
+		zap.String("request_id", func() string {
+			if resp.Body.RequestId != nil {
+				return *resp.Body.RequestId
+			}
+			return ""
+		}()),
+	)
 	return nil
 }
 

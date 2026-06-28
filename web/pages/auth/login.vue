@@ -127,9 +127,23 @@ async function handleLogin() {
 }
 
 function handleWechatLogin() {
-  // Redirect to WeChat OAuth page
-  // In production, this would redirect to the WeChat OAuth authorization URL
-  ElMessage.info('微信登录功能即将上线')
+  // WeChat OAuth 2.0 redirect flow (FR-002)
+  // The appid and redirect_uri should come from runtime config
+  const appid = useRuntimeConfig().public.wechatAppId || ''
+  if (!appid) {
+    ElMessage.info('微信登录功能即将上线')
+    return
+  }
+
+  const redirectUri = encodeURIComponent(`${window.location.origin}/auth/wechat-callback`)
+  const state = Math.random().toString(36).substring(2, 15)
+
+  // Store state for CSRF verification
+  sessionStorage.setItem('wechat_oauth_state', state)
+
+  // Redirect to WeChat OAuth authorization page
+  const oauthUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appid}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_userinfo&state=${state}#wechat_redirect`
+  window.location.href = oauthUrl
 }
 
 onUnmounted(() => {

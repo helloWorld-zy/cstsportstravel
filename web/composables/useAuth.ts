@@ -88,12 +88,22 @@ export function useAuth() {
     }
   }
 
+  async function loginWithWechat(code: string): Promise<LoginResponse> {
+    const api = useApi()
+    const data = await api.post<LoginResponse>('/auth/wechat', { code })
+    token.value = data.access_token
+    refreshToken.value = data.refresh_token
+    user.value = data.user
+    return data
+  }
+
   return {
     user,
     token,
     isLoggedIn,
     sendSmsCode,
     login,
+    loginWithWechat,
     logout,
     fetchProfile,
     refreshAccessToken,

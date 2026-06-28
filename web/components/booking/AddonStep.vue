@@ -31,8 +31,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { formatAmount } from '~/shared/utils/amount'
+
+interface Addon {
+  id: number
+  name: string
+  description: string
+  price: number
+  original_price?: number
+}
+
+const props = defineProps<{
+  productId?: number
+  initialAddons?: Addon[]
+}>()
 
 const emit = defineEmits<{
   update: [data: any]
@@ -42,16 +55,29 @@ const emit = defineEmits<{
 
 const api = useApi()
 const loading = ref(false)
-const addons = ref<any[]>([])
-const selectedAddons = ref<Map<number, any>>(new Map())
+const addons = ref<Addon[]>([])
+const selectedAddons = ref<Map<number, Addon & { quantity: number }>>(new Map())
 
 onMounted(async () => {
-  // In MVP, addons are loaded from a static list or product config
-  // For now, use sample data
-  addons.value = [
-    { id: 1, name: '境内旅行意外险', description: '保额50万，含意外医疗、航班延误', price: 3000, original_price: 5000 },
-    { id: 2, name: '机场接送服务', description: '专车接送机/站，含高速费', price: 15000, original_price: 20000 },
-  ]
+  // Use initial addons from parent if provided
+  if (props.initialAddons && props.initialAddons.length > 0) {
+    addons.value = props.initialAddons
+    return
+  }
+
+  // Otherwise, fetch from API
+  if (props.productId) {
+    loading.value = true
+    try {
+      const data = await api.get(`/products/${props.productId}/addons`)
+      addons.value = data?.items || data || []
+    } catch {
+      // Addons endpoint may not exist yet — show empty state
+      addons.value = []
+    } finally {
+      loading.value = false
+    }
+  }
 })
 
 function isSelected(addonId: number): boolean {

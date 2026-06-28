@@ -58,11 +58,9 @@ func (h *UserHandler) SendSMSCode(c *gin.Context) {
 
 	// In test mode, include the code in the response for easier testing
 	data := gin.H{"expires_in": expiresIn}
-	if h.smsService.GetCode != nil {
-		code, codeErr := h.smsService.GetCode(c.Request.Context(), req.Phone)
-		if codeErr == nil {
-			data["code"] = code // Only in dev/test mode
-		}
+	code, codeErr := h.smsService.GetCode(c.Request.Context(), req.Phone)
+	if codeErr == nil && code != "" {
+		data["code"] = code // Only in dev/test mode
 	}
 
 	response.OK(c, data)

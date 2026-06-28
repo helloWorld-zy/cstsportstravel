@@ -122,32 +122,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-
-interface Banner {
-  id: number
-  image_url: string
-  title: string
-  link: string
-  sort_order: number
-  status: string
-}
-
-interface Destination {
-  name: string
-  image_url?: string
-  product_count: number
-  min_price: number
-  sort_order: number
-}
+import { listBanners, createBanner, updateBanner, deleteBanner, listDestinations } from '@/api/banner'
+import type { Banner, Destination } from '@/api/banner'
 
 // Banners
-const banners = ref<Banner[]>([
-  { id: 1, image_url: '/static/images/banner1.jpg', title: '暑期特惠·云南6日游', link: '/products?destination=云南', sort_order: 1, status: 'active' },
-  { id: 2, image_url: '/static/images/banner2.jpg', title: '亲子游·北京5日研学之旅', link: '/products?destination=北京', sort_order: 2, status: 'active' },
-  { id: 3, image_url: '/static/images/banner3.jpg', title: '海岛度假·海南三亚4日游', link: '/products?destination=海南', sort_order: 3, status: 'active' },
-])
+const banners = ref<Banner[]>([])
+const bannersLoading = ref(false)
+
+async function loadBanners() {
+  bannersLoading.value = true
+  try {
+    const res = await listBanners()
+    banners.value = res.data?.items || []
+  } catch {
+    ElMessage.error('加载 Banner 列表失败')
+  } finally {
+    bannersLoading.value = false
+  }
+}
 
 const bannerDialogVisible = ref(false)
 const editingBannerIndex = ref(-1)
@@ -172,41 +166,83 @@ function editBanner(row: Banner, index: number) {
   bannerDialogVisible.value = true
 }
 
-function saveBanner() {
+async function saveBanner() {
   if (!editingBanner.title || !editingBanner.image_url) {
     ElMessage.warning('请填写标题和图片')
     return
   }
-  if (editingBannerIndex.value >= 0) {
-    banners.value[editingBannerIndex.value] = { ...editingBanner }
-  } else {
-    banners.value.push({ ...editingBanner, id: Date.now() })
+  try {
+    if (editingBannerIndex.value >= 0) {
+      // Update existing banner
+      await updateBanner(editingBanner.id, {
+        title: editingBanner.title,
+        image_url: editingBanner.image_url,
+        link: editingBanner.link,
+        sort_order: editingBanner.sort_order,
+        status: editingBanner.status,
+      })
+      banners.value[editingBannerIndex.value] = { ...editingBanner }
+    } else {
+      // Create new banner
+      const res = await createBanner({
+        title: editingBanner.title,
+        image_url: editingBanner.image_url,
+        link: editingBanner.link,
+        sort_order: editingBanner.sort_order,
+        status: editingBanner.status,
+      })
+      banners.value.push({ ...editingBanner, id: res.data?.id || Date.now() })
+    }
+    bannerDialogVisible.value = false
+    ElMessage.success('保存成功')
+  } catch {
+    ElMessage.error('保存失败')
   }
-  bannerDialogVisible.value = false
-  ElMessage.success('保存成功')
 }
 
-function removeBanner(index: number) {
-  banners.value.splice(index, 1)
-  ElMessage.success('已删除')
+async function removeBanner(index: number) {
+  const banner = banners.value[index]
+  try {
+    if (banner.id) {
+      await deleteBanner(banner.id)
+    }
+    banners.value.splice(index, 1)
+    ElMessage.success('已删除')
+  } catch {
+    ElMessage.error('删除失败')
+  }
 }
 
-function toggleBannerStatus(row: Banner) {
-  row.status = row.status === 'active' ? 'hidden' : 'active'
+async function toggleBannerStatus(row: Banner) {
+  const newStatus = row.status === 'active' ? 'hidden' : 'active'
+  try {
+    await updateBanner(row.id, { status: newStatus })
+    row.status = newStatus
+  } catch {
+    ElMessage.error('状态更新失败')
+  }
 }
 
 // Destinations
-const destinations = ref<Destination[]>([
-  { name: '云南', product_count: 25, min_price: 2999, sort_order: 1 },
-  { name: '海南', product_count: 18, min_price: 1999, sort_order: 2 },
-  { name: '北京', product_count: 20, min_price: 2599, sort_order: 3 },
-  { name: '四川', product_count: 15, min_price: 3299, sort_order: 4 },
-  { name: '广西', product_count: 12, min_price: 2199, sort_order: 5 },
-])
+const destinations = ref<Destination[]>([])
+const destsLoading = ref(false)
+
+async function loadDestinations() {
+  destsLoading.value = true
+  try {
+    const res = await listDestinations()
+    destinations.value = res.data?.items || []
+  } catch {
+    ElMessage.error('加载目的地列表失败')
+  } finally {
+    destsLoading.value = false
+  }
+}
 
 const destDialogVisible = ref(false)
 const editingDestIndex = ref(-1)
 const editingDest = reactive<Destination>({
+  id: 0,
   name: '',
   image_url: '',
   product_count: 0,
@@ -216,7 +252,7 @@ const editingDest = reactive<Destination>({
 
 function addDestination() {
   editingDestIndex.value = -1
-  Object.assign(editingDest, { name: '', image_url: '', product_count: 0, min_price: 0, sort_order: destinations.value.length })
+  Object.assign(editingDest, { id: 0, name: '', image_url: '', product_count: 0, min_price: 0, sort_order: destinations.value.length })
   destDialogVisible.value = true
 }
 
@@ -244,6 +280,12 @@ function removeDestination(index: number) {
   destinations.value.splice(index, 1)
   ElMessage.success('已删除')
 }
+
+// Load data on mount
+onMounted(() => {
+  loadBanners()
+  loadDestinations()
+})
 </script>
 
 <style scoped>

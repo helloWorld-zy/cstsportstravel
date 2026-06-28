@@ -600,3 +600,52 @@ func (s *OrderService) GetOrderStats(userID int64) (*OrderStatsResponse, error) 
 
 	return stats, nil
 }
+
+// ValidateConfirmTransition checks if an order status allows confirmation (FR-017).
+// Only in_travel and completed (idempotent) orders can be confirmed.
+func ValidateConfirmTransition(currentStatus string) error {
+	switch currentStatus {
+	case ordermodel.OrderStatusInTravel, ordermodel.OrderStatusCompleted:
+		return nil
+	default:
+		return fmt.Errorf("order with status '%s' cannot be confirmed", currentStatus)
+	}
+}
+
+// ConfirmOrder confirms travel completion for an order.
+// Transitions from in_travel to completed.
+func (s *OrderService) ConfirmOrder(userID, orderID int64) error {
+	order, err := s.orderRepo.FindByID(orderID)
+	if err != nil {
+		return ErrOrderNotFound
+	}
+
+	// Verify ownership
+	if order.UserID != userID {
+		return ErrOrderNotFound
+	}
+
+	// Validate status transition
+	if err := ValidateConfirmTransition(order.OrderStatus); err != nil {
+		return err
+	}
+
+	// Already completed (idempotent)
+	if order.OrderStatus == ordermodel.OrderStatusCompleted {
+		return nil
+	}
+
+	// Transition to completed using repository's transactional UpdateStatus
+	if err := s.orderRepo.UpdateStatus(
+		orderID,
+		ordermodel.OrderStatusInTravel,
+		ordermodel.OrderStatusCompleted,
+		"user",
+		&userID,
+		"travel confirmed by user",
+	); err != nil {
+		return fmt.Errorf("update order status: %w", err)
+	}
+
+	return nil
+}

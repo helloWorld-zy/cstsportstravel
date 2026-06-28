@@ -147,3 +147,37 @@ func (r *AdminUserRepository) ExistsByUsername(username string) (bool, error) {
 	err := r.db.Model(&model.AdminUser{}).Where("username = ?", username).Count(&count).Error
 	return count > 0, err
 }
+
+// IncrementLoginFailCount increments the login failure counter and locks if threshold exceeded.
+func (r *AdminUserRepository) IncrementLoginFailCount(userID int64, maxAttempts int, lockDuration time.Duration) (int, error) {
+	var user model.AdminUser
+	if err := r.db.First(&user, userID).Error; err != nil {
+		return 0, err
+	}
+
+	newCount := user.LoginFailCount + 1
+	updates := map[string]interface{}{
+		"login_fail_count": newCount,
+	}
+
+	if newCount >= maxAttempts {
+		lockUntil := time.Now().Add(lockDuration)
+		updates["locked_until"] = lockUntil
+		updates["status"] = model.AdminStatusLocked
+	}
+
+	if err := r.db.Model(&model.AdminUser{}).Where("id = ?", userID).Updates(updates).Error; err != nil {
+		return 0, err
+	}
+
+	return newCount, nil
+}
+
+// ResetLoginFailCount resets the login failure counter and clears lock on successful login.
+func (r *AdminUserRepository) ResetLoginFailCount(userID int64) error {
+	return r.db.Model(&model.AdminUser{}).Where("id = ?", userID).
+		Updates(map[string]interface{}{
+			"login_fail_count": 0,
+			"locked_until":     nil,
+		}).Error
+}
