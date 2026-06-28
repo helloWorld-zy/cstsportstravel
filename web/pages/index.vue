@@ -1,10 +1,33 @@
 <template>
   <div class="home-page">
-    <!-- Search Bar -->
+    <!-- Search Bar with Autocomplete -->
     <div class="search-section">
-      <div class="search-box" @click="goToSearch">
+      <div class="search-box" :class="{ focused: searchFocused }">
         <span class="search-icon">🔍</span>
-        <span class="search-placeholder">搜索目的地、产品名称</span>
+        <input
+          v-model="searchQuery"
+          type="text"
+          class="search-input"
+          placeholder="搜索目的地、产品名称"
+          @focus="searchFocused = true"
+          @blur="handleSearchBlur"
+          @input="handleSearchInput"
+        />
+        <span v-if="searchQuery" class="search-clear" @click="clearSearch">✕</span>
+      </div>
+
+      <!-- Autocomplete Dropdown -->
+      <div v-if="showSuggestions && suggestions.length" class="suggestions-dropdown">
+        <div
+          v-for="(item, idx) in suggestions"
+          :key="idx"
+          class="suggestion-item"
+          @mousedown.prevent="selectSuggestion(item)"
+        >
+          <span class="suggestion-icon">{{ item.type === 'destination' ? '📍' : item.type === 'product' ? '🧳' : '🏔️' }}</span>
+          <span class="suggestion-text">{{ item.text }}</span>
+          <span v-if="item.type" class="suggestion-type">{{ typeLabels[item.type] || '' }}</span>
+        </div>
       </div>
     </div>
 
@@ -63,6 +86,7 @@
       </div>
       <div class="dest-content">
         <div v-if="activeDestData" class="dest-card">
+          <div v-if="activeDestData.cover_image" class="dest-cover" :style="{ backgroundImage: `url(${activeDestData.cover_image})` }" />
           <div class="dest-info">
             <h3>{{ activeDestData.name }}</h3>
             <p>{{ activeDestData.product_count }}条线路 · ¥{{ activeDestData.min_price }}起</p>
@@ -110,7 +134,7 @@ const api = useApi()
 interface HomepageData {
   banners: Array<{ id: number; image_url: string; title: string; link: string }>
   categories: Array<{ id: number; name: string; icon_url?: string }>
-  popular_destinations: Array<{ name: string; product_count: number; min_price: number }>
+  popular_destinations: Array<{ id?: number; name: string; cover_image?: string; product_count: number; min_price: number }>
   recommended_products: ProductSummary[]
 }
 
@@ -154,7 +178,7 @@ const iconGridItems = [
 ]
 
 // Popular destinations
-const activeDestTab = ref('云南')
+const activeDestTab = ref('')
 
 const popularDestinations = computed(() =>
   homepageData.value?.popular_destinations || [
@@ -166,6 +190,13 @@ const popularDestinations = computed(() =>
   ]
 )
 
+// Set initial active tab when data loads
+watch(popularDestinations, (dests) => {
+  if (!activeDestTab.value && dests.length) {
+    activeDestTab.value = dests[0].name
+  }
+}, { immediate: true })
+
 const activeDestData = computed(() =>
   popularDestinations.value.find(d => d.name === activeDestTab.value)
 )
@@ -173,8 +204,64 @@ const activeDestData = computed(() =>
 // Recommended products
 const recommendedProducts = computed(() => homepageData.value?.recommended_products || [])
 
-const goToSearch = () => {
-  router.push('/products')
+// Search autocomplete
+interface SuggestItem {
+  text: string
+  type: 'destination' | 'product' | 'spot'
+}
+
+const searchQuery = ref('')
+const searchFocused = ref(false)
+const suggestions = ref<SuggestItem[]>([])
+const showSuggestions = ref(false)
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
+
+const typeLabels: Record<string, string> = {
+  destination: '目的地',
+  product: '产品',
+  spot: '景点',
+}
+
+function handleSearchInput() {
+  if (debounceTimer) clearTimeout(debounceTimer)
+
+  if (!searchQuery.value.trim()) {
+    suggestions.value = []
+    showSuggestions.value = false
+    return
+  }
+
+  debounceTimer = setTimeout(async () => {
+    try {
+      const result = await api.get<SuggestItem[]>('/search/autocomplete', {
+        params: { q: searchQuery.value.trim(), limit: 8 },
+      })
+      suggestions.value = result || []
+      showSuggestions.value = suggestions.value.length > 0
+    } catch {
+      suggestions.value = []
+    }
+  }, 300) // 300ms debounce
+}
+
+function handleSearchBlur() {
+  // Delay hiding to allow click on suggestion
+  setTimeout(() => {
+    searchFocused.value = false
+    showSuggestions.value = false
+  }, 200)
+}
+
+function selectSuggestion(item: SuggestItem) {
+  searchQuery.value = item.text
+  showSuggestions.value = false
+  router.push(`/products?keyword=${encodeURIComponent(item.text)}`)
+}
+
+function clearSearch() {
+  searchQuery.value = ''
+  suggestions.value = []
+  showSuggestions.value = false
 }
 </script>
 
@@ -186,7 +273,9 @@ const goToSearch = () => {
   min-height: 100vh;
 }
 
+/* Search Section */
 .search-section {
+  position: relative;
   padding: 12px 16px;
   background: #ff5722;
 }
@@ -198,18 +287,85 @@ const goToSearch = () => {
   background: #fff;
   border-radius: 20px;
   padding: 8px 16px;
-  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+
+.search-box.focused {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .search-icon {
   font-size: 16px;
+  flex-shrink: 0;
 }
 
-.search-placeholder {
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: #333;
+  background: transparent;
+}
+
+.search-input::placeholder {
+  color: #999;
+}
+
+.search-clear {
+  cursor: pointer;
   color: #999;
   font-size: 14px;
+  padding: 2px;
 }
 
+/* Suggestions Dropdown */
+.suggestions-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 16px;
+  right: 16px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.suggestion-item:hover {
+  background: #f5f5f5;
+}
+
+.suggestion-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.suggestion-text {
+  flex: 1;
+  font-size: 14px;
+  color: #333;
+}
+
+.suggestion-type {
+  font-size: 12px;
+  color: #999;
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Banner */
 .banner-section {
   position: relative;
 }
@@ -269,6 +425,7 @@ const goToSearch = () => {
   background: #fff;
 }
 
+/* Icon Grid */
 .icon-grid-section {
   background: #fff;
   padding: 16px;
@@ -297,6 +454,7 @@ const goToSearch = () => {
   font-size: 12px;
 }
 
+/* Sections */
 .section {
   margin-top: 8px;
   background: #fff;
@@ -314,12 +472,14 @@ const goToSearch = () => {
   margin: 0;
 }
 
+/* Popular Destinations */
 .dest-tabs {
   display: flex;
   gap: 12px;
   overflow-x: auto;
   padding-bottom: 8px;
   margin-bottom: 12px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .dest-tab {
@@ -330,6 +490,7 @@ const goToSearch = () => {
   color: #666;
   cursor: pointer;
   background: #f5f5f5;
+  transition: all 0.2s;
 }
 
 .dest-tab.active {
@@ -340,7 +501,17 @@ const goToSearch = () => {
 .dest-card {
   background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
   border-radius: 8px;
-  padding: 20px;
+  overflow: hidden;
+}
+
+.dest-cover {
+  height: 120px;
+  background-size: cover;
+  background-position: center;
+}
+
+.dest-info {
+  padding: 16px;
 }
 
 .dest-info h3 {
@@ -362,10 +533,44 @@ const goToSearch = () => {
   font-weight: 500;
 }
 
+/* Products */
 .product-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
+}
+
+/* Responsive adjustments */
+@media (min-width: 640px) {
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .banner-image {
+    height: 240px;
+  }
+
+  .icon-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .home-page {
+    max-width: 1200px;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .banner-image {
+    height: 320px;
+  }
+
+  .icon-grid {
+    grid-template-columns: repeat(8, 1fr);
+  }
 }
 
 .loading-skeleton {

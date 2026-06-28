@@ -21,8 +21,10 @@ import (
 	"github.com/travel-booking/server/internal/common/cache"
 	"github.com/travel-booking/server/internal/common/config"
 	"github.com/travel-booking/server/internal/common/encrypt"
+	commonhandler "github.com/travel-booking/server/internal/common/handler"
 	"github.com/travel-booking/server/internal/common/middleware"
 	"github.com/travel-booking/server/internal/common/response"
+	"github.com/travel-booking/server/internal/common/service"
 	orderhandler "github.com/travel-booking/server/internal/order/handler"
 	orderrepo "github.com/travel-booking/server/internal/order/repository"
 	orderservice "github.com/travel-booking/server/internal/order/service"
@@ -132,6 +134,7 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 	adminUserRepo := adminrepo.NewAdminUserRepository(r.DB)
 	adminRoleRepo := adminrepo.NewRoleRepository(r.DB)
 	adminPermRepo := adminrepo.NewPermissionRepository(r.DB)
+	adminBannerRepo := adminrepo.NewBannerRepository(r.DB)
 	adminAuthH := adminhandler.NewAdminAuthHandler(adminUserRepo, r.JWTManager, r.Logger)
 
 	// RBAC service and handler (US7 - Phase 9)
@@ -155,14 +158,33 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 	adminCancelSvc := adminservice.NewCancellationRuleService(r.DB, r.Logger)
 	adminOrdH := adminhandler.NewAdminOrderHandler(adminOrdSvc, adminRefundSvc, adminCancelSvc, r.Logger)
 
+	// Banner management service and handler (Phase 10)
+	bannerSvc := adminservice.NewBannerService(adminBannerRepo, r.Logger)
+	bannerH := adminhandler.NewAdminBannerHandler(bannerSvc, r.Logger)
+
+	// Upload service and handler (Phase 10)
+	uploadCfg := service.UploadConfig{
+		AccessKeyID:     r.Config.Upload.AccessKeyID,
+		AccessKeySecret: r.Config.Upload.AccessKeySecret,
+		BucketName:      r.Config.Upload.BucketName,
+		Region:          r.Config.Upload.Region,
+		Endpoint:        r.Config.Upload.Endpoint,
+		CDN域名:          r.Config.Upload.CDNDomain,
+		BasePath:        r.Config.Upload.BasePath,
+	}
+	uploadSvc := service.NewUploadService(uploadCfg, r.Logger)
+	uploadH := commonhandler.NewUploadHandler(uploadSvc, r.Logger)
+
 	// Product domain services and handlers
 	catRepo := productrepo.NewCategoryRepository(r.DB)
 	prodRepo := productrepo.NewProductRepository(r.DB)
+	destRepo := productrepo.NewDestinationRepository(r.DB)
 	revRepo := productrepo.NewReviewRepository(r.DB)
 	revSvc := productservice.NewReviewService(revRepo, r.Logger)
 	prodSvc := productservice.NewProductService(prodRepo, catRepo, revRepo, revSvc, r.Logger)
 	prodH := producthandler.NewProductHandler(prodSvc, revSvc, r.Logger)
-	homeH := producthandler.NewHomepageHandler(prodRepo, catRepo, r.Logger)
+	destH := producthandler.NewDestinationHandler(destRepo, r.Logger)
+	homeH := producthandler.NewHomepageHandler(prodRepo, catRepo, destRepo, adminBannerRepo, r.Logger)
 
 	// Inventory service (Redis + DB two-phase locking)
 	inventorySvc := productservice.NewInventoryService(r.DB, r.Redis.Client(), r.Logger)
@@ -236,6 +258,7 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 		{
 			order.POST("", ordH.CreateOrder)
 			order.GET("", ordH.ListOrders)
+			order.GET("/stats", ordH.GetOrderStats)
 			order.GET("/:id", ordH.GetOrder)
 			order.POST("/:id/cancel", ordH.CancelOrder)
 			order.POST("/:id/refund", refundH.RequestRefund)
@@ -268,6 +291,12 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 		// Homepage data (public)
 		v1.GET("/homepage", homeH.GetHomepageData)
 		v1.GET("/search/autocomplete", prodH.SearchSuggest)
+
+		// Popular destinations (public)
+		dest := v1.Group("/destinations")
+		{
+			dest.GET("/popular", destH.ListPopularDestinations)
+		}
 	}
 
 	// Admin routes (JWT + RBAC required)
@@ -357,6 +386,24 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 			adminCancel.GET("/defaults", adminOrdH.GetDefaultCancellationRules)
 			adminCancel.POST("", middleware.RBACRequired("cancel_rule:create"), adminOrdH.CreateCancellationRules)
 			adminCancel.POST("/assign", middleware.RBACRequired("cancel_rule:manage"), adminOrdH.AssignCancellationTemplate)
+		}
+
+		// Banner management (Phase 10)
+		adminBanner := admin.Group("/banners")
+		adminBanner.Use(middleware.RBACAny("banner:list", "banner:manage", "config:manage"))
+		{
+			adminBanner.GET("", bannerH.ListBanners)
+			adminBanner.GET("/:id", bannerH.GetBanner)
+			adminBanner.POST("", middleware.RBACAny("banner:create", "banner:manage", "config:manage"), bannerH.CreateBanner)
+			adminBanner.PUT("/:id", middleware.RBACAny("banner:update", "banner:manage", "config:manage"), bannerH.UpdateBanner)
+			adminBanner.DELETE("/:id", middleware.RBACAny("banner:delete", "banner:manage", "config:manage"), bannerH.DeleteBanner)
+		}
+
+		// Upload service (Phase 10)
+		adminUpload := admin.Group("/upload")
+		{
+			adminUpload.POST("/image", uploadH.UploadImage)
+			adminUpload.POST("/sts-token", uploadH.GetSTSToken)
 		}
 	}
 }

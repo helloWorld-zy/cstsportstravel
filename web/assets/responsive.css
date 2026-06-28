@@ -1,0 +1,323 @@
+/**
+ * Responsive Design System
+ * Mobile-first approach with breakpoints for tablet and desktop.
+ *
+ * Breakpoints:
+ *   - Mobile:  < 640px  (default)
+ *   - Tablet:  640px - 1024px
+ *   - Desktop: > 1024px
+ */
+
+/* ============================================
+   CSS Variables for Responsive Spacing
+   ============================================ */
+:root {
+  /* Responsive spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  /* Responsive font sizes */
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+
+  /* Container max-width */
+  --container-max: 1200px;
+  --container-padding: 16px;
+}
+
+/* ============================================
+   Base Mobile Styles (default)
+   ============================================ */
+
+/* Ensure proper box-sizing */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Prevent horizontal overflow on mobile */
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Touch-friendly tap targets on mobile */
+a,
+button,
+[role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Responsive images */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Responsive containers */
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding-left: var(--container-padding);
+  padding-right: var(--container-padding);
+}
+
+/* ============================================
+   Mobile-Specific Adjustments
+   ============================================ */
+
+/* Navigation adjustments for mobile */
+@media (max-width: 639px) {
+  /* Stack navigation items vertically on mobile */
+  .nav-horizontal {
+    flex-direction: column;
+  }
+
+  /* Full-width buttons on mobile */
+  .btn-full-mobile {
+    width: 100%;
+  }
+
+  /* Reduce padding on mobile */
+  .section {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  /* Single column grid on mobile */
+  .grid-2-mobile {
+    grid-template-columns: 1fr;
+  }
+
+  /* Smaller headings on mobile */
+  h1 {
+    font-size: var(--text-xl);
+  }
+
+  h2 {
+    font-size: var(--text-lg);
+  }
+
+  /* Fixed bottom bar on mobile */
+  .fixed-bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: #fff;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+    padding: var(--space-sm) var(--space-md);
+    padding-bottom: calc(var(--space-sm) + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Product card single column on small mobile */
+  .product-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Search section full width */
+  .search-section {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  /* Tab bar scrollable on mobile */
+  .tab-bar {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .tab-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Modal full-screen on mobile */
+  .modal-mobile-full {
+    position: fixed;
+    inset: 0;
+    margin: 0;
+    border-radius: 0;
+    max-width: none;
+    max-height: none;
+  }
+}
+
+/* ============================================
+   Tablet Styles (640px - 1024px)
+   ============================================ */
+@media (min-width: 640px) {
+  :root {
+    --space-xs: 6px;
+    --space-sm: 12px;
+    --space-md: 20px;
+    --space-lg: 32px;
+    --space-xl: 48px;
+    --container-padding: 24px;
+  }
+
+  /* Two-column product grid on tablet */
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-2-mobile {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Larger banner on tablet */
+  .banner-image {
+    height: 240px;
+  }
+
+  /* Icon grid 5 columns on tablet */
+  .icon-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* ============================================
+   Desktop Styles (> 1024px)
+   ============================================ */
+@media (min-width: 1024px) {
+  :root {
+    --space-xs: 8px;
+    --space-sm: 16px;
+    --space-md: 24px;
+    --space-lg: 40px;
+    --space-xl: 64px;
+    --text-xs: 13px;
+    --text-sm: 15px;
+    --text-base: 16px;
+    --text-lg: 20px;
+    --text-xl: 24px;
+    --text-2xl: 28px;
+    --container-padding: 32px;
+  }
+
+  /* Three-column product grid on desktop */
+  .product-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* Larger banner on desktop */
+  .banner-image {
+    height: 320px;
+  }
+
+  /* Icon grid 8 columns on desktop */
+  .icon-grid {
+    grid-template-columns: repeat(8, 1fr);
+  }
+
+  /* Desktop navigation */
+  .nav-horizontal {
+    flex-direction: row;
+  }
+
+  /* Sidebar layout on desktop */
+  .layout-with-sidebar {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: var(--space-lg);
+  }
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+
+/* Hide on specific breakpoints */
+.hide-mobile {
+  display: none;
+}
+
+.hide-tablet {
+  display: none;
+}
+
+.hide-desktop {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .hide-mobile {
+    display: initial;
+  }
+  .show-mobile-only {
+    display: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hide-tablet {
+    display: initial;
+  }
+  .hide-desktop {
+    display: none;
+  }
+  .show-tablet-only {
+    display: none;
+  }
+}
+
+/* Safe area padding for notched devices */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Prevent zoom on input focus (iOS) */
+@media (max-width: 639px) {
+  input[type="text"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="email"],
+  input[type="password"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Smooth scrolling */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #1a1a1a;
+    --color-bg-white: #2a2a2a;
+    --color-text: #e0e0e0;
+    --color-text-secondary: #a0a0a0;
+    --color-border-light: #3a3a3a;
+  }
+}

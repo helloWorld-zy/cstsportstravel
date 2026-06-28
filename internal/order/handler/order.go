@@ -145,6 +145,25 @@ func (h *OrderHandler) CancelOrder(c *gin.Context) {
 	response.OKMessage(c, "order cancelled")
 }
 
+// GetOrderStats handles GET /api/v1/orders/stats.
+// Returns order counts grouped by status for the current user.
+func (h *OrderHandler) GetOrderStats(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		response.Unauthorized(c, "authentication required")
+		return
+	}
+
+	stats, err := h.orderService.GetOrderStats(userID)
+	if err != nil {
+		h.logger.Error("failed to get order stats", zap.Int64("user_id", userID), zap.Error(err))
+		response.ServerError(c, "failed to get order stats")
+		return
+	}
+
+	response.OK(c, stats)
+}
+
 // handleOrderError maps order service errors to HTTP responses.
 func (h *OrderHandler) handleOrderError(c *gin.Context, err error) {
 	switch {

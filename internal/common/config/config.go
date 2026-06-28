@@ -20,6 +20,7 @@ type Config struct {
 	Encryption EncryptionConfig `mapstructure:"encryption"`
 	MFA        MFAConfig        `mapstructure:"mfa"`
 	Signing    SigningConfig    `mapstructure:"signing"`
+	Upload     UploadConfig     `mapstructure:"upload"`
 }
 
 // ServerConfig holds HTTP server settings.
@@ -131,6 +132,17 @@ type SigningConfig struct {
 	Secret     string `mapstructure:"secret"`      // HMAC signing secret
 	Tolerance  int    `mapstructure:"tolerance"`   // timestamp tolerance in minutes
 	NonceTTL   int    `mapstructure:"nonce_ttl"`   // nonce dedup TTL in minutes
+}
+
+// UploadConfig holds OSS file upload settings.
+type UploadConfig struct {
+	AccessKeyID     string `mapstructure:"access_key_id"`
+	AccessKeySecret string `mapstructure:"access_key_secret"`
+	BucketName      string `mapstructure:"bucket_name"`
+	Region          string `mapstructure:"region"`
+	Endpoint        string `mapstructure:"endpoint"`
+	CDNDomain       string `mapstructure:"cdn_domain"`
+	BasePath        string `mapstructure:"base_path"`
 }
 
 // Load reads configuration from file and environment variables.

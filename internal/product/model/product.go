@@ -197,3 +197,21 @@ const (
 	PriceTypeEarlyBird = "early_bird"
 	PriceTypePromotion = "promotion"
 )
+
+// Destination represents a travel destination.
+type Destination struct {
+	ID          int64     `gorm:"primaryKey;autoIncrement" json:"id"`
+	Name        string    `gorm:"column:name;size:100;not null" json:"name"`
+	Province    string    `gorm:"column:province;size:50" json:"province,omitempty"`
+	City        string    `gorm:"column:city;size:50" json:"city,omitempty"`
+	CoverImage  string    `gorm:"column:cover_image;size:500" json:"cover_image,omitempty"`
+	Description string    `gorm:"column:description;type:text" json:"description,omitempty"`
+	SortOrder   int       `gorm:"column:sort_order;not null;default:0" json:"sort_order"`
+	Status      string    `gorm:"column:status;size:20;not null;default:active" json:"status"`
+	CreatedAt   time.Time `gorm:"column:created_at;not null;default:now()" json:"created_at"`
+}
+
+// TableName overrides the table name.
+func (Destination) TableName() string {
+	return "destination"
+}

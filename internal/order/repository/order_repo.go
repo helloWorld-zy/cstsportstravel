@@ -199,3 +199,12 @@ func (r *OrderRepository) FindByIDBasic(id int64) (*ordermodel.MainOrder, error)
 	}
 	return &order, nil
 }
+
+// CountByUserAndStatus returns the count of orders for a user with a specific status.
+func (r *OrderRepository) CountByUserAndStatus(userID int64, status string) (int64, error) {
+	var count int64
+	err := r.db.Model(&ordermodel.MainOrder{}).
+		Where("user_id = ? AND order_status = ?", userID, status).
+		Count(&count).Error
+	return count, err
+}

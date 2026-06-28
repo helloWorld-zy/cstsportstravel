@@ -308,12 +308,12 @@
 
 **Purpose**: Polish UI, add homepage content, improve UX
 
-- [ ] T134 [P] Implement homepage banner management API in `internal/admin/handler/banner.go` — CRUD for banners with image upload, link target, position, sort order, status, expiry date
-- [ ] T135 [P] Implement popular destination recommendation API in `internal/product/handler/destination.go` — list destinations by category (domestic/popular), with product count and starting price
-- [ ] T136 [US2] Enhance homepage at `web/pages/index.vue` — connect banner carousel to API, connect popular destinations to API, add search autocomplete with debounce
-- [ ] T137 [US4] Enhance personal center at `web/pages/user/index.vue` — member level display, order count badges, quick actions (my orders/my travellers/real-name)
-- [ ] T138 [P] Implement image upload service in `internal/common/service/upload.go` — generate STS token for OSS upload, file format validation (jpg/png, ≤5MB), thumbnail generation
-- [ ] T139 [P] Add responsive design adjustments to web pages for mobile browser compatibility in `web/assets/responsive.css` and component-level media queries
+- [x] T134 [P] Implement homepage banner management API in `internal/admin/handler/banner.go` — CRUD for banners with image upload, link target, position, sort order, status, expiry date
+- [x] T135 [P] Implement popular destination recommendation API in `internal/product/handler/destination.go` — list destinations by category (domestic/popular), with product count and starting price
+- [x] T136 [US2] Enhance homepage at `web/pages/index.vue` — connect banner carousel to API, connect popular destinations to API, add search autocomplete with debounce
+- [x] T137 [US4] Enhance personal center at `web/pages/user/index.vue` — member level display, order count badges, quick actions (my orders/my travellers/real-name)
+- [x] T138 [P] Implement image upload service in `internal/common/service/upload.go` — generate STS token for OSS upload, file format validation (jpg/png, ≤5MB), thumbnail generation
+- [x] T139 [P] Add responsive design adjustments to web pages for mobile browser compatibility in `web/assets/responsive.css` and component-level media queries
 
 **Checkpoint**: Homepage shows dynamic content, search autocomplete works, personal center is complete, responsive on mobile
 

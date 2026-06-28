@@ -558,3 +558,45 @@ func maskIDCard(idCard string) string {
 	}
 	return idCard[:6] + "********" + idCard[14:]
 }
+
+// OrderStatsResponse holds order count statistics by status.
+type OrderStatsResponse struct {
+	PendingPay    int64 `json:"pending_pay"`
+	PaidFull      int64 `json:"paid_full"`
+	PendingTravel int64 `json:"pending_travel"`
+	Refunding     int64 `json:"refunding"`
+	Completed     int64 `json:"completed"`
+	Cancelled     int64 `json:"cancelled"`
+	Total         int64 `json:"total"`
+}
+
+// GetOrderStats returns order counts grouped by status for a user.
+func (s *OrderService) GetOrderStats(userID int64) (*OrderStatsResponse, error) {
+	stats := &OrderStatsResponse{}
+
+	// Count by each status group
+	statuses := []struct {
+		status string
+		target *int64
+	}{
+		{ordermodel.OrderStatusPendingPay, &stats.PendingPay},
+		{ordermodel.OrderStatusPaidFull, &stats.PaidFull},
+		{ordermodel.OrderStatusPendingTravel, &stats.PendingTravel},
+		{ordermodel.OrderStatusRefunding, &stats.Refunding},
+		{ordermodel.OrderStatusCompleted, &stats.Completed},
+		{ordermodel.OrderStatusCancelled, &stats.Cancelled},
+	}
+
+	for _, st := range statuses {
+		count, err := s.orderRepo.CountByUserAndStatus(userID, st.status)
+		if err != nil {
+			return nil, fmt.Errorf("count orders by status %s: %w", st.status, err)
+		}
+		*st.target = count
+	}
+
+	stats.Total = stats.PendingPay + stats.PaidFull + stats.PendingTravel +
+		stats.Refunding + stats.Completed + stats.Cancelled
+
+	return stats, nil
+}
