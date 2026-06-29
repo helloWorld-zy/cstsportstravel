@@ -14,7 +14,7 @@ export default defineNuxtConfig({
 
   css: [
     '~/assets/tokens.css',
-    '~/assets/responsive.css',
+    '~/assets/css/responsive.css',
   ],
 
   runtimeConfig: {

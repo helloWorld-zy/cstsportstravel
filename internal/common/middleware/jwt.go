@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/travel-booking/server/internal/common/config"
@@ -40,11 +41,18 @@ type JWTManager struct {
 	accessExpiry  time.Duration
 	refreshExpiry time.Duration
 	issuer        string
+	revoker       TokenRevoker // CHK039: token blacklist support
+}
+
+// TokenRevoker abstracts token revocation storage (e.g., Redis).
+type TokenRevoker interface {
+	IsRevoked(tokenID string) bool
+	Revoke(tokenID string, ttl time.Duration)
 }
 
 // NewJWTManager creates a JWT manager from configuration.
 // If key paths are empty, generates an in-memory key pair (development only).
-func NewJWTManager(cfg config.JWTConfig) (*JWTManager, error) {
+func NewJWTManager(cfg config.JWTConfig, revoker ...TokenRevoker) (*JWTManager, error) {
 	var privateKey *rsa.PrivateKey
 	var publicKey *rsa.PublicKey
 	var err error
@@ -67,12 +75,18 @@ func NewJWTManager(cfg config.JWTConfig) (*JWTManager, error) {
 		publicKey = &privateKey.PublicKey
 	}
 
+	var r TokenRevoker
+	if len(revoker) > 0 {
+		r = revoker[0]
+	}
+
 	return &JWTManager{
 		privateKey:    privateKey,
 		publicKey:     publicKey,
 		accessExpiry:  time.Duration(cfg.AccessExpiry) * time.Minute,
 		refreshExpiry: time.Duration(cfg.RefreshExpiry) * time.Minute,
 		issuer:        cfg.Issuer,
+		revoker:       r,
 	}, nil
 }
 
@@ -81,6 +95,7 @@ func (m *JWTManager) GenerateAccessToken(userID int64, userType string, roles, p
 	now := time.Now()
 	claims := Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        uuid.New().String(), // CHK039: unique token ID for revocation
 			Issuer:    m.issuer,
 			Subject:   fmt.Sprintf("%d", userID),
 			IssuedAt:  jwt.NewNumericDate(now),
@@ -103,6 +118,7 @@ func (m *JWTManager) GenerateRefreshToken(userID int64, userType string) (string
 	now := time.Now()
 	claims := Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        uuid.New().String(), // CHK039: unique token ID for revocation
 			Issuer:    m.issuer,
 			Subject:   fmt.Sprintf("%d", userID),
 			IssuedAt:  jwt.NewNumericDate(now),
@@ -150,7 +166,38 @@ func (m *JWTManager) ValidateToken(tokenStr string) (*Claims, error) {
 		return nil, fmt.Errorf("invalid token claims")
 	}
 
+	// CHK039: Check token blacklist (server-side revocation)
+	if m.revoker != nil && m.revoker.IsRevoked(claims.ID) {
+		return nil, fmt.Errorf("token has been revoked")
+	}
+
 	return claims, nil
+}
+
+// RevokeToken adds a token ID to the blacklist, effectively logging out the user.
+// The token remains revoked until its original expiry time.
+func (m *JWTManager) RevokeToken(tokenStr string) error {
+	token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		return m.publicKey, nil
+	})
+	if err != nil {
+		return fmt.Errorf("parse token for revocation: %w", err)
+	}
+
+	claims, ok := token.Claims.(*Claims)
+	if !ok {
+		return fmt.Errorf("invalid token claims")
+	}
+
+	if m.revoker != nil {
+		// Revoke until the token's original expiry
+		ttl := time.Until(claims.ExpiresAt.Time)
+		if ttl > 0 {
+			m.revoker.Revoke(claims.ID, ttl)
+		}
+	}
+
+	return nil
 }
 
 // PublicKey returns the RSA public key for external verification.

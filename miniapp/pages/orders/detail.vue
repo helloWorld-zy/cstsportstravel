@@ -282,13 +282,78 @@ function cancelOrder() {
   })
 }
 
+// CHK072: Implement refund request in miniapp
 function requestRefund() {
-  // Navigate to refund form or show modal
-  uni.showToast({ title: '请在Web端申请退款', icon: 'none' })
+  uni.showModal({
+    title: '申请退款',
+    content: '请输入退款原因',
+    editable: true,
+    placeholderText: '如：行程变更、个人原因等',
+    success: async (modalRes) => {
+      if (!modalRes.confirm) return
+      const reason = modalRes.content?.trim()
+      if (!reason) {
+        uni.showToast({ title: '请输入退款原因', icon: 'none' })
+        return
+      }
+      try {
+        const token = uni.getStorageSync('access_token')
+        const res = await uni.request({
+          url: `${getApp().globalData?.apiBase || ''}/api/v1/orders/${orderId}/refund`,
+          method: 'POST',
+          data: { reason, description: reason },
+          header: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        })
+        const data = res.data as any
+        if (data?.code === 0) {
+          uni.showToast({ title: '退款申请已提交', icon: 'success' })
+          fetchOrder()
+        } else {
+          uni.showToast({ title: data?.message || '申请失败', icon: 'none' })
+        }
+      } catch {
+        uni.showToast({ title: '申请失败，请重试', icon: 'none' })
+      }
+    },
+  })
 }
 
+// CHK072: Implement review submission in miniapp
 function goToReview() {
-  uni.showToast({ title: '请在Web端提交评价', icon: 'none' })
+  uni.showModal({
+    title: '评价订单',
+    editable: true,
+    placeholderText: '请分享您的旅行体验（至少10个字）',
+    success: async (modalRes) => {
+      if (!modalRes.confirm) return
+      const content = modalRes.content?.trim()
+      if (!content || content.length < 10) {
+        uni.showToast({ title: '评价内容至少10个字', icon: 'none' })
+        return
+      }
+      try {
+        const token = uni.getStorageSync('access_token')
+        const res = await uni.request({
+          url: `${getApp().globalData?.apiBase || ''}/api/v1/products/${order.value?.product_id || 0}/reviews`,
+          method: 'POST',
+          data: {
+            order_id: orderId,
+            rating: 5,
+            content,
+          },
+          header: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        })
+        const data = res.data as any
+        if (data?.code === 0) {
+          uni.showToast({ title: '评价已提交', icon: 'success' })
+        } else {
+          uni.showToast({ title: data?.message || '提交失败', icon: 'none' })
+        }
+      } catch {
+        uni.showToast({ title: '提交失败，请重试', icon: 'none' })
+      }
+    },
+  })
 }
 
 onLoad((options) => {

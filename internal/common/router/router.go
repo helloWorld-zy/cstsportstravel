@@ -20,6 +20,7 @@ import (
 	adminhandler "github.com/travel-booking/server/internal/admin/handler"
 	adminrepo "github.com/travel-booking/server/internal/admin/repository"
 	adminservice "github.com/travel-booking/server/internal/admin/service"
+	"github.com/travel-booking/server/internal/common/auth"
 	"github.com/travel-booking/server/internal/common/cache"
 	"github.com/travel-booking/server/internal/common/config"
 	"github.com/travel-booking/server/internal/common/encrypt"
@@ -61,6 +62,7 @@ func New(cfg *config.Config, db *gorm.DB, rdb *cache.Redis, jwtManager *middlewa
 	engine.Use(gin.Recovery())
 	engine.Use(traceIDMiddleware())
 	engine.Use(corsMiddleware())
+	engine.Use(hstsMiddleware(cfg.Server.TLS.Enabled))
 
 	// Rate limiter for all requests
 	rateLimiter := middleware.NewRateLimiter(100, 200) // 100 req/s, burst 200
@@ -235,13 +237,28 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 	v1 := r.Engine.Group("/api/v1")
 	{
 		// Auth routes (no JWT required)
+		// CHK050: login-specific rate limiting (10 req/min per IP)
+		loginRateLimit := middleware.CustomRateLimit(10, 20)
+		smsRateLimit := middleware.CustomRateLimit(5, 10)
 		auth := v1.Group("/auth")
 		{
-			auth.POST("/sms-code", userH.SendSMSCode)
-			auth.POST("/login", userH.Login)
-			auth.POST("/wechat", wechatH.Login)
-			auth.POST("/admin/login", adminAuthH.Login)
+			auth.POST("/sms-code", smsRateLimit, userH.SendSMSCode)
+			auth.POST("/login", loginRateLimit, userH.Login)
+			auth.POST("/wechat", loginRateLimit, wechatH.Login)
+			auth.POST("/admin/login", loginRateLimit, adminAuthH.Login)
 			auth.POST("/refresh-token", userH.RefreshToken)
+
+			// CHK039: Logout with token revocation
+			auth.POST("/logout", middleware.AuthRequired(r.JWTManager), func(c *gin.Context) {
+				tokenStr := c.GetHeader("Authorization")
+				if len(tokenStr) > 7 && tokenStr[:7] == "Bearer " {
+					tokenStr = tokenStr[7:]
+				}
+				if err := r.JWTManager.RevokeToken(tokenStr); err != nil {
+					r.Logger.Warn("token revocation failed", zap.Error(err))
+				}
+				response.OKMessage(c, "logged out")
+			})
 
 			// Admin password change (JWT required)
 			auth.POST("/admin/change-password",
@@ -331,6 +348,7 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 	admin := v1.Group("/admin")
 	admin.Use(middleware.AuthRequired(r.JWTManager))
 	admin.Use(middleware.PerUserRateLimit(rateLimiter))
+	admin.Use(middleware.AuditMiddleware(r.DB)) // CHK045: audit all admin write operations
 	{
 		// Admin user info
 		admin.GET("/users/me", adminAuthH.GetAdminMe)
@@ -338,7 +356,7 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 		// Product management (with supplier data isolation)
 		adminProd := admin.Group("/products")
 		adminProd.Use(middleware.RBACAny("product:list", "product:manage"))
-		adminProd.Use(middleware.SupplierDataIsolation())
+		adminProd.Use(middleware.SupplierDataIsolation(r.DB))
 		{
 			// Review queue (must be before /:id routes to avoid conflict)
 			adminProd.GET("/review-queue", middleware.RBACAny("product:approve", "product:manage"), adminProdH.ListReviewQueue)
@@ -357,10 +375,14 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 			adminProd.POST("/:id/itinerary", middleware.RBACRequired("product:update"), adminProdH.SaveItinerary)
 		}
 
+		// CHK041: Initialize MFA middleware early so it can be used by multiple route groups
+		totpSvc := auth.NewTOTPService(r.Config.MFA.Issuer)
+		mfaRequired := middleware.MFARequired(r.DB, totpSvc)
+
 		// Order management (with supplier data isolation)
 		adminOrder := admin.Group("/orders")
 		adminOrder.Use(middleware.RBACAny("order:list", "order:manage"))
-		adminOrder.Use(middleware.SupplierDataIsolation())
+		adminOrder.Use(middleware.SupplierDataIsolation(r.DB))
 		{
 			adminOrder.GET("", adminOrdH.ListOrders)
 			adminOrder.GET("/:id", adminOrdH.GetOrderDetail)
@@ -372,8 +394,8 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 		{
 			adminRefund.GET("", adminOrdH.ListRefunds)
 			adminRefund.GET("/:id", adminOrdH.GetRefundDetail)
-			adminRefund.PUT("/:id/approve", middleware.RBACRequired("refund:approve"), adminOrdH.ApproveRefund)
-			adminRefund.PUT("/:id/reject", middleware.RBACRequired("refund:reject"), adminOrdH.RejectRefund)
+			adminRefund.PUT("/:id/approve", middleware.RBACRequired("refund:approve"), mfaRequired, adminOrdH.ApproveRefund)
+			adminRefund.PUT("/:id/reject", middleware.RBACRequired("refund:reject"), mfaRequired, adminOrdH.RejectRefund)
 		}
 
 		// User management (US7)
@@ -382,8 +404,8 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 		{
 			adminUser.GET("", rbacH.ListUsers)
 			adminUser.POST("", rbacH.CreateUser)
-			adminUser.PUT("/:id/status", rbacH.UpdateUserStatus)
-			adminUser.PUT("/:id/roles", rbacH.UpdateUserRoles)
+			adminUser.PUT("/:id/status", mfaRequired, rbacH.UpdateUserStatus)  // CHK041: MFA for status changes
+			adminUser.PUT("/:id/roles", mfaRequired, rbacH.UpdateUserRoles)    // CHK041: MFA for role changes
 		}
 
 		// Role management (US7)
@@ -391,9 +413,9 @@ func (r *Router) setupAPIRoutes(rateLimiter *middleware.RateLimiter) {
 		adminRole.Use(middleware.RBACRequired("role:manage"))
 		{
 			adminRole.GET("", rbacH.ListRoles)
-			adminRole.POST("", rbacH.CreateRole)
-			adminRole.PUT("/:id", rbacH.UpdateRole)
-			adminRole.DELETE("/:id", rbacH.DeleteRole)
+			adminRole.POST("", mfaRequired, rbacH.CreateRole)   // CHK041: MFA for role creation
+			adminRole.PUT("/:id", mfaRequired, rbacH.UpdateRole) // CHK041: MFA for role update
+			adminRole.DELETE("/:id", mfaRequired, rbacH.DeleteRole)
 		}
 
 		// Menu and permission tree (US7)
@@ -477,4 +499,15 @@ func corsMiddleware() gin.HandlerFunc {
 
 func generateTraceID() string {
 	return fmt.Sprintf("%d", time.Now().UnixNano())
+}
+
+// hstsMiddleware adds HSTS header when TLS is enabled (Constitution §III).
+func hstsMiddleware(tlsEnabled bool) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if tlsEnabled {
+			// max-age=31536000 (1 year), includeSubDomains
+			c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		}
+		c.Next()
+	}
 }

@@ -3,6 +3,11 @@ server:
   mode: debug
   read_timeout: 30
   write_timeout: 30
+  tls:
+    enabled: false
+    cert_file: "certs/server.crt"
+    key_file: "certs/server.key"
+    min_version: "1.3"
 
 database:
   host: localhost
@@ -11,6 +16,7 @@ database:
   password: ""
   dbname: travel_booking
   sslmode: disable
+  # Note: empty password must use 'password=' without quotes in DSN
   max_open_conns: 25
   max_idle_conns: 5
   max_lifetime: 30

@@ -22,6 +22,10 @@ type ProductFilter struct {
 	ProductGrade string
 	Keyword     string
 	Status      string // default: "approved"
+	// CHK011: Additional filter fields (PRD F-I-L06, F-I-L07, F-I-L09)
+	AccommodationStandard string // economy/comfort/luxury/five_star
+	ThemeTags             string // family/honeymoon/photography/food/shopping/adventure/red_tourism/health
+	TransportMode         string // flight/train/bus
 }
 
 // ProductSort defines sort options.
@@ -105,6 +109,16 @@ func (r *ProductRepository) FindWithFilters(filter ProductFilter, sort ProductSo
 	}
 	if filter.ProductGrade != "" {
 		query = query.Where("product_grade = ?", filter.ProductGrade)
+	}
+	// CHK011: Additional filter conditions
+	if filter.AccommodationStandard != "" {
+		query = query.Where("product_grade = ?", filter.AccommodationStandard)
+	}
+	if filter.TransportMode != "" {
+		query = query.Where("transport_mode = ?", filter.TransportMode)
+	}
+	if filter.ThemeTags != "" {
+		query = query.Where("destination_tags::text ILIKE ?", "%"+filter.ThemeTags+"%")
 	}
 	if filter.Keyword != "" {
 		kw := "%" + strings.TrimSpace(filter.Keyword) + "%"

@@ -29,6 +29,15 @@ type ServerConfig struct {
 	Mode         string `mapstructure:"mode"` // debug, release, test
 	ReadTimeout  int    `mapstructure:"read_timeout"`
 	WriteTimeout int    `mapstructure:"write_timeout"`
+	TLS          TLSConfig `mapstructure:"tls"`
+}
+
+// TLSConfig holds TLS/HTTPS settings.
+type TLSConfig struct {
+	Enabled  bool   `mapstructure:"enabled"`
+	CertFile string `mapstructure:"cert_file"`
+	KeyFile  string `mapstructure:"key_file"`
+	MinVersion string `mapstructure:"min_version"` // "1.2" or "1.3"
 }
 
 // DatabaseConfig holds PostgreSQL connection settings.
@@ -46,6 +55,12 @@ type DatabaseConfig struct {
 
 // DSN returns the PostgreSQL connection string.
 func (d DatabaseConfig) DSN() string {
+	if d.Password == "" {
+		return fmt.Sprintf(
+			"host=%s port=%d user=%s dbname=%s sslmode=%s",
+			d.Host, d.Port, d.User, d.DBName, d.SSLMode,
+		)
+	}
 	return fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		d.Host, d.Port, d.User, d.Password, d.DBName, d.SSLMode,

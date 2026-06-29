@@ -3,6 +3,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -173,7 +174,7 @@ func (h *PaymentHandler) WechatNotify(c *gin.Context) {
 }
 
 // QueryPayment handles POST /api/v1/payments/:id/query.
-// Actively queries the payment channel for transaction status.
+// CHK028: Actively queries the payment channel for transaction status.
 func (h *PaymentHandler) QueryPayment(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	if userID == 0 {
@@ -194,9 +195,39 @@ func (h *PaymentHandler) QueryPayment(c *gin.Context) {
 		return
 	}
 
-	// In production, if status is still 'created' or 'paying', actively query the channel
-	// For now, just return current status
+	// CHK028: If status is still pending, actively query the payment channel
+	if result.Status == "created" || result.Status == "paying" {
+		tradeStatus, queryErr := h.queryChannelStatus(result.Channel, result.PaymentNo)
+		if queryErr != nil {
+			h.logger.Warn("channel query failed",
+				zap.String("channel", result.Channel),
+				zap.String("payment_no", result.PaymentNo),
+				zap.Error(queryErr),
+			)
+		} else if tradeStatus == "TRADE_SUCCESS" || tradeStatus == "TRADE_FINISHED" || tradeStatus == "SUCCESS" {
+			// Channel says paid — process the callback
+			if cbErr := h.paymentService.HandleCallback(paymentID, "CHANNEL_QUERY", true); cbErr != nil {
+				h.logger.Error("failed to process channel query result", zap.Error(cbErr))
+			} else {
+				// Refresh status after processing
+				result, _ = h.paymentService.GetPaymentStatus(userID, paymentID)
+			}
+		}
+	}
+
 	response.OK(c, result)
+}
+
+// queryChannelStatus queries the payment channel for the current trade status.
+func (h *PaymentHandler) queryChannelStatus(channel, paymentNo string) (string, error) {
+	switch channel {
+	case "alipay":
+		return h.alipaySvc.QueryOrder(paymentNo)
+	case "wechat":
+		return h.wechatSvc.QueryOrder(paymentNo)
+	default:
+		return "", fmt.Errorf("unsupported channel: %s", channel)
+	}
 }
 
 // SimulateCallback handles POST /api/v1/test/payments/simulate-callback.

@@ -8,6 +8,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/travel-booking/server/internal/common/cache"
 	"github.com/travel-booking/server/internal/product/model"
 	"github.com/travel-booking/server/internal/product/repository"
 )
@@ -18,6 +19,7 @@ type ProductService struct {
 	categoryRepo *repository.CategoryRepository
 	reviewRepo   *repository.ReviewRepository
 	reviewSvc    *ReviewService
+	localCache   *cache.LocalCache // CHK054: L3 local cache
 	logger       *zap.Logger
 }
 
@@ -34,6 +36,7 @@ func NewProductService(
 		categoryRepo: categoryRepo,
 		reviewRepo:   reviewRepo,
 		reviewSvc:    reviewSvc,
+		localCache:   cache.NewLocalCache(5 * time.Minute), // CHK054: 5min TTL for product data
 		logger:       logger,
 	}
 }
@@ -55,6 +58,10 @@ type ListProductsRequest struct {
 	Sort         string `form:"sort" binding:"omitempty,oneof=recommended price_asc price_desc satisfaction sales days_asc days_desc"`
 	Page         int    `form:"page" binding:"min=1"`
 	PageSize     int    `form:"page_size" binding:"min=1,max=100"`
+	// CHK011: Additional filter fields (PRD F-I-L06, F-I-L07, F-I-L09)
+	AccommodationStandard string `form:"accommodation_standard"`
+	ThemeTags             string `form:"theme_tags"`
+	TransportMode         string `form:"transport_mode"`
 }
 
 // ProductSummaryResponse is the product card data for list view.
@@ -162,6 +169,10 @@ func (s *ProductService) ListProducts(req ListProductsRequest) (*PaginatedProduc
 		CategoryID:   req.CategoryID,
 		ProductGrade: req.ProductGrade,
 		Keyword:      req.Keyword,
+		// CHK011: Additional filter fields
+		AccommodationStandard: req.AccommodationStandard,
+		ThemeTags:             req.ThemeTags,
+		TransportMode:         req.TransportMode,
 	}
 
 	sort := repository.ProductSort(req.Sort)
@@ -188,7 +199,16 @@ func (s *ProductService) ListProducts(req ListProductsRequest) (*PaginatedProduc
 }
 
 // GetProductDetail returns complete product information.
+// CHK054: Uses local cache (L3) for hot product data.
 func (s *ProductService) GetProductDetail(id int64) (*ProductDetailResponse, error) {
+	// Check local cache first (L3)
+	cacheKey := fmt.Sprintf("product:detail:%d", id)
+	if cached := s.localCache.Get(cacheKey); cached != nil {
+		if resp, ok := cached.(*ProductDetailResponse); ok {
+			return resp, nil
+		}
+	}
+
 	product, err := s.productRepo.FindByID(id)
 	if err != nil {
 		return nil, fmt.Errorf("find product: %w", err)
@@ -270,6 +290,9 @@ func (s *ProductService) GetProductDetail(id int64) (*ProductDetailResponse, err
 	if reviewSummary != nil {
 		detail.ReviewSummary = reviewSummary.Summary
 	}
+
+	// CHK054: Cache the product detail in local cache (L3)
+	s.localCache.Set(cacheKey, detail)
 
 	return detail, nil
 }

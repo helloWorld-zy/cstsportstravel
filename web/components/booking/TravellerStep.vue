@@ -70,6 +70,24 @@
       <el-button @click="emit('back')">上一步</el-button>
       <el-button type="primary" :disabled="!isValid" @click="handleNext">下一步</el-button>
     </div>
+
+    <!-- CHK004: Frequent traveller selection dialog -->
+    <el-dialog v-model="showFrequentDialog" title="选择常用出游人" width="500px">
+      <div class="frequent-list">
+        <div
+          v-for="ft in frequentTravellers"
+          :key="ft.id"
+          class="frequent-item"
+          @click="selectFrequentTraveller(ft)"
+        >
+          <div class="frequent-name">{{ ft.real_name }}</div>
+          <div class="frequent-meta">{{ ft.id_card_no }} · {{ ft.phone }}</div>
+        </div>
+      </div>
+      <div v-if="!frequentTravellers.length" style="text-align: center; color: #999; padding: 20px;">
+        暂无常用出游人
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -168,9 +186,55 @@ function validateIDCard(index: number) {
   }
 }
 
-function fillFromFrequent(index: number) {
-  // TODO: Open frequent traveller selection dialog
-  ElMessage.info('常用出游人选择功能开发中')
+// CHK004: Implement frequent traveller selection
+const frequentTravellers = ref<any[]>([])
+const showFrequentDialog = ref(false)
+const fillingIndex = ref(0)
+
+async function fillFromFrequent(index: number) {
+  fillingIndex.value = index
+  try {
+    const { data } = await useFetch('/api/v1/users/me/travellers')
+    const response = data.value as any
+    if (response?.code === 0 && response.data?.length) {
+      frequentTravellers.value = response.data
+      showFrequentDialog.value = true
+    } else {
+      ElMessage.info('暂无常用出游人，请先在个人中心添加')
+    }
+  } catch {
+    ElMessage.error('获取常用出游人失败')
+  }
+}
+
+function selectFrequentTraveller(traveller: any) {
+  const idx = fillingIndex.value
+  const t = travellers.value[idx]
+  if (!t) return
+
+  t.real_name = traveller.real_name || ''
+  t.id_card_no = traveller.id_card_no || ''
+  t.phone = traveller.phone || ''
+  t.birth_date = traveller.birth_date || ''
+  t.gender = traveller.gender || ''
+
+  // Auto-detect child/infant by birth date
+  if (traveller.birth_date) {
+    const birth = new Date(traveller.birth_date)
+    const now = new Date()
+    const age = now.getFullYear() - birth.getFullYear()
+    if (age < 2) {
+      t.is_infant = true
+      t.is_child = false
+    } else if (age < 12) {
+      t.is_child = true
+      t.is_infant = false
+    }
+  }
+
+  validateIDCard(idx)
+  showFrequentDialog.value = false
+  ElMessage.success('已填充出游人信息')
 }
 
 const isValid = computed(() => {
@@ -240,5 +304,37 @@ function handleNext() {
   display: flex;
   justify-content: space-between;
   margin-top: 24px;
+}
+
+/* CHK004: Frequent traveller dialog styles */
+.frequent-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.frequent-item {
+  padding: 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.frequent-item:hover {
+  border-color: #409eff;
+  background: #f5f7ff;
+}
+
+.frequent-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.frequent-meta {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
 }
 </style>

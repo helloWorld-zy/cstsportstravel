@@ -1,0 +1,99 @@
+/* CHK082: Responsive layout breakpoints for Web sales platform
+ *
+ * Breakpoints follow industry standard:
+ * - Mobile:  0 – 767px
+ * - Tablet:  768px – 1023px
+ * - Desktop: 1024px+
+ */
+
+/* Mobile-first base styles */
+:root {
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+}
+
+/* Small screens (mobile landscape) */
+@media (min-width: 640px) {
+  .container {
+    max-width: 640px;
+  }
+}
+
+/* Medium screens (tablets) */
+@media (min-width: 768px) {
+  .container {
+    max-width: 768px;
+  }
+
+  .hide-on-mobile {
+    display: inherit !important;
+  }
+
+  .show-on-mobile {
+    display: none !important;
+  }
+}
+
+/* Large screens (desktops) */
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1024px;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Extra large screens */
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1280px;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Mobile-specific overrides */
+@media (max-width: 767px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .show-on-mobile {
+    display: inherit !important;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .filter-drawer {
+    width: 100% !important;
+  }
+
+  .booking-steps {
+    flex-direction: column;
+  }
+
+  .price-summary {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .order-card {
+    margin: 0 -16px;
+    border-radius: 0;
+  }
+}

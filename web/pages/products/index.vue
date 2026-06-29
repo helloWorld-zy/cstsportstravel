@@ -134,6 +134,49 @@
               </span>
             </div>
           </div>
+          <!-- CHK011: Additional filter groups (PRD F-I-L06, F-I-L07, F-I-L09) -->
+          <div class="filter-group">
+            <h4>住宿标准</h4>
+            <div class="filter-options">
+              <span
+                v-for="opt in accommodationOptions"
+                :key="opt.value"
+                class="filter-option"
+                :class="{ selected: params.accommodation_standard === opt.value }"
+                @click="params.accommodation_standard = params.accommodation_standard === opt.value ? '' : opt.value"
+              >
+                {{ opt.label }}
+              </span>
+            </div>
+          </div>
+          <div class="filter-group">
+            <h4>主题标签</h4>
+            <div class="filter-options">
+              <span
+                v-for="tag in themeOptions"
+                :key="tag.value"
+                class="filter-option"
+                :class="{ selected: params.theme_tags === tag.value }"
+                @click="params.theme_tags = params.theme_tags === tag.value ? '' : tag.value"
+              >
+                {{ tag.label }}
+              </span>
+            </div>
+          </div>
+          <div class="filter-group">
+            <h4>交通工具</h4>
+            <div class="filter-options">
+              <span
+                v-for="opt in transportOptions"
+                :key="opt.value"
+                class="filter-option"
+                :class="{ selected: params.transport_mode === opt.value }"
+                @click="params.transport_mode = params.transport_mode === opt.value ? '' : opt.value"
+              >
+                {{ opt.label }}
+              </span>
+            </div>
+          </div>
         </div>
         <div class="drawer-footer">
           <button class="reset-btn" @click="resetFilters">重置</button>
@@ -173,6 +216,10 @@ const params = reactive<ProductListParams>({
   sort: (route.query.sort as string) || 'recommended',
   page: 1,
   page_size: 20,
+  // CHK011: Additional filter fields (PRD F-I-L06, F-I-L07, F-I-L09)
+  accommodation_standard: (route.query.accommodation_standard as string) || '',
+  theme_tags: (route.query.theme_tags as string) || '',
+  transport_mode: (route.query.transport_mode as string) || '',
 })
 
 // Sort options
@@ -201,6 +248,30 @@ const priceOptions = [
   { label: '2000-4000', min: 2000, max: 4000 },
   { label: '4000-6000', min: 4000, max: 6000 },
   { label: '6000以上', min: 6000, max: undefined },
+]
+// CHK011: Additional filter options (PRD F-I-L06, F-I-L07, F-I-L09)
+const accommodationOptions = [
+  { label: '不限', value: '' },
+  { label: '经济型', value: 'economy' },
+  { label: '舒适型', value: 'comfort' },
+  { label: '豪华型', value: 'luxury' },
+  { label: '五星', value: 'five_star' },
+]
+const themeOptions = [
+  { label: '亲子', value: 'family' },
+  { label: '蜜月', value: 'honeymoon' },
+  { label: '摄影', value: 'photography' },
+  { label: '美食', value: 'food' },
+  { label: '购物', value: 'shopping' },
+  { label: '探险', value: 'adventure' },
+  { label: '红色旅游', value: 'red_tourism' },
+  { label: '康养', value: 'health' },
+]
+const transportOptions = [
+  { label: '不限', value: '' },
+  { label: '飞机', value: 'flight' },
+  { label: '高铁', value: 'train' },
+  { label: '大巴', value: 'bus' },
 ]
 const gradeOptions = [
   { label: '不限', value: '' },
@@ -267,6 +338,10 @@ function resetFilters() {
   params.price_min = undefined
   params.price_max = undefined
   params.product_grade = ''
+  // CHK011: Reset additional filters
+  params.accommodation_standard = ''
+  params.theme_tags = ''
+  params.transport_mode = ''
   params.page = 1
 }
 

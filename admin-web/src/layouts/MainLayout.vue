@@ -20,7 +20,7 @@
           <!-- Submenu with children -->
           <el-sub-menu v-if="item.children?.length" :index="item.path">
             <template #title>
-              <el-icon v-if="item.icon"><component :is="item.icon" /></el-icon>
+              <el-icon v-if="item.icon && iconMap[item.icon]"><component :is="iconMap[item.icon]" /></el-icon>
               <span>{{ item.title }}</span>
             </template>
             <el-menu-item
@@ -34,7 +34,7 @@
 
           <!-- Single menu item -->
           <el-menu-item v-else :index="item.path">
-            <el-icon v-if="item.icon"><component :is="item.icon" /></el-icon>
+            <el-icon v-if="item.icon && iconMap[item.icon]"><component :is="iconMap[item.icon]" /></el-icon>
             <template #title>{{ item.title }}</template>
           </el-menu-item>
         </template>
@@ -86,8 +86,15 @@
 </template>
 
 <script setup lang="ts">
-import { Fold, Expand, User } from '@element-plus/icons-vue'
+import { ref, computed, type Component } from 'vue'
+import { Fold, Expand, User, Goods, Document, Setting } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
+
+const iconMap: Record<string, Component> = {
+  Goods,
+  Document,
+  Setting,
+}
 
 const route = useRoute()
 const router = useRouter()

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"net/http"
@@ -62,17 +63,18 @@ func main() {
 	log.Info("redis connected")
 	defer rdb.Close()
 
-	// Initialize JWT manager
-	jwtManager, err := middleware.NewJWTManager(cfg.JWT)
+	// Initialize JWT manager with Redis token revocation (CHK039)
+	tokenRevoker := middleware.NewRedisTokenRevoker(rdb.Client())
+	jwtManager, err := middleware.NewJWTManager(cfg.JWT, tokenRevoker)
 	if err != nil {
 		log.Fatal("failed to init JWT manager", zap.Error(err))
 	}
-	log.Info("JWT manager initialized")
+	log.Info("JWT manager initialized", zap.Bool("token_revocation", true))
 
 	// Setup router
 	r := router.New(cfg, db, rdb, jwtManager, log)
 
-	// HTTP server
+	// HTTP server with TLS 1.3 support (Constitution Principle III)
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.Server.Port),
 		Handler:      r.Engine,
@@ -80,11 +82,29 @@ func main() {
 		WriteTimeout: time.Duration(cfg.Server.WriteTimeout) * time.Second,
 	}
 
+	// Configure TLS 1.3 minimum version (Constitution §III: TLS 1.3 mandatory)
+	if cfg.Server.TLS.Enabled {
+		srv.TLSConfig = &tls.Config{
+			MinVersion: tls.VersionTLS13,
+		}
+		log.Info("TLS 1.3 enabled",
+			zap.String("cert", cfg.Server.TLS.CertFile),
+			zap.String("min_version", "1.3"),
+		)
+	}
+
 	// Start server in goroutine
 	go func() {
-		log.Info("server listening", zap.String("addr", srv.Addr))
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal("server error", zap.Error(err))
+		if cfg.Server.TLS.Enabled {
+			log.Info("server listening (TLS)", zap.String("addr", srv.Addr))
+			if err := srv.ListenAndServeTLS(cfg.Server.TLS.CertFile, cfg.Server.TLS.KeyFile); err != nil && err != http.ErrServerClosed {
+				log.Fatal("server error", zap.Error(err))
+			}
+		} else {
+			log.Info("server listening (HTTP — TLS disabled)", zap.String("addr", srv.Addr))
+			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Fatal("server error", zap.Error(err))
+			}
 		}
 	}()
 

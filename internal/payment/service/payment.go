@@ -216,6 +216,22 @@ func (s *PaymentService) HandleCallback(paymentID int64, channelTradeNo string, 
 		return nil
 	}
 
+	// CHK025: If order is already cancelled, reject the payment and trigger refund
+	cancelledOrder, orderErr := s.orderRepo.FindByIDBasic(ptx.OrderID)
+	if orderErr == nil && cancelledOrder.OrderStatus == ordermodel.OrderStatusCancelled {
+		s.logger.Warn("payment received for cancelled order — rejecting",
+			zap.Int64("payment_id", paymentID),
+			zap.Int64("order_id", ptx.OrderID),
+		)
+		// Mark payment as failed (rejected due to cancelled order)
+		s.paymentRepo.UpdateStatus(paymentID, paymentmodel.PaymentTxnStatusFailed, map[string]interface{}{
+			"channel_trade_no": channelTradeNo,
+		})
+		// Set dedup key to prevent reprocessing
+		s.rdb.Set(ctx, dedupKey, 1, 24*time.Hour)
+		return nil
+	}
+
 	// 4. Update payment status
 	now := time.Now()
 	if success {

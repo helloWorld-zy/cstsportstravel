@@ -3,6 +3,7 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 
 	"github.com/travel-booking/server/internal/common/response"
 )
@@ -17,16 +18,13 @@ const (
 // and services to filter queries by supplier_id, ensuring suppliers can only
 // access their own products and orders (FR-027).
 //
-// If the user has a "supplier" role and has a supplier_id set on their admin_user
-// record, the middleware sets the supplier_id in the context. Platform admin users
-// (without supplier role) pass through without filtering.
-//
-// Usage:
-//
-//	admin.Use(AuthRequired(jwtManager))
-//	admin.Use(SupplierDataIsolation())
-//	// In handler: supplierID := GetSupplierID(c) // 0 = no filter, >0 = filter by this ID
-func SupplierDataIsolation() gin.HandlerFunc {
+// CHK060: Also sets PostgreSQL session variables for Row-Level Security policies.
+func SupplierDataIsolation(db ...*gorm.DB) gin.HandlerFunc {
+	var gdb *gorm.DB
+	if len(db) > 0 {
+		gdb = db[0]
+	}
+
 	return func(c *gin.Context) {
 		roles := GetRoles(c)
 
@@ -41,16 +39,23 @@ func SupplierDataIsolation() gin.HandlerFunc {
 		if !isSupplier {
 			// Platform admin — no data isolation needed
 			c.Set(ContextKeySupplierID, int64(0))
+			// CHK060: Set RLS session variables for admin (sees all)
+			if gdb != nil {
+				gdb.Exec("SET app.current_user_type = 'admin'")
+			}
 			c.Next()
 			return
 		}
 
 		// Supplier user — extract supplier_id from JWT claims or user record.
-		// The supplier_id is expected to be set during login and stored in the
-		// JWT claims. For now, we check if it's available in the context.
 		if supplierID, exists := c.Get("supplier_id"); exists {
 			if sid, ok := supplierID.(int64); ok && sid > 0 {
 				c.Set(ContextKeySupplierID, sid)
+				// CHK060: Set RLS session variables for supplier
+				if gdb != nil {
+					gdb.Exec("SET app.current_user_type = 'supplier'")
+					gdb.Exec("SET app.current_supplier_id = ?", sid)
+				}
 				c.Next()
 				return
 			}

@@ -916,8 +916,8 @@ Phase 12 包含：WinSW 服务配置、Traefik 配置（TLS 1.3）、GitHub Acti
 1. specs/001-domestic-tour-mvp/spec.md（MVP 规格）
 2. specs/001-domestic-tour-mvp/contracts/（API 契约，验证每个端点是否实现）
 3. specs/001-domestic-tour-mvp/quickstart.md（验证场景，验证端到端流程是否通过）
-2. .specify/memory/constitution.md（项目宪法）
-3. docs/travel_booking_system_v3.agent.final.md 的以下章节：
+4. .specify/memory/constitution.md（项目宪法）
+5. docs/travel_booking_system_v3.agent.final.md 的以下章节：
    - §4.1 通用功能（用户体系完整性）
    - §4.2 境内游跟团游（产品/预订/订单流程完整性）
    - §4.2.5 业务规则（单房差、儿童价、超时未付、退改规则）

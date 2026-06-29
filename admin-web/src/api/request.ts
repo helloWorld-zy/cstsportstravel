@@ -52,7 +52,7 @@ export class ApiError extends Error {
  */
 function createApiClient(): AxiosInstance {
   const client = axios.create({
-    baseURL: `${import.meta.env.VITE_API_BASE || 'http://localhost:8080'}/api/v1`,
+    baseURL: `${import.meta.env.VITE_API_BASE || 'http://localhost:8088'}/api/v1`,
     timeout: 30000,
     headers: {
       'Content-Type': 'application/json',
