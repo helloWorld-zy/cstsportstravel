@@ -29,6 +29,12 @@ type Product struct {
 	ProductName        string          `gorm:"column:product_name;size:200;not null" json:"product_name"`
 	CategoryID         int64           `gorm:"column:category_id;not null;index" json:"category_id"`
 	ProductType        string          `gorm:"column:product_type;size:30;not null;default:group_tour" json:"product_type"`
+	// Outbound travel fields (Phase 2)
+	DestinationCountryID    *int64          `gorm:"column:destination_country_id;index" json:"destination_country_id,omitempty"`
+	VisaInfo                json.RawMessage `gorm:"column:visa_info;type:jsonb" json:"visa_info,omitempty"`
+	InternationalFlightInfo json.RawMessage `gorm:"column:international_flight_info;type:jsonb" json:"international_flight_info,omitempty"`
+	InsuranceRequirements   json.RawMessage `gorm:"column:insurance_requirements;type:jsonb" json:"insurance_requirements,omitempty"`
+	PreTripServices         json.RawMessage `gorm:"column:pre_trip_services;type:jsonb" json:"pre_trip_services,omitempty"`
 	OriginCity         string          `gorm:"column:origin_city;size:50;not null" json:"origin_city"`
 	DestinationCities  json.RawMessage `gorm:"column:destination_cities;type:jsonb;not null" json:"destination_cities"`
 	DestinationTags    json.RawMessage `gorm:"column:destination_tags;type:jsonb" json:"destination_tags,omitempty"`
@@ -62,6 +68,7 @@ type Product struct {
 	RefundRules    []RefundRule   `gorm:"foreignKey:ProductID" json:"refund_rules,omitempty"`
 	Reviews        []ProductReview `gorm:"foreignKey:ProductID" json:"reviews,omitempty"`
 	Category       *Category      `gorm:"foreignKey:CategoryID" json:"category,omitempty"`
+	DestinationCountry *Country   `gorm:"foreignKey:DestinationCountryID" json:"destination_country,omitempty"`
 }
 
 // TableName overrides the table name.
@@ -182,6 +189,27 @@ const (
 	ProductStatusSuspended           = "suspended"
 	ProductStatusChangePendingReview = "change_pending_review"
 )
+
+// Product type constants.
+const (
+	ProductTypeGroupTour = "group_tour"
+	ProductTypeOutbound  = "outbound_group"
+)
+
+// InternationalFlightInfo contains international flight details for outbound products.
+type InternationalFlightInfo struct {
+	Airline        string `json:"airline"`
+	FlightNo       string `json:"flight_no"`
+	DepartCity     string `json:"depart_city"`
+	DepartAirport  string `json:"depart_airport,omitempty"`
+	ArriveCity     string `json:"arrive_city"`
+	ArriveAirport  string `json:"arrive_airport,omitempty"`
+	DepartTime     string `json:"depart_time,omitempty"`
+	ArriveTime     string `json:"arrive_time,omitempty"`
+	Stops          int    `json:"stops,omitempty"` // 0 = direct
+	Aircraft       string `json:"aircraft,omitempty"`
+	BaggageAllowance string `json:"baggage_allowance,omitempty"`
+}
 
 // Departure status constants.
 const (

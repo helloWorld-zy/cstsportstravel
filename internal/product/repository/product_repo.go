@@ -222,6 +222,72 @@ func (r *ProductRepository) FindPopular(limit int) ([]model.Product, error) {
 	return products, err
 }
 
+// FindOutboundWithFilters returns outbound products with continent/country/visa_type filters.
+func (r *ProductRepository) FindOutboundWithFilters(filter ProductFilter, continent string, countryID *int64, visaType string, sort ProductSort, page, pageSize int) ([]model.Product, int64, error) {
+	query := r.db.Model(&model.Product{})
+
+	// Filter to outbound products only
+	query = query.Where("product_type = ? AND status = ?", model.ProductTypeOutbound, model.ProductStatusApproved)
+
+	// Continent/country filter via join
+	if countryID != nil {
+		query = query.Where("destination_country_id = ?", *countryID)
+	} else if continent != "" {
+		query = query.Where("destination_country_id IN (SELECT id FROM country WHERE continent = ? AND status = 'active')", continent)
+	}
+
+	// Visa type filter via join
+	if visaType != "" {
+		query = query.Where("destination_country_id IN (SELECT id FROM country WHERE visa_type = ? AND status = 'active')", visaType)
+	}
+
+	// Common filters
+	if filter.Origin != "" {
+		query = query.Where("origin_city = ?", filter.Origin)
+	}
+	if filter.DaysMin != nil {
+		query = query.Where("days >= ?", *filter.DaysMin)
+	}
+	if filter.DaysMax != nil {
+		query = query.Where("days <= ?", *filter.DaysMax)
+	}
+	if filter.Keyword != "" {
+		kw := "%" + filter.Keyword + "%"
+		query = query.Where("(product_name ILIKE ? OR summary ILIKE ?)", kw, kw)
+	}
+	if filter.PriceMin != nil {
+		minCents := *filter.PriceMin * 100
+		query = query.Where("id IN (SELECT product_id FROM departure_date WHERE adult_price >= ? AND status = 'open')", minCents)
+	}
+	if filter.PriceMax != nil {
+		maxCents := *filter.PriceMax * 100
+		query = query.Where("id IN (SELECT product_id FROM departure_date WHERE adult_price <= ? AND status = 'open')", maxCents)
+	}
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, fmt.Errorf("count outbound products: %w", err)
+	}
+
+	query = applyProductSort(query, sort)
+
+	offset := (page - 1) * pageSize
+	var products []model.Product
+	err := query.
+		Preload("DestinationCountry").
+		Preload("DepartureDates", func(db *gorm.DB) *gorm.DB {
+			return db.Order("departure_date ASC")
+		}).
+		Offset(offset).
+		Limit(pageSize).
+		Find(&products).Error
+	if err != nil {
+		return nil, 0, fmt.Errorf("find outbound products: %w", err)
+	}
+
+	return products, total, nil
+}
+
 // applyProductSort applies sorting to the query.
 func applyProductSort(query *gorm.DB, sort ProductSort) *gorm.DB {
 	switch sort {

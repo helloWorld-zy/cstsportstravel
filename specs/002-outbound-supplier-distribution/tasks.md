@@ -63,42 +63,42 @@
 
 ### Implementation
 
-- [ ] T021 [P] [US1] Create Country domain model in `backend/internal/product/domain/country.go` with visa_type enum and hierarchy
-- [ ] T022 [P] [US1] Create VisaInfo domain model in `backend/internal/product/domain/visa_info.go` with visa types, processing days, material preview
-- [ ] T023 [P] [US1] Create VisaMaterialTemplate domain model in `backend/internal/product/domain/visa_material_template.go` with occupation-based templates
-- [ ] T024 [US1] Extend Product model with outbound fields (destination_country_id, visa_info, insurance_requirements) in `backend/internal/product/domain/outbound.go`
-- [ ] T025 [P] [US1] Create Country repository with CRUD and hierarchy query in `backend/internal/product/repository/country_repo.go`
-- [ ] T026 [P] [US1] Create VisaMaterialTemplate repository with country+occupation query in `backend/internal/product/repository/visa_template_repo.go`
-- [ ] T027 [US1] Create outbound product listing API with continent/country/visa_type/city/days filters in `backend/internal/product/handler/outbound_handler.go`
-- [ ] T028 [US1] Create outbound product detail API with visa info card in `backend/internal/product/handler/outbound_handler.go`
-- [ ] T029 [US1] Create pre-trip service API (entry policy, materials, cash rules, customs guide, emergency contacts) in `backend/internal/product/handler/pretrip_handler.go`
-- [ ] T030 [P] [US1] Create PassportInfo domain model with expiry validation (≥6 months after return) in `backend/internal/order/domain/passport.go`
-- [ ] T031 [P] [US1] Create OCR adapter interface and Baidu OCR implementation for passport recognition in `backend/internal/order/service/ocr_adapter.go`
-- [ ] T032 [US1] Create passport management API (CRUD + OCR + expiry validation) in `backend/internal/order/handler/passport_handler.go`
-- [ ] T033 [US1] Create outbound booking API (5-step wizard: select departure→fill passport→visa service→addons→confirm) in `backend/internal/order/handler/outbound_booking_handler.go`
-- [ ] T034 [P] [US1] Create VisaOrder domain model with 5-node state machine (pending_submit→reviewing→submitted→approved/rejected) in `backend/internal/order/domain/visa_order.go`
-- [ ] T035 [P] [US1] Create VisaMaterial domain model in `backend/internal/order/domain/visa_material.go`
-- [ ] T036 [P] [US1] Create VisaProgress domain model in `backend/internal/order/domain/visa_progress.go`
-- [ ] T037 [US1] Create VisaOrder repository with status machine transitions in `backend/internal/order/repository/visa_order_repo.go`
-- [ ] T038 [US1] Create VisaMaterial repository with file storage integration in `backend/internal/order/repository/visa_material_repo.go`
-- [ ] T039 [US1] Create visa material management API (upload ≤10MB, occupation-based checklist, completeness check) in `backend/internal/order/handler/visa_material_handler.go`
-- [ ] T040 [US1] Create visa progress tracking API with NATS event publishing on status change in `backend/internal/order/handler/visa_progress_handler.go`
-- [ ] T041 [US1] Create visa notification NATS consumer (SMS + in-app for status change/approval/rejection/logistics) in `backend/internal/order/service/visa_notification_consumer.go`
-- [ ] T042 [US1] Create visa history query API and visa expiry reminder (Asynq cron job, 90 days before expiry) in `backend/internal/order/service/visa_reminder.go`
-- [ ] T043 [US1] Create outbound product list page with visa filters in `frontend/web/pages/outbound/index.vue`
-- [ ] T044 [US1] Create outbound product detail page with visa info card in `frontend/web/pages/outbound/[id].vue`
-- [ ] T045 [US1] Create outbound booking 5-step wizard page (passport form, OCR, visa service, addons, confirm) in `frontend/web/pages/outbound/booking.vue`
-- [ ] T046 [US1] Create visa progress page with 5-node progress bar and material upload in `frontend/web/components/visa/VisaProgress.vue`
-- [ ] T047 [US1] Create pre-trip service page (entry policy, entry card templates, flight tracking, checklist) in `frontend/web/pages/outbound/pretrip.vue`
-- [ ] T048 [P] [US1] Create mini-program outbound list page in `frontend/miniprogram/pages/outbound/list.vue`
-- [ ] T049 [P] [US1] Create mini-program outbound detail page in `frontend/miniprogram/pages/outbound/detail.vue`
-- [ ] T050 [P] [US1] Create mini-program outbound booking page in `frontend/miniprogram/pages/outbound/booking.vue`
-- [ ] T051 [P] [US1] Create mini-program visa progress page in `frontend/miniprogram/pages/visa/progress.vue`
-- [ ] T052 [P] [US1] Create mini-program visa materials upload page in `frontend/miniprogram/pages/visa/materials.vue`
-- [ ] T053 [US1] Create admin visa order list page in `frontend/admin/views/visa/VisaOrderList.vue`
-- [ ] T054 [US1] Create admin visa material audit page in `frontend/admin/views/visa/VisaMaterialAudit.vue`
+- [X] T021 [P] [US1] Create Country domain model in `backend/internal/product/domain/country.go` with visa_type enum and hierarchy
+- [X] T022 [P] [US1] Create VisaInfo domain model in `backend/internal/product/domain/visa_info.go` with visa types, processing days, material preview
+- [X] T023 [P] [US1] Create VisaMaterialTemplate domain model in `backend/internal/product/domain/visa_material_template.go` with occupation-based templates
+- [X] T024 [US1] Extend Product model with outbound fields (destination_country_id, visa_info, insurance_requirements) in `backend/internal/product/domain/outbound.go`
+- [X] T025 [P] [US1] Create Country repository with CRUD and hierarchy query in `backend/internal/product/repository/country_repo.go`
+- [X] T026 [P] [US1] Create VisaMaterialTemplate repository with country+occupation query in `backend/internal/product/repository/visa_template_repo.go`
+- [X] T027 [US1] Create outbound product listing API with continent/country/visa_type/city/days filters in `backend/internal/product/handler/outbound_handler.go`
+- [X] T028 [US1] Create outbound product detail API with visa info card in `backend/internal/product/handler/outbound_handler.go`
+- [X] T029 [US1] Create pre-trip service API (entry policy, materials, cash rules, customs guide, emergency contacts) in `backend/internal/product/handler/pretrip_handler.go`
+- [X] T030 [P] [US1] Create PassportInfo domain model with expiry validation (≥6 months after return) in `backend/internal/order/domain/passport.go`
+- [X] T031 [P] [US1] Create OCR adapter interface and Baidu OCR implementation for passport recognition in `backend/internal/order/service/ocr_adapter.go`
+- [X] T032 [US1] Create passport management API (CRUD + OCR + expiry validation) in `backend/internal/order/handler/passport_handler.go`
+- [X] T033 [US1] Create outbound booking API (5-step wizard: select departure→fill passport→visa service→addons→confirm) in `backend/internal/order/handler/outbound_booking_handler.go`
+- [X] T034 [P] [US1] Create VisaOrder domain model with 5-node state machine (pending_submit→reviewing→submitted→approved/rejected) in `backend/internal/order/domain/visa_order.go`
+- [X] T035 [P] [US1] Create VisaMaterial domain model in `backend/internal/order/domain/visa_material.go`
+- [X] T036 [P] [US1] Create VisaProgress domain model in `backend/internal/order/domain/visa_progress.go`
+- [X] T037 [US1] Create VisaOrder repository with status machine transitions in `backend/internal/order/repository/visa_order_repo.go`
+- [X] T038 [US1] Create VisaMaterial repository with file storage integration in `backend/internal/order/repository/visa_material_repo.go`
+- [X] T039 [US1] Create visa material management API (upload ≤10MB, occupation-based checklist, completeness check) in `backend/internal/order/handler/visa_material_handler.go`
+- [X] T040 [US1] Create visa progress tracking API with NATS event publishing on status change in `backend/internal/order/handler/visa_progress_handler.go`
+- [X] T041 [US1] Create visa notification NATS consumer (SMS + in-app for status change/approval/rejection/logistics) in `backend/internal/order/service/visa_notification_consumer.go`
+- [X] T042 [US1] Create visa history query API and visa expiry reminder (Asynq cron job, 90 days before expiry) in `backend/internal/order/service/visa_reminder.go`
+- [X] T043 [US1] Create outbound product list page with visa filters in `frontend/web/pages/outbound/index.vue`
+- [X] T044 [US1] Create outbound product detail page with visa info card in `frontend/web/pages/outbound/[id].vue`
+- [X] T045 [US1] Create outbound booking 5-step wizard page (passport form, OCR, visa service, addons, confirm) in `frontend/web/pages/outbound/booking.vue`
+- [X] T046 [US1] Create visa progress page with 5-node progress bar and material upload in `frontend/web/components/visa/VisaProgress.vue`
+- [X] T047 [US1] Create pre-trip service page (entry policy, entry card templates, flight tracking, checklist) in `frontend/web/pages/outbound/pretrip.vue`
+- [X] T048 [P] [US1] Create mini-program outbound list page in `frontend/miniprogram/pages/outbound/list.vue`
+- [X] T049 [P] [US1] Create mini-program outbound detail page in `frontend/miniprogram/pages/outbound/detail.vue`
+- [X] T050 [P] [US1] Create mini-program outbound booking page in `frontend/miniprogram/pages/outbound/booking.vue`
+- [X] T051 [P] [US1] Create mini-program visa progress page in `frontend/miniprogram/pages/visa/progress.vue`
+- [X] T052 [P] [US1] Create mini-program visa materials upload page in `frontend/miniprogram/pages/visa/materials.vue`
+- [X] T053 [US1] Create admin visa order list page in `frontend/admin/views/visa/VisaOrderList.vue`
+- [X] T054 [US1] Create admin visa material audit page in `frontend/admin/views/visa/VisaMaterialAudit.vue`
 
-- [ ] T055 [US1] Create visa application form dynamic field generation service (fields vary by visa type/country) in `backend/internal/order/service/visa_form_service.go`
+- [X] T055 [US1] Create visa application form dynamic field generation service (fields vary by visa type/country) in `backend/internal/order/service/visa_form_service.go`
 
 **Checkpoint**: 出境游产品浏览→预订→签证全流程可独立测试
 
