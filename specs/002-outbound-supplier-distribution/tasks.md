@@ -112,28 +112,28 @@
 
 ### Implementation
 
-- [ ] T055 [P] [US2] Create Supplier domain model with status machine (pending/reviewing/active/suspended/terminated) in `backend/internal/supplier/domain/supplier.go`
-- [ ] T056 [P] [US2] Create SupplierQualification domain model in `backend/internal/supplier/domain/supplier_qualification.go`
-- [ ] T057 [P] [US2] Create SettlementStatement domain model with 5-step status (pending/confirmed/disputed/paid/archived) in `backend/internal/supplier/domain/settlement.go`
-- [ ] T058 [P] [US2] Create CommissionRule domain model with scope types (global/category/supplier/product) in `backend/internal/supplier/domain/commission_rule.go`
-- [ ] T059 [US2] Create Supplier repository with RLS tenant isolation in `backend/internal/supplier/repository/supplier_repo.go`
-- [ ] T060 [US2] Create SettlementStatement repository in `backend/internal/supplier/repository/settlement_repo.go`
-- [ ] T061 [US2] Create supplier application submission API (multipart form, file validation, application number generation APP-YYYYMMDD-NNNN) in `backend/internal/supplier/handler/application_handler.go`
-- [ ] T062 [US2] Create supplier application status query API in `backend/internal/supplier/handler/application_handler.go`
-- [ ] T063 [US2] Create supplier 2-level audit API (first review 2d, second review 1d, timeout alert via Asynq) in `backend/internal/supplier/handler/audit_handler.go`
-- [ ] T064 [US2] Create e-contract generation service (template management, PDF generation, CA signing adapter, 7-day reminder + 30-day auto-close timeout via Asynq) in `backend/internal/supplier/service/contract_service.go`
-- [ ] T065 [US2] Create supplier data isolation middleware (tenant_id + supplier_id, RLS policies) in `backend/internal/shared/middleware/supplier_isolation.go`
-- [ ] T066 [US2] Create supplier product management API (publish/edit/toggle/status tracking) in `backend/internal/supplier/handler/workspace_product_handler.go`
-- [ ] T067 [US2] Create supplier order handling API (list/confirm/reject/detail/refund) in `backend/internal/supplier/handler/workspace_order_handler.go`
-- [ ] T068 [US2] Create supplier settlement 5-step flow service (auto-generate→review→confirm→pay→archive) in `backend/internal/supplier/service/settlement_service.go`
-- [ ] T069 [US2] Create supplier settlement API (list/detail/confirm/dispute) in `backend/internal/supplier/handler/settlement_handler.go`
-- [ ] T070 [US2] Create supplier withdrawal API (apply/approve/reject) in `backend/internal/supplier/handler/withdrawal_handler.go`
-- [ ] T071 [US2] Create supplier commission rule configuration API (category/supplier level, tiered rates, approval flow) in `backend/internal/supplier/handler/commission_handler.go`
-- [ ] T072 [US2] Create supplier statistics service (sales/revenue/review, Asynq pre-aggregation) in `backend/internal/supplier/service/statistics_service.go`
-- [ ] T073 [P] [US2] Create supplier application page (multi-step form, auto-save) in `frontend/web/pages/supplier/apply.vue`
-- [ ] T074 [P] [US2] Create admin supplier audit list page in `frontend/admin/views/supplier/AuditList.vue`
-- [ ] T075 [P] [US2] Create admin supplier list page in `frontend/admin/views/supplier/SupplierList.vue`
-- [ ] T076 [P] [US2] Create admin supplier detail page in `frontend/admin/views/supplier/SupplierDetail.vue`
+- [X] T055 [P] [US2] Create Supplier domain model with status machine (pending/reviewing/active/suspended/terminated) in `internal/supplier/model/supplier.go`
+- [X] T056 [P] [US2] Create SupplierQualification domain model in `internal/supplier/model/supplier_qualification.go`
+- [X] T057 [P] [US2] Create SettlementStatement domain model with 5-step status (pending/confirmed/disputed/paid/archived) in `internal/supplier/model/settlement.go`
+- [X] T058 [P] [US2] Create CommissionRule domain model with scope types (global/category/supplier/product) in `internal/supplier/model/commission_rule.go`
+- [X] T059 [US2] Create Supplier repository with RLS tenant isolation in `internal/supplier/repository/supplier_repo.go`
+- [X] T060 [US2] Create SettlementStatement repository in `internal/supplier/repository/settlement_repo.go`
+- [X] T061 [US2] Create supplier application submission API (multipart form, file validation, application number generation APP-YYYYMMDD-NNNN) in `internal/supplier/handler/application_handler.go`
+- [X] T062 [US2] Create supplier application status query API in `internal/supplier/handler/application_handler.go`
+- [X] T063 [US2] Create supplier 2-level audit API (first review 2d, second review 1d, timeout alert via Asynq) in `internal/supplier/handler/audit_handler.go`
+- [X] T064 [US2] Create e-contract generation service (template management, PDF generation, CA signing adapter, 7-day reminder + 30-day auto-close timeout via Asynq) in `internal/supplier/service/contract_service.go`
+- [X] T065 [US2] Create supplier data isolation middleware (tenant_id + supplier_id, RLS policies) in `internal/shared/middleware/supplier_isolation.go`
+- [X] T066 [US2] Create supplier product management API (publish/edit/toggle/status tracking) in `internal/supplier/handler/workspace_product_handler.go`
+- [X] T067 [US2] Create supplier order handling API (list/confirm/reject/detail/refund) in `internal/supplier/handler/workspace_order_handler.go`
+- [X] T068 [US2] Create supplier settlement 5-step flow service (auto-generate→review→confirm→pay→archive) in `internal/supplier/service/settlement_service.go`
+- [X] T069 [US2] Create supplier settlement API (list/detail/confirm/dispute) in `internal/supplier/handler/settlement_handler.go`
+- [X] T070 [US2] Create supplier withdrawal API (apply/approve/reject) in `internal/supplier/handler/withdrawal_handler.go`
+- [X] T071 [US2] Create supplier commission rule configuration API (category/supplier level, tiered rates, approval flow) in `internal/supplier/handler/commission_handler.go`
+- [X] T072 [US2] Create supplier statistics service (sales/revenue/review, Asynq pre-aggregation) in `internal/supplier/service/statistics_service.go`
+- [X] T073 [P] [US2] Create supplier application page (multi-step form, auto-save) in `web/pages/supplier/apply.vue`
+- [X] T074 [P] [US2] Create admin supplier audit list page in `admin-web/src/views/supplier/AuditList.vue`
+- [X] T075 [P] [US2] Create admin supplier list page in `admin-web/src/views/supplier/SupplierList.vue`
+- [X] T076 [P] [US2] Create admin supplier detail page in `admin-web/src/views/supplier/SupplierDetail.vue`
 
 **Checkpoint**: 供应商入驻→审核→工作台全流程可独立测试
 
