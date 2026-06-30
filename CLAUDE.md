@@ -3,12 +3,12 @@
 Constitution: `.specify/memory/constitution.md` (v1.0.0)
 
 ## Current Plan
-Plan: `specs/001-domestic-tour-mvp/plan.md`
-Feature: `specs/001-domestic-tour-mvp/spec.md`
-Data Model: `specs/001-domestic-tour-mvp/data-model.md`
-API Contracts: `specs/001-domestic-tour-mvp/contracts/`
-Tasks: `specs/001-domestic-tour-mvp/tasks.md` (164 tasks)
-Quickstart: `specs/001-domestic-tour-mvp/quickstart.md`
+Plan: `specs/002-outbound-supplier-distribution/plan.md`
+Feature: `specs/002-outbound-supplier-distribution/spec.md`
+Data Model: `specs/002-outbound-supplier-distribution/data-model.md`
+API Contracts: `specs/002-outbound-supplier-distribution/contracts/`
+Tasks: `specs/002-outbound-supplier-distribution/tasks.md` (193 tasks)
+Quickstart: `specs/002-outbound-supplier-distribution/quickstart.md`
 
 ## Key Constraints (from Constitution)
 - Backend: Go 1.26+, Gin, GORM v2 + pgx

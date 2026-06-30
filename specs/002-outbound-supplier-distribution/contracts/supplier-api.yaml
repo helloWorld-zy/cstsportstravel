@@ -1,0 +1,438 @@
+openapi: 3.0.3
+info:
+  title: 供应商开放平台 API
+  description: 供应商入驻、工作台、结算相关接口
+  version: 2.0.0
+tags:
+  - name: supplier-application
+    description: 供应商入驻申请
+  - name: supplier-audit
+    description: 供应商审核（运营后台）
+  - name: supplier-workspace
+    description: 供应商工作台
+  - name: supplier-settlement
+    description: 供应商结算
+
+paths:
+  /api/v2/suppliers/apply:
+    post:
+      tags: [supplier-application]
+      summary: 提交供应商入驻申请
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [companyName, creditCode, businessLicense, legalPersonName, legalPersonIdCard, contactName, contactPhone]
+              properties:
+                companyName:
+                  type: string
+                  description: 企业全称
+                creditCode:
+                  type: string
+                  description: 统一社会信用代码
+                registeredAddress:
+                  type: string
+                registeredCapital:
+                  type: number
+                establishmentDate:
+                  type: string
+                  format: date
+                businessLicense:
+                  type: string
+                  format: binary
+                  description: 营业执照扫描件
+                legalPersonName:
+                  type: string
+                legalPersonIdCard:
+                  type: string
+                  description: 法人身份证号
+                legalPersonIdCardFront:
+                  type: string
+                  format: binary
+                legalPersonIdCardBack:
+                  type: string
+                  format: binary
+                businessScope:
+                  type: string
+                travelLicenseNo:
+                  type: string
+                travelLicense:
+                  type: string
+                  format: binary
+                contactName:
+                  type: string
+                contactPhone:
+                  type: string
+                contactEmail:
+                  type: string
+                financeContactName:
+                  type: string
+                financeContactPhone:
+                  type: string
+                bankName:
+                  type: string
+                bankAccountName:
+                  type: string
+                bankAccountNumber:
+                  type: string
+      responses:
+        '200':
+          description: 申请提交成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationResponse'
+
+  /api/v2/suppliers/apply/{applicationNo}:
+    get:
+      tags: [supplier-application]
+      summary: 查询入驻申请进度
+      parameters:
+        - name: applicationNo
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 申请详情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationDetail'
+
+  /api/v2/admin/suppliers/applications:
+    get:
+      tags: [supplier-audit]
+      summary: 获取待审核供应商申请列表
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending_first_review, pending_second_review, all]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: 申请列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApplicationListItem'
+                  total:
+                    type: integer
+
+  /api/v2/admin/suppliers/applications/{id}/audit:
+    post:
+      tags: [supplier-audit]
+      summary: 审核供应商申请
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [approve, reject, return_for_revision]
+                reason:
+                  type: string
+                  description: 拒绝/退回原因
+                itemsToRevise:
+                  type: array
+                  items:
+                    type: string
+                  description: 需修改的材料项
+      responses:
+        '200':
+          description: 审核完成
+
+  /api/v2/supplier/products:
+    get:
+      tags: [supplier-workspace]
+      summary: 供应商产品列表
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 产品列表
+    post:
+      tags: [supplier-workspace]
+      summary: 发布新产品
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreate'
+      responses:
+        '200':
+          description: 产品创建成功
+
+  /api/v2/supplier/orders:
+    get:
+      tags: [supplier-workspace]
+      summary: 供应商订单列表
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 订单列表
+
+  /api/v2/supplier/orders/{id}/confirm:
+    post:
+      tags: [supplier-workspace]
+      summary: 确认/拒绝订单
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [confirm, reject]
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: 操作完成
+
+  /api/v2/supplier/settlements:
+    get:
+      tags: [supplier-settlement]
+      summary: 供应商结算单列表
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 结算单列表
+
+  /api/v2/supplier/settlements/{id}/confirm:
+    post:
+      tags: [supplier-settlement]
+      summary: 确认/异议结算单
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [confirm, dispute]
+                disputeReason:
+                  type: string
+      responses:
+        '200':
+          description: 操作完成
+
+  /api/v2/supplier/withdrawals:
+    post:
+      tags: [supplier-settlement]
+      summary: 供应商提现申请
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount:
+                  type: number
+                bankAccountId:
+                  type: integer
+      responses:
+        '200':
+          description: 提现申请已提交
+
+components:
+  schemas:
+    ApplicationResponse:
+      type: object
+      properties:
+        applicationNo:
+          type: string
+        status:
+          type: string
+
+    ApplicationDetail:
+      type: object
+      properties:
+        applicationNo:
+          type: string
+        companyName:
+          type: string
+        status:
+          type: string
+        auditHistory:
+          type: array
+          items:
+            type: object
+            properties:
+              action:
+                type: string
+              operator:
+                type: string
+              reason:
+                type: string
+              createdAt:
+                type: string
+                format: date-time
+
+    ApplicationListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        applicationNo:
+          type: string
+        companyName:
+          type: string
+        creditCode:
+          type: string
+        contactName:
+          type: string
+        contactPhone:
+          type: string
+        status:
+          type: string
+        appliedAt:
+          type: string
+          format: date-time
+
+    ProductCreate:
+      type: object
+      required: [productName, destinationId, days, productType]
+      properties:
+        productName:
+          type: string
+        productType:
+          type: string
+          enum: [domestic_group, outbound_group]
+        destinationId:
+          type: integer
+        days:
+          type: integer
+        nights:
+          type: integer
+        departureCityIds:
+          type: array
+          items:
+            type: integer
+        transportation:
+          type: array
+          items:
+            type: string
+        minGroupSize:
+          type: integer
+        maxGroupSize:
+          type: integer
+        productLevel:
+          type: string
+          enum: [economy, comfort, luxury, premium]
+        feeIncluded:
+          type: string
+        feeExcluded:
+          type: string
+        bookingNotice:
+          type: string
+        visaInfo:
+          type: object
+          properties:
+            visaType:
+              type: string
+            processingDays:
+              type: integer
+            fee:
+              type: number
+            materialPreview:
+              type: string

@@ -1,0 +1,361 @@
+openapi: 3.0.3
+info:
+  title: 营销系统 API（优惠券+促销活动）
+  description: 优惠券创建/发放/核销、促销活动管理相关接口
+  version: 2.0.0
+tags:
+  - name: coupon-admin
+    description: 优惠券管理（运营后台）
+  - name: coupon-user
+    description: 优惠券用户端
+  - name: promotion-activity
+    description: 促销活动管理
+
+paths:
+  /api/v2/admin/marketing/coupons:
+    get:
+      tags: [coupon-admin]
+      summary: 优惠券列表
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [full_reduction, discount, cash, exchange]
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 优惠券列表
+    post:
+      tags: [coupon-admin]
+      summary: 创建优惠券
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CouponCreate'
+      responses:
+        '200':
+          description: 创建成功
+
+  /api/v2/admin/marketing/coupons/{id}:
+    get:
+      tags: [coupon-admin]
+      summary: 优惠券详情
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 优惠券详情
+    put:
+      tags: [coupon-admin]
+      summary: 更新优惠券
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CouponCreate'
+      responses:
+        '200':
+          description: 更新成功
+
+  /api/v2/admin/marketing/coupons/{id}/analytics:
+    get:
+      tags: [coupon-admin]
+      summary: 优惠券效果分析
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 效果数据
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  distributedCount:
+                    type: integer
+                  claimedCount:
+                    type: integer
+                  usedCount:
+                    type: integer
+                  claimRate:
+                    type: number
+                  usageRate:
+                    type: number
+                  gmvDriven:
+                    type: number
+
+  /api/v2/coupons/center:
+    get:
+      tags: [coupon-user]
+      summary: 领券中心（可领取优惠券列表）
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 可领取优惠券列表
+
+  /api/v2/coupons/{id}/claim:
+    post:
+      tags: [coupon-user]
+      summary: 领取优惠券
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 领取成功
+        '400':
+          description: 领取失败（库存不足/已达上限/已过期）
+
+  /api/v2/coupons/mine:
+    get:
+      tags: [coupon-user]
+      summary: 我的优惠券
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [available, used, expired]
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 优惠券列表
+
+  /api/v2/coupons/available:
+    get:
+      tags: [coupon-user]
+      summary: 查询订单可用优惠券
+      parameters:
+        - name: productId
+          in: query
+          schema:
+            type: integer
+        - name: orderAmount
+          in: query
+          schema:
+            type: number
+      responses:
+        '200':
+          description: 可用优惠券列表（按优惠金额排序）
+
+  /api/v2/admin/marketing/activities:
+    get:
+      tags: [promotion-activity]
+      summary: 促销活动列表
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [flash_sale, full_reduction, early_bird]
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 活动列表
+    post:
+      tags: [promotion-activity]
+      summary: 创建促销活动
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityCreate'
+      responses:
+        '200':
+          description: 创建成功
+
+  /api/v2/admin/marketing/activities/{id}:
+    get:
+      tags: [promotion-activity]
+      summary: 活动详情
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 活动详情
+    put:
+      tags: [promotion-activity]
+      summary: 更新活动
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityCreate'
+      responses:
+        '200':
+          description: 更新成功
+
+  /api/v2/admin/marketing/activities/{id}/cancel:
+    post:
+      tags: [promotion-activity]
+      summary: 取消活动
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 取消成功
+
+components:
+  schemas:
+    CouponCreate:
+      type: object
+      required: [couponName, couponType, totalStock, perUserLimit, validityType]
+      properties:
+        couponName:
+          type: string
+        couponType:
+          type: string
+          enum: [full_reduction, discount, cash, exchange]
+        discountAmount:
+          type: number
+          description: 满减/现金券面额
+        discountRate:
+          type: number
+          description: 折扣比例（%）
+        discountCap:
+          type: number
+          description: 折扣上限（折扣券必填）
+        minConsumption:
+          type: number
+          description: 最低消费门槛
+        totalStock:
+          type: integer
+        perUserLimit:
+          type: integer
+        perDeviceLimit:
+          type: integer
+        validityType:
+          type: string
+          enum: [fixed, relative]
+        validFrom:
+          type: string
+          format: date-time
+        validTo:
+          type: string
+          format: date-time
+        validDays:
+          type: integer
+          description: 领取后N天有效（relative类型）
+        applicableScope:
+          type: string
+          enum: [all, category, product]
+        applicableIds:
+          type: array
+          items:
+            type: integer
+        applicableChannels:
+          type: array
+          items:
+            type: string
+        stackable:
+          type: boolean
+        stackableTypes:
+          type: array
+          items:
+            type: string
+        exchangeProductId:
+          type: integer
+          description: 兑换券关联产品ID
+
+    ActivityCreate:
+      type: object
+      required: [activityName, activityType, startTime, endTime]
+      properties:
+        activityName:
+          type: string
+        activityType:
+          type: string
+          enum: [flash_sale, full_reduction, early_bird]
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        applicableProducts:
+          type: array
+          items:
+            type: integer
+        applicableCategories:
+          type: array
+          items:
+            type: integer
+        rules:
+          type: object
+          description: "活动规则（JSON）: flash_sale={flashPrice,activityStock,perUserLimit}; full_reduction={tiers:[{threshold,discount}]}; early_bird={tiers:[{daysBeforeDiscount,rate}]}"
+        stackableWithCoupon:
+          type: boolean

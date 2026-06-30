@@ -1093,7 +1093,7 @@ Phase 12 包含：WinSW 服务配置、Traefik 配置（TLS 1.3）、GitHub Acti
 **Skill**：`/speckit-plan`
 
 **必读文档**：
-- `specs/002-phase1/spec.md`（一期规格）
+- `specs/002-outbound-supplier-distribution/spec.md`（一期规格）
 - PRD §3 系统架构（微服务划分）
 - PRD §5 支付系统（支付渠道技术参数对比表5-1）
 - PRD §11 外部接口（支付接口详情、消息推送方案）
@@ -1107,7 +1107,7 @@ Phase 12 包含：WinSW 服务配置、Traefik 配置（TLS 1.3）、GitHub Acti
 请为一期（出境游+供应商开放平台+分销体系）制定实施计划。
 
 执行前请先阅读以下文档：
-1. specs/002-phase1/spec.md（一期功能规格）
+1. specs/002-outbound-supplier-distribution/spec.md（一期功能规格）
 2. .specify/memory/constitution.md（项目宪法）
 3. docs/travel_booking_system_v3.agent.final.md 的以下章节：
    - §3 系统架构（§3.1.2 微服务划分）
@@ -1156,11 +1156,11 @@ Phase 12 包含：WinSW 服务配置、Traefik 配置（TLS 1.3）、GitHub Acti
 **Skill**：`/speckit-tasks`
 
 **必读文档**：
-- `specs/002-phase1/spec.md`（一期规格）
-- `specs/002-phase1/plan.md`（一期实施计划）
-- `specs/002-phase1/data-model.md`（一期数据模型，新增供应商/分销/签证表）
-- `specs/002-phase1/contracts/`（一期 API 契约）
-- `specs/002-phase1/research.md`（一期技术决策）
+- `specs/002-outbound-supplier-distribution/spec.md`（一期规格）
+- `specs/002-outbound-supplier-distribution/plan.md`（一期实施计划）
+- `specs/002-outbound-supplier-distribution/data-model.md`（一期数据模型，新增供应商/分销/签证表）
+- `specs/002-outbound-supplier-distribution/contracts/`（一期 API 契约）
+- `specs/002-outbound-supplier-distribution/research.md`（一期技术决策）
 - PRD §7, §8（确认供应商和分销功能点的完整性）
 
 **Prompt**：
@@ -1171,11 +1171,11 @@ Phase 12 包含：WinSW 服务配置、Traefik 配置（TLS 1.3）、GitHub Acti
 请根据一期的 spec.md、plan.md 和相关设计文档生成可执行的任务列表。
 
 执行前请先阅读以下文档：
-1. specs/002-phase1/spec.md（一期功能规格）
-2. specs/002-phase1/plan.md（一期实施计划）
-3. specs/002-phase1/data-model.md（一期数据模型）
-4. specs/002-phase1/contracts/（一期 API 契约）
-5. specs/002-phase1/research.md（一期技术决策）
+1. specs/002-outbound-supplier-distribution/spec.md（一期功能规格）
+2. specs/002-outbound-supplier-distribution/plan.md（一期实施计划）
+3. specs/002-outbound-supplier-distribution/data-model.md（一期数据模型）
+4. specs/002-outbound-supplier-distribution/contracts/（一期 API 契约）
+5. specs/002-outbound-supplier-distribution/research.md（一期技术决策）
 6. .specify/memory/constitution.md（项目宪法）
 7. docs/travel_booking_system_v3.agent.final.md 的以下章节：
    - §7 供应商/开放平台（确认入驻/工作台/结算功能点完整性）
@@ -1206,9 +1206,9 @@ Phase 12 包含：WinSW 服务配置、Traefik 配置（TLS 1.3）、GitHub Acti
 **Skill**：`/speckit-analyze`
 
 **必读文档**：
-- `specs/002-phase1/spec.md`, `plan.md`, `tasks.md`
-- `specs/002-phase1/data-model.md`（一期数据模型）
-- `specs/002-phase1/contracts/`（一期 API 契约）
+- `specs/002-outbound-supplier-distribution/spec.md`, `plan.md`, `tasks.md`
+- `specs/002-outbound-supplier-distribution/data-model.md`（一期数据模型）
+- `specs/002-outbound-supplier-distribution/contracts/`（一期 API 契约）
 - PRD §4.3, §7, §8（对照功能覆盖度）
 - PRD §11（对照外部接口集成完整性）
 
@@ -1220,9 +1220,9 @@ Phase 12 包含：WinSW 服务配置、Traefik 配置（TLS 1.3）、GitHub Acti
 请对一期的 spec.md、plan.md、tasks.md 进行跨文档一致性分析。
 
 执行前请先阅读以下文档：
-1. specs/002-phase1/spec.md, plan.md, tasks.md
-2. specs/002-phase1/data-model.md（一期数据模型）
-3. specs/002-phase1/contracts/（一期 API 契约）
+1. specs/002-outbound-supplier-distribution/spec.md, plan.md, tasks.md
+2. specs/002-outbound-supplier-distribution/data-model.md（一期数据模型）
+3. specs/002-outbound-supplier-distribution/contracts/（一期 API 契约）
 4. .specify/memory/constitution.md（项目宪法）
 5. docs/travel_booking_system_v3.agent.final.md 的以下章节：
    - §4.3 出境游跟团游（签证闭环 15 个功能点是否覆盖）
@@ -1249,50 +1249,646 @@ Phase 12 包含：WinSW 服务配置、Traefik 配置（TLS 1.3）、GitHub Acti
 
 **Skill**：`/speckit-implement`
 
-**必读文档**：
-- `specs/002-phase1/plan.md`, `tasks.md`
-- `specs/002-phase1/data-model.md`（一期数据模型，新增供应商/分销/签证表结构）
-- `specs/002-phase1/contracts/`（一期 API 契约）
-- `specs/002-phase1/quickstart.md`（一期验证场景）
-- PRD §5 支付系统（银联支付 SDK 用法、定金+尾款逻辑）
-- PRD §11 外部接口（支付接口参数、消息推送模板）
+**执行策略**：按 Phase 分批实现，每个 Phase 单独一次会话。tasks.md 共 12 个 Phase（193 个任务），每次只实现一个 Phase 的全部任务，完成后标记 [X] 并运行对应的 Checkpoint 验证。
 
-**Prompt**：
+**通用必读文档**（每次会话都需阅读）：
+- `specs/002-outbound-supplier-distribution/plan.md`（实施计划）
+- `specs/002-outbound-supplier-distribution/tasks.md`（任务列表，定位到当前 Phase）
+- `specs/002-outbound-supplier-distribution/data-model.md`（一期数据模型，新增供应商/分销/签证表结构）
+- `.specify/memory/constitution.md`（编码规范和安全基线）
+
+**通用实现要求**（适用于所有 Phase）：
+
+1. 每完成一个任务，在 tasks.md 中标记为 [X]
+2. 遵循 Go 编码规范：错误处理必须显式、zap 结构化日志、导出函数 godoc 注释、核心逻辑单元测试
+3. 遵循前端编码规范：TypeScript 严格模式、组件 PascalCase、API 调用统一封装
+4. 前端页面必须包含三种状态：Loading、正常显示、空状态/错误状态
+5. 表单页面必须包含客户端校验（身份证号、护照号、手机号、银行卡号、必填项）
+6. 小程序页面必须使用 `#ifdef` 条件编译处理平台特有 API（微信/抖音）
+7. 后台管理页面必须实现动态权限路由和按钮级权限控制
+8. 供应商工作台必须实现 tenant_id + supplier_id 双重数据隔离
+9. 分销商中心必须实现推广链接生成、二维码下载、佣金明细展示
+10. 签证进度跟踪页面必须展示五节点状态机（待提交→审核中→已送签→已出签/已拒签）
+11. 禁止只提交后端代码不提交前端代码
+
+**代码结构（参考）**：
+
+```
+backend/
+  /cmd/
+    /user-service/main.go
+    /product-service/main.go
+    /order-service/main.go
+    /payment-service/main.go
+    /distribution-service/main.go
+  /internal/
+    /user/                       # 用户模块
+    /product/                    # 产品模块（含出境游扩展）
+      /domain/outbound.go        # 出境游产品模型
+      /domain/visa_info.go       # 签证信息模型
+    /order/                      # 订单模块（含签证域）
+      /domain/visa_order.go      # 签证订单模型
+      /domain/deposit_order.go   # 定金+尾款模型
+    /payment/                    # 支付模块
+      /gateway/unionpay.go       # 银联网关适配器
+      /service/deposit_service.go # 定金+尾款服务
+    /supplier/                   # 供应商域（新增）
+      /domain/supplier.go
+      /domain/settlement.go
+      /domain/commission_rule.go
+      /service/settlement_service.go
+    /distribution/               # 分销域（新增，独立服务）
+      /domain/distributor.go
+      /domain/commission.go
+      /domain/promotion_link.go
+      /domain/anti_fraud.go
+      /service/commission_service.go
+      /service/anti_fraud_service.go
+    /marketing/                  # 营销域（新增）
+      /domain/coupon.go
+      /domain/promotion_activity.go
+    /shared/                     # 共享内核
+      /middleware/               # 中间件（鉴权/限流/审计/供应商隔离）
+      /event/                    # NATS 事件定义
+      /encryption/               # AES-256-GCM 加密
+      /errors/                   # 统一错误码
+  /migrations/                   # 数据库迁移（6 个 SQL 文件）
+  /api/openapi/v2/               # OpenAPI 契约（5 个 YAML）
+frontend/
+  /web/                          # Nuxt.js Web 前端
+    /pages/outbound/             # 出境游页面（新增）
+    /pages/coupon/               # 优惠券页面（新增）
+    /pages/distributor/          # 分销商中心（新增）
+    /components/visa/            # 签证组件（新增）
+  /admin/                        # Vue 3 后台管理
+    /views/supplier/             # 供应商管理（新增）
+    /views/supplier-workspace/   # 供应商工作台（新增）
+    /views/distribution/         # 分销管理（新增）
+    /views/finance/              # 财务管理（新增）
+    /views/marketing/            # 营销管理（新增）
+    /views/visa/                 # 签证管理（新增）
+  /miniprogram/                  # Uni-App 小程序
+    /pages/outbound/             # 出境游页面（新增）
+    /pages/visa/                 # 签证页面（新增）
+    /pages/coupon/               # 优惠券（新增）
+    /pages/distributor/          # 分销商中心（新增）
+    /pages-douyin/               # 抖音特有页面（条件编译）
+infra/
+  /consul/                       # Consul 配置
+  /traefik/                      # Traefik 路由配置
+  /nats/                         # NATS 配置
+  /meilisearch/                  # Meilisearch 索引配置
+  /winsw/                        # WinSW 服务注册配置
+```
+
+---
+
+**以下为各 Phase 的独立 Prompt，每次复制一个发送：**
+
+### Phase 1：服务拆分基础设施
 
 ```
 /speckit-implement
 
-请按照一期 tasks.md 中的任务列表逐步实现。
+请实现 tasks.md 中 Phase 1（服务拆分基础设施）的全部任务（T001-T020）。
 
-执行前请先阅读以下文档：
-1. specs/002-phase1/plan.md（实施计划）
-2. specs/002-phase1/tasks.md（任务列表）
-3. specs/002-phase1/data-model.md（一期数据模型）
-4. specs/002-phase1/contracts/（一期 API 契约）
-5. specs/002-phase1/quickstart.md（一期验证场景）
-6. .specify/memory/constitution.md（编码规范）
-7. docs/travel_booking_system_v3.agent.final.md 的以下章节：
-   - §5.1.3 银联支付接入（SDK 用法和回调处理）
-   - §5.2.2 定金+尾款模式（两笔独立支付方案）
-   - §11.1 外部接口（支付接口参数详情）
-   - §11.3 消息推送接口（短信/小程序订阅消息模板）
+执行前先阅读：
+1. specs/002-outbound-supplier-distribution/plan.md（§Implementation Phases Phase 1）
+2. specs/002-outbound-supplier-distribution/data-model.md（全部 6 个迁移文件对应的表结构）
+3. specs/002-outbound-supplier-distribution/research.md（R-001 微服务拆分策略、R-002 NATS 使用模式）
+4. specs/002-outbound-supplier-distribution/tasks.md（仅 Phase 1 部分）
+5. .specify/memory/constitution.md（Principle II DDD 服务边界、Principle III 安全基线）
 
-## 实现要求
+Phase 1 包含：
+- 基础设施：Consul 集群部署+Go 客户端、NATS+JetStream 部署+Go 客户端、Meilisearch 部署+Go 客户端、Traefik 路由配置
+- 事件总线：NATS 主题定义、事件 DTO、发布/订阅封装（佣金计算/签证状态变更/对账任务三类事件）
+- 数据库迁移：6 个 SQL 文件（outbound/supplier/distribution/visa/marketing/payment_extension）
+- 服务拆分：user/product/order/payment 从单体拆出为独立服务，distribution-service 新建骨架
+- 共享包：中间件（鉴权/限流/审计/供应商隔离）、统一错误码、AES-256-GCM 加密工具
+- API 网关：OpenAPI v2 聚合文档
 
-1. 服务拆分时保持 API 兼容性，Web 前端和小程序无需改动
-2. NATS 消息格式使用 JSON，定义统一的事件信封结构
-3. 分销佣金计算必须原子性，防止并发场景下金额错误
-4. 供应商数据隔离通过 tenant_id + supplier_id 双重过滤
-5. 银联支付接入使用 smartwalle/unionpay SDK
-6. 所有新服务必须注册到 Consul 并暴露 /health 和 /ready 端点
-7. **前端实现要求**：
-   - 抖音小程序必须与微信小程序共享业务逻辑层，仅在平台 API 层做条件编译
-   - 供应商工作台必须实现完整的 RBAC 权限控制（菜单+按钮级）
-   - 分销商中心必须实现推广链接生成、二维码下载、佣金明细展示
-   - 签证进度跟踪页面必须展示五节点状态机（待提交→审核中→已送签→已出签/已拒签）
+⚠️ 关键约束：
+- 所有服务必须注册到 Consul 并暴露 /health 和 /ready 端点
+- NATS 事件使用 JSON 格式，定义统一信封结构（event_type, payload, timestamp, trace_id）
+- 数据库迁移必须与 data-model.md 表结构完全一致
+- 服务拆分必须保持 API 兼容性，已有 MVP 前端无需改动
 
-请开始实现。
+完成后：
+1. 将已完成任务标记为 [X]
+2. 验证：5 个服务能独立启动、注册 Consul、通过 NATS 收发消息
+3. Checkpoint：所有基础组件就绪，用户故事可以开始实现
 ```
+
+### Phase 2：出境游产品与预订 [US1]
+
+```
+/speckit-implement
+
+请实现 tasks.md 中 Phase 2（出境游产品与预订）的全部任务（T021-T055）。
+
+执行前先阅读：
+1. .specify/memory/constitution.md（项目宪法，在实现过程中严格遵守其中的原则）
+2. specs/002-outbound-supplier-distribution/spec.md（US1 验收场景，FR-101~FR-124，签证闭环 F-V-001~F-V-015）
+3. specs/002-outbound-supplier-distribution/contracts/visa-api.yaml（签证服务 API 端点定义）
+4. specs/002-outbound-supplier-distribution/data-model.md（country、visa_material_template、visa_order、visa_material、visa_progress 表，product 表出境游扩展字段）
+5. specs/002-outbound-supplier-distribution/tasks.md（仅 Phase 2 部分）
+6. docs/travel_booking_system_v3.agent.final.md 的以下章节：
+   - §4.3.1 产品列表与筛选（表4-4，7个出境游特有筛选维度）
+   - §4.3.2 产品详情页（签证信息卡片内容）
+   - §4.3.3 预订流程（五步向导，护照校验规则）
+   - §4.3.4 签证服务交易闭环（表4-5，15个功能点 F-V-001~F-V-015）
+   - §4.3.5 行前信息服务（表4-6，12个功能点 F-O-P01~F-O-P12）
+   - §4.3.6 业务规则（护照有效期规则、申根保险规则、签证材料提交时效）
+
+Phase 2 包含：
+- 后端：
+  - 出境游产品模型（Country/VisaInfo/VisaMaterialTemplate/Product 扩展）
+  - 出境游产品列表 API（大洲→国家层级树、签证类型、国际口岸、天数筛选）
+  - 出境游产品详情 API（签证信息卡片、行前服务数据）
+  - 护照信息管理 API（CRUD + OCR 识别 + 有效期≥6个月校验）
+  - 出境游预订 API（五步向导：选团期→填护照→选签证代办→附加服务→确认）
+  - 签证订单模型（五节点状态机：pending_submit→reviewing→submitted→approved/rejected）
+  - 签证材料管理 API（上传≤10MB、按职业生成清单、完整性预审）
+  - 签证进度跟踪 API（状态变更→NATS 事件→通知）
+  - 签证通知服务（NATS 消费者：短信+站内信）
+  - 签证历史+到期提醒（Asynq 定时任务，90天提醒）
+  - 签证申请表动态字段生成服务
+  - 行前信息服务 API（入境政策/材料/入境卡/海关/航班/天气/紧急联系）
+- Web 前端：
+  - 出境游产品列表页（出境游专属筛选栏、签证类型标签、产品卡片）
+  - 出境游产品详情页（签证信息卡片、国际航班信息、出境专属 FAQ）
+  - 出境游预订五步向导页（护照表单+OCR、签证代办选择、附加服务、确认支付）
+  - 签证进度页（五节点进度条、材料上传/审核反馈、物流跟踪）
+  - 行前服务页（入境政策/入境卡模板/航班动态/行前清单）
+- 小程序前端：
+  - 出境游产品列表/详情/预订页面（小程序适配版本）
+  - 签证进度查询页、签证材料上传页
+- 后台前端：
+  - 签证订单管理页（列表、状态筛选）
+  - 签证材料审核页（查看材料、逐条反馈、推进状态）
+
+⚠️ 关键业务规则（必须正确实现）：
+- 护照有效期校验：覆盖回程日期后≥6个月（PRD §4.3.6）
+- 签证材料清单：按职业类型动态生成（在职/自由职业/退休/学生/儿童，PRD §4.3.4）
+- 签证五节点状态机：待提交→审核中→已送签→已出签/已拒签（PRD §4.3.4）
+- 签证状态变更通知：短信+站内信双通道（PRD §4.3.4 F-V-010）
+- 拒签退款保障：标注拒签退款条件（PRD §4.3.4 F-V-015）
+
+完成后：
+1. 将已完成任务标记为 [X]
+2. 运行 quickstart.md 验证场景 Scenario 1（出境游产品浏览与签证信息）和 Scenario 2（出境游预订与签证代办）
+3. Checkpoint：出境游产品浏览→预订→签证全流程可独立测试
+```
+
+### Phase 3：供应商入驻与管理 [US2]
+
+```
+/speckit-implement
+
+请实现 tasks.md 中 Phase 3（供应商入驻与管理）的全部任务（T056-T076）。
+
+执行前先阅读：
+1. .specify/memory/constitution.md（项目宪法，Principle III 数据隔离要求）
+2. specs/002-outbound-supplier-distribution/spec.md（US2 验收场景，FR-125~FR-136）
+3. specs/002-outbound-supplier-distribution/contracts/supplier-api.yaml（供应商 API 端点定义）
+4. specs/002-outbound-supplier-distribution/data-model.md（supplier、supplier_qualification、settlement_statement、commission_rule 表）
+5. specs/002-outbound-supplier-distribution/tasks.md（仅 Phase 3 部分）
+6. docs/travel_booking_system_v3.agent.final.md 的以下章节：
+   - §7.1.1 入驻申请（申请信息采集范围）
+   - §7.1.2 资质审核（二级审核制，初审2工作日/复审1工作日）
+   - §7.1.3 合同签署（CA 认证电子签章，7日提醒+30日关闭）
+   - §7.2 供应商工作台（表7-1，四大功能域：产品/订单/结算/统计）
+   - §7.3.1 佣金规则配置（比例佣金/固定佣金/阶梯佣金）
+   - §7.3.2 结算周期与流程（表7-2，五步流程：生成→核对→确认→打款→归档）
+
+Phase 3 包含：
+- 后端：
+  - 供应商域模型（Supplier/SupplierQualification/SettlementStatement/CommissionRule）
+  - 供应商数据隔离中间件（tenant_id + supplier_id，RLS 策略）
+  - 入驻申请 API（multipart 表单、资料校验、申请编号 APP-YYYYMMDD-NNNN）
+  - 二级审核 API（初审/复审、超时告警 Asynq、三种结果：通过/拒绝/退回修改）
+  - 电子合同服务（模板管理、PDF 生成、CA 签章适配器、7日提醒+30日关闭超时）
+  - 工作台产品管理 API（发布/编辑/上下架/团期/库存/审核追踪）
+  - 工作台订单处理 API（列表/确认/拒绝/详情/退改，数据隔离）
+  - 结算五步流程服务（自动生成 PDF→7日核对→付款审批→打款→归档）
+  - 提现管理 API（申请/审批/打款记录）
+  - 佣金规则配置 API（品类级/供应商级、阶梯佣金率、审批流程）
+  - 数据统计 API（销量/销售额/评价，Asynq 预聚合）
+- Web 前端：
+  - 供应商入驻申请页（多步骤表单、自动保存、申请进度查询）
+- 后台前端：
+  - 供应商入驻审核页（审核列表、资料预览含资质文件放大、通过/拒绝/退回修改）
+  - 供应商管理页（列表/详情/状态管理/佣金配置）
+- 供应商工作台前端：
+  - 登录页（手机号+验证码）
+  - 独立布局（侧边栏菜单、与运营后台隔离）
+  - 独立路由配置（supplier_id 权限控制）
+
+⚠️ 关键业务规则：
+- 供应商数据隔离：通过 tenant_id + supplier_id 双重过滤，RLS 策略强制执行（PRD §7.2）
+- 结算五步流程：生成→核对→确认→打款→归档，每步有明确状态和超时规则（PRD §7.3.2）
+- 佣金规则优先级：品类级默认 + 供应商级覆盖（PRD §7.3.1）
+- 审核超时告警：初审 2 工作日、复审 1 工作日，超时自动升级（PRD §7.1.2）
+
+完成后：
+1. 将已完成任务标记为 [X]
+2. 运行 quickstart.md 验证场景 Scenario 3（供应商入驻全流程）
+3. Checkpoint：供应商入驻→审核→合同签署→工作台登录可独立测试
+```
+
+### Phase 4：二级分销体系 [US3]
+
+```
+/speckit-implement
+
+请实现 tasks.md 中 Phase 4（二级分销体系）的全部任务（T077-T108）。
+
+执行前先阅读：
+1. .specify/memory/constitution.md（项目宪法）
+2. specs/002-outbound-supplier-distribution/spec.md（US3 验收场景，FR-137~FR-160，含佣金计算规则和防薅羊毛规则）
+3. specs/002-outbound-supplier-distribution/contracts/distribution-api.yaml（分销 API 端点定义）
+4. specs/002-outbound-supplier-distribution/data-model.md（distributor、distributor_relation、promotion_link、commission_detail、withdrawal_record、promotion_click 表）
+5. specs/002-outbound-supplier-distribution/tasks.md（仅 Phase 4 部分）
+6. docs/travel_booking_system_v3.agent.final.md 的以下章节：
+   - §8.1 分销体系概述（二级分销模式定义、分销关系链）
+   - §8.2 分销商管理（入驻申请/审核/等级/状态/邀请机制）
+   - §8.3 推广与跟踪（推广链接/二维码/订单跟踪/推广素材）
+   - §8.4 佣金管理（规则配置/计算/冻结解冻/明细）
+   - §8.5 分销商 C 端功能（中心/推广/团队/提现/看板）
+   - §8.6 后台分销管理（列表/结算审核/报表/规则配置/订单查询）
+   - §8.7 业务规则（§8.7.1 佣金计算规则、§8.7.2 防薅羊毛规则、§8.7.3 退款退佣规则、§8.7.4 佣金结算周期）
+
+Phase 4 包含：
+- 后端：
+  - 分销域模型（Distributor/DistributorRelation/CommissionDetail/PromotionLink/WithdrawalRecord/PromotionClick）
+  - 分销商入驻 API（个人/企业、身份证/营业执照/银行卡自动校验）
+  - 分销商审核 API（通过/拒绝/转补充材料、分销编码 8 位生成）
+  - 协议签署 API（签署记录、15天待激活超时自动拒绝 Asynq）
+  - 邀请机制 API（邀请链接/邀请码、二级关系绑定）
+  - 推广链接 API（短链接+二维码 3 尺寸含 Logo、URL+Cookie 30天双轨跟踪）
+  - 分销订单跟踪（订单记录 distributor_id_l1/l2、点击/转化统计）
+  - 佣金规则配置 API（三级优先级：产品>品类>全局，5分钟缓存刷新）
+  - 佣金计算引擎（NATS 消费者异步计算、基数/比例/归属/上限规则、50% 封顶强制执行）
+  - 佣金冻结/解冻服务（T+N：境内7天/出境15天/邮轮15天，自动解冻 Asynq）
+  - 佣金退款追回服务（全额/部分、冻结期内/外处理）
+  - 分销商提现 API（≥100元、审核、高级分销商 T+3 加速）
+  - 防薅羊毛引擎（自购禁止、身份隔离、设备关联30天、IP频率10/h、违规处罚）
+  - 分销商等级服务（普通/高级、90天自动升降级 Asynq）
+  - 分销商中心 API（概览/推广/团队/佣金明细/提现/业绩看板）
+  - 后台管理 API（分销商列表/审核/冻结/注销、佣金结算审核/批量打款、规则配置、数据报表）
+- 分销商中心前端（Web）：
+  - 入驻申请页（个人/企业类型选择）
+  - 登录页、布局（侧边栏导航）
+  - 首页数据概览（累计/可提现/冻结、快捷入口、公告）
+  - 我的推广页（产品列表、链接/二维码管理、数据统计）
+  - 我的团队页（成员列表、业绩汇总、邀请、排行榜）
+  - 佣金明细页（列表、筛选导出、一级/二级标签）
+  - 佣金提现页（余额、申请、历史）
+  - 业绩看板页（趋势图表、产品排行、渠道分析）
+- 后台前端：
+  - 分销商列表页（按类型/等级/状态筛选、详情、操作）
+  - 分销商审核页（申请列表、资料预览、通过/拒绝/补充材料）
+  - 佣金结算审核页（提现列表、确认打款/批量打款/拒绝）
+  - 分销规则配置页（三级佣金配置、结算规则、变更日志）
+  - 分销数据报表页（订单统计、佣金支出、活跃度分析）
+
+⚠️ 关键业务规则（必须正确实现）：
+- 佣金计算基数 = 实付金额（扣除优惠券/积分/满减后）（PRD §8.7.1）
+- 一级佣金比例 ≥ 二级佣金比例（系统强制校验）（PRD §8.7.1）
+- 单笔订单总佣金 ≤ 实付金额的 50%（PRD §8.7.1）
+- 自购禁止：分销商点击自己推广链接下单，自动清除推广关联（PRD §8.7.2）
+- 设备关联：同一设备 30 天内关联多账号检测（PRD §8.7.2）
+- IP 频率：同 IP 同链接 1 小时 >10 次点击触发反作弊（PRD §8.7.2）
+- 退款退佣：全额退款全额追回，部分退款按比例追回（PRD §8.7.3）
+- 佣金结算周期：境内 T+7、出境 T+15、邮轮 T+15（PRD §8.7.4）
+
+完成后：
+1. 将已完成任务标记为 [X]
+2. 运行 quickstart.md 验证场景 Scenario 4（二级分销全流程）
+3. Checkpoint：分销商入驻→推广→佣金计算→提现全流程可独立测试
+```
+
+### Phase 5：支付扩展 - 银联+定金尾款 [US4]
+
+```
+/speckit-implement
+
+请实现 tasks.md 中 Phase 5（支付扩展）的全部任务（T109-T122）。
+
+执行前先阅读：
+1. .specify/memory/constitution.md（项目宪法，Principle III 支付安全要求）
+2. specs/002-outbound-supplier-distribution/spec.md（US4 验收场景，FR-161~FR-168）
+3. specs/002-outbound-supplier-distribution/contracts/payment-extension-api.yaml（支付扩展 API）
+4. specs/002-outbound-supplier-distribution/data-model.md（main_order/payment_transaction 表新增字段）
+5. specs/002-outbound-supplier-distribution/tasks.md（仅 Phase 5 部分）
+6. docs/travel_booking_system_v3.agent.final.md 的以下章节：
+   - §5.1.3 银联支付接入（网关支付/WAP支付/云闪付，RSA-SHA256 签名）
+   - §5.2.2 定金+尾款模式（两笔独立支付方案，表5-2 对比）
+   - §5.3 退款管理（全额/部分/多次部分退款，原路退回）
+   - §5.4 财务对账（自动对账六步流程，差异处理表5-4）
+   - §11.1.3 银联支付接口（接口参数、双重通知机制、Go SDK）
+
+Phase 5 包含：
+- 后端：
+  - 银联支付网关适配器（smartwalle/unionpay SDK，网关支付 channelType=07 + WAP 支付 channelType=08）
+  - 银联回调处理器（backUrl 确认依据/frontUrl 展示参考，验签，幂等）
+  - 银联退款适配器（当日消费撤销实时到账/隔日退货 3-7 工作日）
+  - 定金+尾款订单模型扩展（deposit_amount/balance_amount/balance_deadline）
+  - 定金支付流程（创建定金支付订单，成功后状态→paid_deposit）
+  - 尾款支付流程（创建尾款支付订单，Asynq 3天前提醒短信/站内信/小程序消息）
+  - 尾款逾期处理（24h 宽限期→自动取消→库存释放→定金按退改规则退还）
+  - 部分退款 API（金额校验、原路退回、累计退款不超实付）
+  - 支付状态主动查询服务（所有 3 渠道，30s 未回调触发、60s 重试）
+  - 对账系统扩展（银联对账文件解析、三方轧账）
+- Web 前端：
+  - 支付方式选择器扩展（新增银联支付选项：网关支付/云闪付）
+  - 定金+尾款选择 UI（定金金额/尾款金额/截止日期/逾期说明）
+  - 尾款提醒页面（已付定金、尾款倒计时、立即支付尾款按钮）
+  - 部分退款申请页面（退款金额预览、原因选择、说明输入）
+- 小程序前端：
+  - 抖音支付适配（tt.pay API，条件编译 MP-TOUTIAO）
+
+⚠️ 关键业务规则：
+- 银联双重通知：后台通知（backUrl）为确认依据，前台通知（frontUrl）仅作展示（PRD §5.1.3）
+- 定金比例：10%-50% 可配置，默认 30%（PRD §5.2.2）
+- 尾款提醒：开放前 3 天短信/站内信/小程序消息三通道（PRD §5.2.2）
+- 尾款逾期：截止日后 24 小时宽限期，自动取消+释放库存（PRD §5.2.2）
+- 优惠券+定金模式：优惠金额在定金中扣除（spec 假设）
+- 银联退款：当日消费撤销实时到账，隔日退货 3-7 工作日（PRD §11.1.3）
+- 主动查询：所有渠道 30 秒未回调触发查询（spec FR-168）
+
+完成后：
+1. 将已完成任务标记为 [X]
+2. 运行 quickstart.md 验证场景 Scenario 5（银联支付）和 Scenario 6（定金+尾款）
+3. Checkpoint：银联支付和定金+尾款模式可独立测试
+```
+
+### Phase 6：营销系统 [US5]
+
+```
+/speckit-implement
+
+请实现 tasks.md 中 Phase 6（营销系统）的全部任务（T123-T138）。
+
+执行前先阅读：
+1. .specify/memory/constitution.md（项目宪法）
+2. specs/002-outbound-supplier-distribution/spec.md（US5 验收场景，FR-169~FR-176）
+3. specs/002-outbound-supplier-distribution/contracts/marketing-api.yaml（营销 API）
+4. specs/002-outbound-supplier-distribution/data-model.md（coupon、coupon_claim、promotion_activity 表）
+5. specs/002-outbound-supplier-distribution/tasks.md（仅 Phase 6 部分）
+6. docs/travel_booking_system_v3.agent.final.md 的以下章节：
+   - §6.5.2 优惠券管理（表6-9，四种类型+配置参数）
+   - §6.5.3 促销活动管理（限时特惠/满减/早鸟优惠）
+
+Phase 6 包含：
+- 后端：
+  - 营销域模型（Coupon/CouponClaim/PromotionActivity）
+  - 优惠券 CRUD API（四种类型：满减/折扣/现金/兑换，全部配置参数）
+  - 优惠券发放 API（六种方式：系统推送/领券中心/商品挂载/活动赠送/分享裂变/兑换码）
+  - 优惠券使用 API（下单选择校验、支付后核销、退款退回）
+  - 促销活动引擎（限时特惠活动库存隔离、阶梯满减、早鸟折扣自动匹配）
+  - 优惠券效果分析 API（发放量/领取量/核销量/核销率/GMV）
+- Web 前端：
+  - 领券中心页（可领取列表、一键领取）
+  - 我的优惠券页（待使用/已使用/已过期 Tab）
+  - 下单优惠券选择组件（按优惠金额排序、实时计算应付）
+- 小程序前端：
+  - 领券中心页、我的优惠券页
+- 后台前端：
+  - 优惠券管理页（创建表单、列表、效果分析）
+  - 促销活动管理页（活动列表、创建/编辑表单）
+
+⚠️ 关键业务规则：
+- 折扣券必须设置折扣上限，防止过度优惠（PRD §6.5.2 表6-9）
+- 优惠券状态机：未开始→待使用→已占用→已使用/已过期/已退还/已作废
+- 限时特惠活动库存与日常库存隔离（PRD §6.5.3）
+- 早鸟优惠按下单日期与出发日期差值自动匹配（PRD §6.5.3）
+- 退款时优惠券按规则退回（全额退款退回、部分退款按平台规则）
+
+完成后：
+1. 将已完成任务标记为 [X]
+2. 运行 quickstart.md 验证场景 Scenario 7（优惠券领取与使用）
+3. Checkpoint：优惠券和促销活动可独立测试
+```
+
+### Phase 7：Meilisearch 搜索集成
+
+```
+/speckit-implement
+
+请实现 tasks.md 中 Phase 7（Meilisearch 搜索集成）的全部任务（T139-T144）。
+
+执行前先阅读：
+1. specs/002-outbound-supplier-distribution/plan.md（§Technical Context，Meilisearch 选型）
+2. specs/002-outbound-supplier-distribution/research.md（R-003 Meilisearch 索引同步策略）
+3. specs/002-outbound-supplier-distribution/tasks.md（仅 Phase 7 部分）
+4. .specify/memory/constitution.md（技术栈约束：Meilisearch 1.19+）
+
+Phase 7 包含：
+- Meilisearch 产品索引 schema 设计（searchable/filterable/sortable 属性，覆盖境内/出境/邮轮）
+- 索引初始化脚本
+- 产品同步服务（Asynq 任务，产品 CRUD 时实时推送，<5s 延迟）
+- 出境游搜索 handler（大洲/国家/签证类型/城市/天数过滤，Meilisearch 分面过滤）
+- 搜索联想 API（热门目的地→产品名称→景点）
+- 数据库降级搜索（Meilisearch 不可用时回退到 PostgreSQL tsvector）
+
+⚠️ 关键约束：
+- 搜索响应 <50ms（Meilisearch 基准）
+- 同步延迟 <5s
+- 必须有降级方案（Meilisearch 不可用时回退数据库搜索）
+
+完成后：
+1. 将已完成任务标记为 [X]
+2. 验证：产品搜索响应 <50ms，多维度过滤可用，typo 容错生效
+3. Checkpoint：搜索功能迁移至 Meilisearch
+```
+
+### Phase 8：抖音小程序
+
+```
+/speckit-implement
+
+请实现 tasks.md 中 Phase 8（抖音小程序）的全部任务（T145-T150）。
+
+执行前先阅读：
+1. specs/002-outbound-supplier-distribution/spec.md（FR-183~FR-186，抖音小程序需求）
+2. specs/002-outbound-supplier-distribution/tasks.md（仅 Phase 8 部分）
+3. .specify/memory/constitution.md（前端技术栈：Uni-App Vue 3）
+
+Phase 8 包含：
+- Uni-App 条件编译配置（#ifdef MP-TOUTIAO）
+- 抖音登录适配（tt.login、OpenID 获取、账号绑定/创建）
+- 抖音支付适配（tt.pay API 集成）
+- 核心页面条件编译适配（产品列表/详情/预订/订单/个人中心）
+- 抖音小程序 manifest 配置
+- 抖音平台审核提交
+
+⚠️ 关键约束：
+- 必须与微信小程序共享业务逻辑层，仅在平台 API 层做条件编译
+- 抖音登录获取 OpenID，首次登录自动创建平台账号并绑定
+- 同一手机号在微信和抖音登录应关联到同一平台账号
+
+完成后：
+1. 将已完成任务标记为 [X]
+2. 验证：抖音小程序可登录、浏览产品、下单、支付、查看订单
+3. Checkpoint：抖音小程序可提审（7-14 天审核周期）
+```
+
+### Phase 9：供应商工作台前端
+
+```
+/speckit-implement
+
+请实现 tasks.md 中 Phase 9（供应商工作台前端）的全部任务（T151-T160）。
+
+执行前先阅读：
+1. .specify/memory/constitution.md（项目宪法，Principle III 安全要求）
+2. specs/002-outbound-supplier-distribution/spec.md（US2 前端页面维度验收场景 #12-#18）
+3. specs/002-outbound-supplier-distribution/contracts/supplier-api.yaml（供应商工作台 API）
+4. specs/002-outbound-supplier-distribution/tasks.md（仅 Phase 9 部分）
+5. docs/travel_booking_system_v3.agent.final.md §7.2 供应商工作台（表7-1，四大功能域）
+
+Phase 9 包含：
+- 供应商工作台登录页（手机号+验证码，与运营后台隔离）
+- 独立布局组件（侧边栏菜单、供应商品牌展示）
+- 独立路由配置（supplier_id 权限控制，仅可见自有数据）
+- 产品管理页（产品列表、多步发布表单：基础信息→行程→价格→退改→库存）
+- 订单处理页（订单列表、确认/拒绝操作、详情、退改处理）
+- 结算对账页（结算单列表、明细查看、确认/异议、提现申请）
+- 提现申请页（提现表单、历史记录）
+- 收支明细页（每笔订单的佣金/应收/退款明细）
+- 数据统计页（销量/销售额/趋势/评价数据）
+
+⚠️ 关键约束：
+- 供应商工作台与运营后台完全隔离（独立登录、独立菜单、独立数据视图）
+- 所有数据查询必须携带 supplier_id 过滤，防止跨供应商数据泄露
+- RBAC 权限控制：菜单可见性 + 按钮操作权限
+- 页面必须包含 Loading/正常/空状态 三种状态
+
+完成后：
+1. 将已完成任务标记为 [X]
+2. 验证：供应商可登录工作台，管理产品、处理订单、查看结算
+3. Checkpoint：供应商工作台前端全部完成
+```
+
+### Phase 10：分销商中心前端
+
+```
+/speckit-implement
+
+请实现 tasks.md 中 Phase 10（分销商中心前端）的全部任务（T161-T170）。
+
+执行前先阅读：
+1. specs/002-outbound-supplier-distribution/spec.md（US3 前端页面维度验收场景 #19-#30）
+2. specs/002-outbound-supplier-distribution/contracts/distribution-api.yaml（分销商中心 API）
+3. specs/002-outbound-supplier-distribution/tasks.md（仅 Phase 10 部分）
+4. docs/travel_booking_system_v3.agent.final.md §8.5 分销商 C 端功能（中心/推广/团队/提现/看板）
+
+Phase 10 包含：
+- Web 分销商中心：
+  - 入驻申请页（个人/企业类型选择、表单、证件上传）
+  - 登录页（手机号+验证码）
+  - 布局组件（侧边栏导航：首页/推广/团队/佣金/提现/设置）
+  - 首页数据概览（累计佣金/可提现/冻结、快捷入口、公告）
+  - 我的推广页（产品列表、链接/二维码管理、点击/订单数据统计）
+  - 我的团队页（成员列表、业绩汇总、邀请链接/邀请码、排行榜）
+  - 佣金明细页（列表、时间/品类/状态筛选、导出 Excel、一级/二级标签）
+  - 佣金提现页（可提现余额、提现申请≥100元、选择银行卡、历史记录）
+  - 业绩看板页（趋势折线图、数据汇总卡片、产品 TOP10 排行、渠道分析）
+- 小程序分销商中心：
+  - 首页/推广/团队/佣金/提现 五个 Tab 页面
+
+⚠️ 关键约束：
+- 推广链接支持复制、分享到微信好友/朋友圈、下载二维码
+- 二维码支持 300×300/500×500/800×800px 三种尺寸，中心嵌入平台 Logo
+- 佣金明细一级分销商展示"自营佣金"+"团队佣金"两类标签
+- 团队页仅一级分销商可见，二级分销商隐藏此菜单
+- 业绩看板使用 ECharts 或类似图表库实现可视化
+
+完成后：
+1. 将已完成任务标记为 [X]
+2. 验证：分销商可登录中心、生成推广链接、查看佣金、申请提现
+3. Checkpoint：分销商中心前端全部完成
+```
+
+### Phase 11：集成测试与安全加固
+
+```
+/speckit-implement
+
+请实现 tasks.md 中 Phase 11（集成测试与安全加固）的全部任务（T171-T184）。
+
+执行前先阅读：
+1. .specify/memory/constitution.md（Principle III 安全基线逐项检查）
+2. specs/002-outbound-supplier-distribution/quickstart.md（全部 7 个验证场景）
+3. specs/002-outbound-supplier-distribution/tasks.md（仅 Phase 11 部分）
+4. docs/travel_booking_system_v3.agent.final.md 的以下章节：
+   - §10.1 安全需求（认证授权/数据安全/攻击防护/安全审计/等保三级）
+   - §10.1.5 等保三级合规对照表（表9-1，32 项测评要求）
+
+Phase 11 包含：
+- 端到端测试（4 个）：
+  - 出境游全流程（浏览→预订→支付→签证→进度跟踪）
+  - 供应商全流程（入驻→审核→产品→订单→结算）
+  - 分销全流程（入驻→推广→订单→佣金→提现）
+  - 支付全流程（支付宝/微信/银联，全额/定金+尾款，部分退款）
+- 单元测试（3 个）：
+  - 佣金计算（基数/比例/归属/50% 封顶）
+  - 防薅羊毛（自购/身份/设备/IP）
+  - 签证状态机（全部转换、非法转换）
+- 安全加固（4 项）：
+  - MFA 配置：供应商审核/分销提现审批/财务操作强制 MFA
+  - WAF + HIDS 部署
+  - 跨区域备份（每日全量+每小时增量，RPO <1min）
+  - 等保三级合规检查（32 控制点逐项验证）
+- 性能压测（QPS ≥10000、订单 TPS ≥500、P99 目标）
+- 数据隔离验证（跨供应商/跨分销商数据访问应被拒绝）
+
+完成后：
+1. 将已完成任务标记为 [X]
+2. 运行 quickstart.md 全部 Scenario 1-7，确认全部通过
+3. Checkpoint：所有测试通过，安全合规达标
+```
+
+### Phase 12：部署与监控
+
+```
+/speckit-implement
+
+请实现 tasks.md 中 Phase 12（部署与监控）的全部任务（T185-T193）。
+
+执行前先阅读：
+1. specs/002-outbound-supplier-distribution/plan.md（§Implementation Phases Phase 12）
+2. specs/002-outbound-supplier-distribution/tasks.md（仅 Phase 12 部分）
+3. .specify/memory/constitution.md（Deployment & Operations Constraints）
+4. docs/travel_booking_system_v3.agent.final.md §10.4.2（监控告警，表9-5 的 16 项指标和阈值）
+
+Phase 12 包含：
+- WinSW 服务注册（5 个服务的 XML 配置）
+- Prometheus 抓取配置（所有服务 /metrics 端点）
+- Grafana 仪表盘（系统层/应用层/业务层三层）
+- Jaeger 分布式追踪（1% 采样率）
+- 日志收集配置（Zap + lumberjack → Loki）
+- 告警规则（P1: 错误率>1%、QPS 降>50%、DB 连接>80%；P2: CPU>80%、退款率>20%）
+- 业务指标仪表盘（订单量/支付成功率/佣金支出/签证完成率）
+- 滚动部署（零停机，/ready 健康检查通过后才接入流量）
+- 灰度上线（供应商→出境游→分销→营销 分批放量）
+
+⚠️ 关键约束：
+- 所有 Go 服务 CGO_ENABLED=0 静态编译
+- WinSW 注册为 Windows 服务，支持开机自启+崩溃重启
+- RTO <5 分钟，RPO <1 分钟
+- 滚动部署零停机
+
+完成后：
+1. 将已完成任务标记为 [X]
+2. 验证：5 个服务作为 Windows 服务运行，Traefik 路由正确，监控告警就绪
+3. Checkpoint：一期全量上线，监控告警就绪
+```
+
+---
+
+**全部 Phase 完成后**，运行 `/speckit-converge` 检查是否有遗漏任务，然后进入步骤 14（二期规格定义）或提交 PR。
 
 ---
 

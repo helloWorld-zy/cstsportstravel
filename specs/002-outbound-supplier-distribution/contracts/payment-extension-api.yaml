@@ -1,0 +1,340 @@
+openapi: 3.0.3
+info:
+  title: 支付扩展 API（银联+定金尾款+部分退款）
+  description: 银联支付接入、定金+尾款模式、部分退款相关接口
+  version: 2.0.0
+tags:
+  - name: unionpay
+    description: 银联支付
+  - name: deposit-balance
+    description: 定金+尾款模式
+  - name: refund-extension
+    description: 退款扩展
+
+paths:
+  /api/v2/payments/create:
+    post:
+      tags: [unionpay, deposit-balance]
+      summary: 创建支付订单（支持银联、定金+尾款）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orderNo, channel, method]
+              properties:
+                orderNo:
+                  type: string
+                  description: 业务订单号
+                channel:
+                  type: string
+                  enum: [alipay, wechat, unionpay]
+                  description: 支付渠道
+                method:
+                  type: string
+                  description: "支付方式（pc/wap/app/native/jsapi/gateway）"
+                paymentType:
+                  type: string
+                  enum: [full, deposit, balance]
+                  description: "款项类型（全额/定金/尾款）"
+      responses:
+        '200':
+          description: 支付参数
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paymentNo:
+                    type: string
+                  payParams:
+                    type: object
+                    description: 渠道支付参数（URL/prepay_id等）
+                  expireTime:
+                    type: string
+                    format: date-time
+
+  /api/v2/payments/{paymentNo}/status:
+    get:
+      tags: [unionpay]
+      summary: 主动查询支付状态（所有渠道）
+      parameters:
+        - name: paymentNo
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 支付状态
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paymentNo:
+                    type: string
+                  status:
+                    type: string
+                    enum: [created, paying, paid, failed, closed]
+                  channelTradeNo:
+                    type: string
+                  paidAt:
+                    type: string
+                    format: date-time
+
+  /api/v2/payments/notify/unionpay:
+    post:
+      tags: [unionpay]
+      summary: 银联后台回调通知（backUrl）
+      description: 银联双重通知机制：后台通知为确认依据，前台通知仅作展示参考
+      responses:
+        '200':
+          description: 处理成功
+
+  /api/v2/orders/{orderNo}/balance-info:
+    get:
+      tags: [deposit-balance]
+      summary: 获取定金+尾款订单的尾款信息
+      parameters:
+        - name: orderNo
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 尾款信息
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orderNo:
+                    type: string
+                  depositAmount:
+                    type: number
+                  depositPaidAt:
+                    type: string
+                    format: date-time
+                  balanceAmount:
+                    type: number
+                  balanceDeadline:
+                    type: string
+                    format: date-time
+                  balancePaid:
+                    type: boolean
+                  countdown:
+                    type: integer
+                    description: 距尾款截止剩余秒数
+
+  /api/v2/admin/payment-config/deposit:
+    put:
+      tags: [deposit-balance]
+      summary: 配置定金比例和尾款截止规则
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productType:
+                  type: string
+                  enum: [outbound_group, cruise]
+                depositRatio:
+                  type: number
+                  minimum: 10
+                  maximum: 50
+                  description: 定金比例（10%-50%，默认30%）
+                balanceDeadlineDays:
+                  type: integer
+                  description: 尾款截止日（出发前N天）
+      responses:
+        '200':
+          description: 配置成功
+
+  /api/v2/refunds/apply:
+    post:
+      tags: [refund-extension]
+      summary: 申请退款（支持部分退款）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orderNo, refundAmount, reason]
+              properties:
+                orderNo:
+                  type: string
+                refundAmount:
+                  type: number
+                  description: 退款金额（不超过实付金额）
+                reason:
+                  type: string
+                reasonCategory:
+                  type: string
+                  enum: [user_request, visa_rejected, force_majeure, supplier_issue]
+                attachments:
+                  type: array
+                  items:
+                    type: string
+                  description: 凭证文件URL列表
+      responses:
+        '200':
+          description: 退款申请已提交
+
+  /api/v2/admin/refunds:
+    get:
+      tags: [refund-extension]
+      summary: 退款审核列表
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: minAmount
+          in: query
+          schema:
+            type: number
+        - name: maxAmount
+          in: query
+          schema:
+            type: number
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 退款申请列表
+
+  /api/v2/admin/refunds/{id}/approve:
+    post:
+      tags: [refund-extension]
+      summary: 审批退款（分级审批：≤1000运营/1000-5000财务主管/>5000总监）
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [approve, reject]
+                adjustedAmount:
+                  type: number
+                  description: 调整后的退款金额
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: 审批完成
+
+  /api/v2/admin/reconciliation/daily:
+    get:
+      tags: [refund-extension]
+      summary: 查询每日对账结果
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: channel
+          in: query
+          schema:
+            type: string
+            enum: [alipay, wechat, unionpay]
+      responses:
+        '200':
+          description: 对账结果
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  date:
+                    type: string
+                    format: date
+                  summary:
+                    type: object
+                    properties:
+                      totalOrders:
+                        type: integer
+                      matchedCount:
+                        type: integer
+                      mismatchedCount:
+                        type: integer
+                      channelOnlyCount:
+                        type: integer
+                      localOnlyCount:
+                        type: integer
+                  differences:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        orderNo:
+                          type: string
+                        channel:
+                          type: string
+                        diffType:
+                          type: string
+                        localAmount:
+                          type: number
+                        channelAmount:
+                          type: number
+                        status:
+                          type: string
+
+  /api/v2/admin/finance/payment-flows:
+    get:
+      tags: [refund-extension]
+      summary: 支付流水查询
+      parameters:
+        - name: channel
+          in: query
+          schema:
+            type: string
+        - name: paymentType
+          in: query
+          schema:
+            type: string
+            enum: [deposit, balance, full, refund]
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 支付流水列表

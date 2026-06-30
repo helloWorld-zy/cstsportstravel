@@ -1,0 +1,743 @@
+openapi: 3.0.3
+info:
+  title: 二级分销体系 API
+  description: 分销商入驻、推广、佣金、提现相关接口
+  version: 2.0.0
+tags:
+  - name: distributor-application
+    description: 分销商入驻申请
+  - name: distributor-promotion
+    description: 推广链接与跟踪
+  - name: distributor-commission
+    description: 佣金管理
+  - name: distributor-team
+    description: 团队管理
+  - name: distributor-withdrawal
+    description: 提现管理
+  - name: admin-distribution
+    description: 后台分销管理
+
+paths:
+  /api/v2/distributors/apply:
+    post:
+      tags: [distributor-application]
+      summary: 提交分销商入驻申请
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [distributorType, phone]
+              properties:
+                distributorType:
+                  type: string
+                  enum: [personal, enterprise]
+                realName:
+                  type: string
+                  description: 真实姓名（个人）
+                idCardNumber:
+                  type: string
+                idCardFront:
+                  type: string
+                  format: binary
+                idCardBack:
+                  type: string
+                  format: binary
+                enterpriseName:
+                  type: string
+                  description: 企业名称（企业）
+                creditCode:
+                  type: string
+                businessLicense:
+                  type: string
+                  format: binary
+                bankName:
+                  type: string
+                bankAccountName:
+                  type: string
+                bankAccountNumber:
+                  type: string
+                phone:
+                  type: string
+                email:
+                  type: string
+                promotionChannel:
+                  type: string
+                inviteCode:
+                  type: string
+                  description: 邀请码（可选，一级分销商的邀请码）
+      responses:
+        '200':
+          description: 申请提交成功
+
+  /api/v2/distributor/promotion-links:
+    post:
+      tags: [distributor-promotion]
+      summary: 生成推广链接
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [productId]
+              properties:
+                productId:
+                  type: integer
+      responses:
+        '200':
+          description: 推广链接
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  shortLink:
+                    type: string
+                  qrCodeUrl:
+                    type: string
+                  qrCodeSizes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        size:
+                          type: integer
+                        url:
+                          type: string
+
+  /api/v2/distributor/promotion-links:
+    get:
+      tags: [distributor-promotion]
+      summary: 我的推广产品列表
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [domestic, outbound, cruise]
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 推广产品列表
+
+  /api/v2/distributor/promotion-stats:
+    get:
+      tags: [distributor-promotion]
+      summary: 推广数据统计
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [today, last7days, last30days]
+        - name: productId
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 推广统计数据
+
+  /api/v2/distributor/commissions:
+    get:
+      tags: [distributor-commission]
+      summary: 佣金明细列表
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, frozen, withdrawable, withdrawn, recovered]
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 佣金明细
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CommissionDetail'
+                  summary:
+                    type: object
+                    properties:
+                      totalAmount:
+                        type: number
+                      frozenAmount:
+                        type: number
+                      withdrawableAmount:
+                        type: number
+
+  /api/v2/distributor/commissions/export:
+    get:
+      tags: [distributor-commission]
+      summary: 导出佣金明细
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Excel 文件
+
+  /api/v2/distributor/overview:
+    get:
+      tags: [distributor-commission]
+      summary: 分销商首页数据概览
+      responses:
+        '200':
+          description: 数据概览
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalCommission:
+                    type: number
+                    description: 累计佣金
+                  withdrawableAmount:
+                    type: number
+                    description: 可提现金额
+                  frozenAmount:
+                    type: number
+                    description: 冻结中金额
+                  todayOrders:
+                    type: integer
+                  todayCommission:
+                    type: number
+                  announcements:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        title:
+                          type: string
+                        content:
+                          type: string
+                        createdAt:
+                          type: string
+                          format: date-time
+
+  /api/v2/distributor/team:
+    get:
+      tags: [distributor-team]
+      summary: 我的团队（仅一级分销商）
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 团队信息
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  teamSummary:
+                    type: object
+                    properties:
+                      totalMembers:
+                        type: integer
+                      todayOrders:
+                        type: integer
+                      monthlyAmount:
+                        type: number
+                      totalSecondaryCommission:
+                        type: number
+                  members:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        nickname:
+                          type: string
+                        registeredAt:
+                          type: string
+                          format: date-time
+                        last30DaysOrders:
+                          type: integer
+                        last30DaysAmount:
+                          type: number
+                        contributedCommission:
+                          type: number
+
+  /api/v2/distributor/team/invite:
+    get:
+      tags: [distributor-team]
+      summary: 获取邀请链接和邀请码
+      responses:
+        '200':
+          description: 邀请信息
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  inviteLink:
+                    type: string
+                  inviteCode:
+                    type: string
+                  clickCount:
+                    type: integer
+                  conversionCount:
+                    type: integer
+
+  /api/v2/distributor/withdrawals:
+    post:
+      tags: [distributor-withdrawal]
+      summary: 申请提现
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount:
+                  type: number
+                  minimum: 100
+                bankAccountId:
+                  type: integer
+      responses:
+        '200':
+          description: 提现申请已提交
+
+  /api/v2/distributor/withdrawals:
+    get:
+      tags: [distributor-withdrawal]
+      summary: 提现记录
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 提现记录列表
+
+  /api/v2/distributor/performance:
+    get:
+      tags: [distributor-commission]
+      summary: 业绩看板数据
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [last7days, last30days]
+      responses:
+        '200':
+          description: 业绩数据
+
+  /api/v2/admin/distributors:
+    get:
+      tags: [admin-distribution]
+      summary: 分销商列表
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [personal, enterprise]
+        - name: grade
+          in: query
+          schema:
+            type: string
+            enum: [normal, senior]
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 分销商列表
+
+  /api/v2/admin/distributors/applications:
+    get:
+      tags: [admin-distribution]
+      summary: 待审核分销商申请
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, all]
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 申请列表
+
+  /api/v2/admin/distributors/{id}/audit:
+    post:
+      tags: [admin-distribution]
+      summary: 审核分销商申请
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [approve, reject, supplement]
+                reason:
+                  type: string
+                supplementItems:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: 审核完成
+
+  /api/v2/admin/distributors/{id}/status:
+    put:
+      tags: [admin-distribution]
+      summary: 更新分销商状态（冻结/解冻/注销）
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [freeze, unfreeze, cancel]
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: 状态更新完成
+
+  /api/v2/admin/distributors/{id}/grade:
+    put:
+      tags: [admin-distribution]
+      summary: 调整分销商等级
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [grade]
+              properties:
+                grade:
+                  type: string
+                  enum: [normal, senior]
+      responses:
+        '200':
+          description: 等级调整完成
+
+  /api/v2/admin/distribution/withdrawals:
+    get:
+      tags: [admin-distribution]
+      summary: 提现审核列表
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, all]
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 提现申请列表
+
+  /api/v2/admin/distribution/withdrawals/{id}/process:
+    post:
+      tags: [admin-distribution]
+      summary: 处理提现申请
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [approve, reject]
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: 处理完成
+
+  /api/v2/admin/distribution/withdrawals/batch-process:
+    post:
+      tags: [admin-distribution]
+      summary: 批量确认打款
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ids]
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: 批量处理完成
+
+  /api/v2/admin/distribution/commission-rules:
+    get:
+      tags: [admin-distribution]
+      summary: 佣金规则列表
+      responses:
+        '200':
+          description: 佣金规则列表
+
+  /api/v2/admin/distribution/commission-rules:
+    post:
+      tags: [admin-distribution]
+      summary: 创建佣金规则
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scopeType, level1Rate, level2Rate]
+              properties:
+                scopeType:
+                  type: string
+                  enum: [global, category, product]
+                scopeId:
+                  type: integer
+                level1Rate:
+                  type: number
+                  minimum: 0.1
+                  maximum: 50
+                level2Rate:
+                  type: number
+                  minimum: 0.1
+                  maximum: 30
+                effectiveFrom:
+                  type: string
+                  format: date-time
+                effectiveTo:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: 规则创建成功
+
+  /api/v2/admin/distribution/settlement-rules:
+    put:
+      tags: [admin-distribution]
+      summary: 配置结算规则
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                domesticFreezeDays:
+                  type: integer
+                  description: 境内游冻结天数，默认 7
+                outboundFreezeDays:
+                  type: integer
+                  description: 出境游冻结天数，默认 15
+                cruiseFreezeDays:
+                  type: integer
+                  description: 邮轮游冻结天数，默认 15
+                minWithdrawalAmount:
+                  type: number
+                  description: 最低提现门槛，默认 100
+                dailyWithdrawalLimit:
+                  type: number
+                  description: 单日提现上限
+                autoSettlement:
+                  type: boolean
+                  description: 自动结算开关
+      responses:
+        '200':
+          description: 规则更新成功
+
+  /api/v2/admin/distribution/orders:
+    get:
+      tags: [admin-distribution]
+      summary: 分销订单查询
+      parameters:
+        - name: orderNo
+          in: query
+          schema:
+            type: string
+        - name: distributorCode
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: commissionStatus
+          in: query
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 分销订单列表
+
+components:
+  schemas:
+    CommissionDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        orderNo:
+          type: string
+        productName:
+          type: string
+        category:
+          type: string
+        orderActualAmount:
+          type: number
+        commissionRate:
+          type: number
+        commissionAmount:
+          type: number
+        commissionLevel:
+          type: integer
+          description: 1=一级佣金, 2=二级佣金
+        status:
+          type: string
+        settledAt:
+          type: string
+          format: date-time
+        consumerNickname:
+          type: string

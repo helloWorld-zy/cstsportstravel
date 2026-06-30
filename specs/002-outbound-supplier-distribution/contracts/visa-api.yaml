@@ -1,0 +1,370 @@
+openapi: 3.0.3
+info:
+  title: 签证服务 API
+  description: 签证订单、材料管理、进度跟踪相关接口
+  version: 2.0.0
+tags:
+  - name: visa-order
+    description: 签证订单管理
+  - name: visa-material
+    description: 签证材料管理
+  - name: visa-progress
+    description: 签证进度跟踪
+
+paths:
+  /api/v2/orders/{orderNo}/visa:
+    get:
+      tags: [visa-order]
+      summary: 获取订单关联的签证订单详情
+      parameters:
+        - name: orderNo
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 签证订单详情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisaOrderDetail'
+
+  /api/v2/visa-orders/{visaOrderId}/materials:
+    get:
+      tags: [visa-material]
+      summary: 获取签证材料清单（按职业类型动态生成）
+      parameters:
+        - name: visaOrderId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 材料清单
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  occupationType:
+                    type: string
+                  materials:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/VisaMaterialItem'
+
+  /api/v2/visa-orders/{visaOrderId}/materials/{materialId}/upload:
+    post:
+      tags: [visa-material]
+      summary: 上传签证材料文件
+      parameters:
+        - name: visaOrderId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: materialId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: 材料文件（≤10MB）
+      responses:
+        '200':
+          description: 上传成功
+
+  /api/v2/visa-orders/{visaOrderId}/materials/submit:
+    post:
+      tags: [visa-material]
+      summary: 提交全部材料进入审核
+      parameters:
+        - name: visaOrderId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 提交成功，状态变更为 reviewing
+
+  /api/v2/visa-orders/{visaOrderId}/progress:
+    get:
+      tags: [visa-progress]
+      summary: 查询签证办理进度
+      parameters:
+        - name: visaOrderId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 进度信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisaProgressDetail'
+
+  /api/v2/visa-orders/{visaOrderId}/history:
+    get:
+      tags: [visa-progress]
+      summary: 查询签证历史记录
+      parameters:
+        - name: visaOrderId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 历史记录列表
+
+  /api/v2/visa/countries/{countryId}/info:
+    get:
+      tags: [visa-order]
+      summary: 查询目的地国家签证信息
+      parameters:
+        - name: countryId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 签证信息（类型、办理周期、材料清单、入境政策）
+
+  /api/v2/visa/countries/{countryId}/pretrip:
+    get:
+      tags: [visa-order]
+      summary: 查询行前信息服务
+      parameters:
+        - name: countryId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 行前信息（入境政策、现金规定、入境卡指引、海关指引、紧急联系）
+
+  /api/v2/passport/ocr:
+    post:
+      tags: [visa-material]
+      summary: 护照OCR识别
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: OCR识别结果
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  passportNumber:
+                    type: string
+                  expiryDate:
+                    type: string
+                    format: date
+                  nationality:
+                    type: string
+
+  /api/v2/admin/visa-orders:
+    get:
+      tags: [visa-order]
+      summary: 签证订单管理列表（运营后台）
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 签证订单列表
+
+  /api/v2/admin/visa-orders/{id}/review:
+    post:
+      tags: [visa-order]
+      summary: 审核签证材料
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [approve, reject, supplement]
+                comments:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      materialId:
+                        type: integer
+                      comment:
+                        type: string
+      responses:
+        '200':
+          description: 审核完成
+
+  /api/v2/admin/visa-orders/{id}/status:
+    put:
+      tags: [visa-order]
+      summary: 更新签证状态（送签/出签/拒签）
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [submitted, approved, rejected]
+                visaExpiryDate:
+                  type: string
+                  format: date
+                rejectReason:
+                  type: string
+                visaPhotoUrl:
+                  type: string
+                trackingCompany:
+                  type: string
+                trackingNumber:
+                  type: string
+      responses:
+        '200':
+          description: 状态更新完成
+
+components:
+  schemas:
+    VisaOrderDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        visaOrderNo:
+          type: string
+        mainOrderNo:
+          type: string
+        countryName:
+          type: string
+        visaType:
+          type: string
+        status:
+          type: string
+          enum: [pending_submit, reviewing, submitted, approved, rejected]
+        estimatedCompletionDate:
+          type: string
+          format: date
+        visaFee:
+          type: number
+        materials:
+          type: array
+          items:
+            $ref: '#/components/schemas/VisaMaterialItem'
+        progress:
+          $ref: '#/components/schemas/VisaProgressDetail'
+
+    VisaMaterialItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        materialType:
+          type: string
+        materialName:
+          type: string
+        isRequired:
+          type: boolean
+        status:
+          type: string
+          enum: [pending, submitted, approved, rejected, supplement]
+        fileUrl:
+          type: string
+        reviewComment:
+          type: string
+
+    VisaProgressDetail:
+      type: object
+      properties:
+        currentStatus:
+          type: string
+        estimatedCompletionDate:
+          type: string
+          format: date
+        timeline:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              timestamp:
+                type: string
+                format: date-time
+              comment:
+                type: string
+        trackingCompany:
+          type: string
+        trackingNumber:
+          type: string
+        trackingTimeline:
+          type: array
+          items:
+            type: object
+            properties:
+              time:
+                type: string
+              location:
+                type: string
+              action:
+                type: string
