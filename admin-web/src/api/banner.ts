@@ -1,4 +1,4 @@
-import request from './request'
+import { adminApi } from './request'
 
 export interface Banner {
   id: number
@@ -23,22 +23,22 @@ export interface Destination {
 
 // Banner CRUD
 export function listBanners(params?: { position?: string; status?: string }) {
-  return request.get<{ items: Banner[]; total: number }>('/admin/banners', { params })
+  return adminApi.get<{ items: Banner[]; total: number }>('/admin/banners', { params })
 }
 
 export function createBanner(data: Partial<Banner>) {
-  return request.post<{ id: number }>('/admin/banners', data)
+  return adminApi.post<{ id: number }>('/admin/banners', data)
 }
 
 export function updateBanner(id: number, data: Partial<Banner>) {
-  return request.put(`/admin/banners/${id}`, data)
+  return adminApi.put(`/admin/banners/${id}`, data)
 }
 
 export function deleteBanner(id: number) {
-  return request.delete(`/admin/banners/${id}`)
+  return adminApi.del(`/admin/banners/${id}`)
 }
 
 // Destinations
 export function listDestinations(params?: { category?: string }) {
-  return request.get<{ items: Destination[] }>('/destinations/popular', { params })
+  return adminApi.get<{ items: Destination[] }>('/destinations/popular', { params })
 }

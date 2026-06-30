@@ -11,8 +11,8 @@
         :default-active="activeMenu"
         :collapse="isCollapsed"
         :router="true"
-        background-color="#001529"
-        text-color="#ffffffa6"
+        background-color="#0f172a"
+        text-color="#94a3b8"
         active-text-color="#ffffff"
         class="sidebar-menu"
       >
@@ -87,7 +87,7 @@
 
 <script setup lang="ts">
 import { ref, computed, type Component } from 'vue'
-import { Fold, Expand, User, Goods, Document, Setting } from '@element-plus/icons-vue'
+import { Fold, Expand, Goods, Document, Setting } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const iconMap: Record<string, Component> = {
@@ -167,34 +167,68 @@ function handleCommand(command: string) {
 }
 
 .sidebar {
-  background-color: #001529;
+  background-color: #0f172a;
   transition: width 0.3s;
   overflow: hidden;
+  box-shadow: 4px 0 24px rgba(15, 23, 42, 0.05);
+  z-index: 100;
 }
 
 .logo {
-  height: 64px;
+  height: 70px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 18px;
-  font-weight: bold;
-  border-bottom: 1px solid #ffffff1a;
+  font-size: 16px;
+  font-weight: 800;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  letter-spacing: 0.5px;
+  background-color: #0f172a;
+}
+
+.logo span {
+  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .sidebar-menu {
   border-right: none;
+  padding: 16px 8px;
+}
+
+:deep(.el-menu-item), :deep(.el-sub-menu__title) {
+  height: 46px !important;
+  line-height: 46px !important;
+  border-radius: 8px !important;
+  margin-bottom: 6px !important;
+  color: #94a3b8 !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  font-weight: 500;
+}
+
+:deep(.el-menu-item:hover), :deep(.el-sub-menu__title:hover) {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  color: #fff !important;
+}
+
+:deep(.el-menu-item.is-active) {
+  background-color: #3b82f6 !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25) !important;
 }
 
 .header {
+  height: 70px !important;
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: #fff;
-  border-bottom: 1px solid #f0f0f0;
-  padding: 0 20px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid #f1f5f9;
+  padding: 0 24px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.01), 0 1px 2px -1px rgba(0, 0, 0, 0.01);
 }
 
 .header-left {
@@ -206,11 +240,17 @@ function handleCommand(command: string) {
 .collapse-btn {
   font-size: 20px;
   cursor: pointer;
-  color: #333;
+  color: #475569;
+  transition: color 0.2s;
+}
+
+.collapse-btn:hover {
+  color: #3b82f6;
 }
 
 .breadcrumb {
   font-size: 14px;
+  font-weight: 500;
 }
 
 .header-right {
@@ -223,16 +263,24 @@ function handleCommand(command: string) {
   align-items: center;
   gap: 8px;
   cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 20px;
+  transition: background-color 0.2s;
+}
+
+.user-info:hover {
+  background-color: #f1f5f9;
 }
 
 .username {
   font-size: 14px;
-  color: #333;
+  font-weight: 600;
+  color: #334155;
 }
 
 .content {
-  background: #f5f5f5;
-  padding: 20px;
+  background: #f8fafc;
+  padding: 24px;
   overflow-y: auto;
 }
 </style>

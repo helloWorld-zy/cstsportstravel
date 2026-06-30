@@ -82,6 +82,10 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { useApi } from '~/composables/useApi'
 
+definePageMeta({
+  layout: 'user',
+})
+
 interface Traveller {
   id: number
   real_name: string
@@ -235,9 +239,7 @@ async function handleDelete(id: number) {
 
 <style scoped>
 .travellers-page {
-  max-width: 700px;
-  margin: 0 auto;
-  padding: var(--space-lg);
+  max-width: 100%;
 }
 .page-header {
   display: flex;

@@ -151,6 +151,10 @@ import { Picture } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import RefundRequest from '~/components/RefundRequest.vue'
 
+definePageMeta({
+  layout: 'user',
+})
+
 interface OrderItem {
   id: number
   order_no: string
@@ -306,9 +310,7 @@ onMounted(() => {
 
 <style scoped>
 .orders-page {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 20px;
+  max-width: 100%;
 }
 
 .page-header {

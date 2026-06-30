@@ -224,11 +224,11 @@ function cellClass(cell: CalendarCell): string[] {
 }
 
 .calendar-cell.clickable:hover {
-  background: #fff3e0;
+  background: #eff6ff;
 }
 
 .calendar-cell.selected {
-  background: #ff5722;
+  background: #2563eb;
   color: #fff;
 }
 
@@ -243,7 +243,7 @@ function cellClass(cell: CalendarCell): string[] {
 
 .day-price {
   font-size: 11px;
-  color: #ff5722;
+  color: #2563eb;
   font-weight: 500;
 }
 

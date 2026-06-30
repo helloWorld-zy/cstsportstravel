@@ -19,6 +19,10 @@
 <script setup lang="ts">
 const { user, fetchProfile, init } = useAuth()
 
+definePageMeta({
+  layout: 'user',
+})
+
 onMounted(async () => {
   await init()
   if (!user.value) {
@@ -33,9 +37,7 @@ async function handleSuccess(status: string) {
 
 <style scoped>
 .real-name-page {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: var(--space-lg);
+  max-width: 100%;
 }
 .real-name-page h1 {
   margin-bottom: var(--space-lg);

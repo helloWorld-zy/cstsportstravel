@@ -360,21 +360,31 @@ const { data, isLoading } = useQuery({
 const products = computed<ProductSummary[]>(() => data.value?.items || [])
 const total = computed(() => data.value?.total || 0)
 const totalPages = computed(() => Math.ceil(total.value / (params.page_size || 20)))
+
+onMounted(() => {
+  if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+    showDrawer.value = true
+  }
+})
 </script>
 
 <style scoped>
 .product-list-page {
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 16px 16px 40px;
+  background: transparent;
+  min-height: calc(100vh - 70px);
 }
 
+/* Filter Bar */
 .filter-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   padding: 12px 0;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .filter-tags {
@@ -382,74 +392,111 @@ const totalPages = computed(() => Math.ceil(total.value / (params.page_size || 2
   gap: 8px;
   flex: 1;
   overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.filter-tags::-webkit-scrollbar {
+  display: none;
 }
 
 .filter-tag {
   white-space: nowrap;
-  padding: 6px 12px;
-  border: 1px solid #ddd;
-  border-radius: 16px;
+  padding: 6px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
   background: #fff;
   font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-tag:hover {
+  color: #2563eb;
+  border-color: rgba(37, 99, 235, 0.3);
 }
 
 .filter-tag.active {
-  border-color: #ff5722;
-  color: #ff5722;
-  background: #fff3e0;
+  border-color: #2563eb;
+  color: #2563eb;
+  background: #eff6ff;
 }
 
 .filter-more-btn {
-  padding: 6px 12px;
-  border: 1px solid #ddd;
-  border-radius: 16px;
+  padding: 6px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
   background: #fff;
   font-size: 13px;
+  font-weight: 600;
+  color: #2563eb;
+  border-color: rgba(37, 99, 235, 0.4);
   cursor: pointer;
+  transition: all 0.2s;
 }
 
+.filter-more-btn:hover {
+  background: #eff6ff;
+}
+
+/* Sort Bar */
 .sort-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   padding: 12px 0;
 }
 
 .sort-btn {
-  padding: 4px 8px;
+  padding: 6px 12px;
   background: none;
   border: none;
   font-size: 13px;
-  color: #666;
+  color: #64748b;
+  font-weight: 600;
   cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.sort-btn:hover {
+  color: #2563eb;
 }
 
 .sort-btn.active {
-  color: #ff5722;
-  font-weight: 600;
+  color: #2563eb;
+  background: #eff6ff;
 }
 
 .view-toggle {
   margin-left: auto;
   display: flex;
   gap: 4px;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 8px;
 }
 
 .view-toggle button {
-  padding: 4px 8px;
-  border: 1px solid #ddd;
-  background: #fff;
+  padding: 4px 10px;
+  border: none;
+  background: transparent;
   font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
   cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
 }
 
 .view-toggle button.active {
-  background: #ff5722;
-  color: #fff;
-  border-color: #ff5722;
+  background: #fff;
+  color: #2563eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
+/* Product list area */
 .product-grid {
   display: grid;
   gap: 16px;
@@ -467,13 +514,27 @@ const totalPages = computed(() => Math.ceil(total.value / (params.page_size || 2
 .product-grid.list :deep(.product-card) {
   display: flex;
   flex-direction: row;
+  height: 160px;
 }
 
 .product-grid.list :deep(.card-image) {
-  width: 200px;
-  min-width: 200px;
+  width: 240px;
+  min-width: 240px;
   padding-top: 0;
-  height: 140px;
+  height: 100%;
+}
+
+.product-grid.list :deep(.card-body) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px 20px;
+}
+
+.product-grid.list :deep(.card-title) {
+  height: auto;
+  margin-bottom: 6px;
 }
 
 .loading-state {
@@ -484,11 +545,11 @@ const totalPages = computed(() => Math.ceil(total.value / (params.page_size || 2
 }
 
 .skeleton-card {
-  height: 240px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  height: 260px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
-  border-radius: 8px;
+  border-radius: 16px;
 }
 
 @keyframes shimmer {
@@ -498,39 +559,63 @@ const totalPages = computed(() => Math.ceil(total.value / (params.page_size || 2
 
 .empty-state {
   text-align: center;
-  padding: 48px 0;
-  color: #999;
+  padding: 60px 24px;
+  background: #fff;
+  border-radius: 16px;
+  color: #64748b;
+  border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
 .reset-btn {
-  margin-top: 12px;
-  padding: 8px 24px;
-  border: 1px solid #ff5722;
-  border-radius: 4px;
+  margin-top: 16px;
+  padding: 10px 28px;
+  border: 1px solid #2563eb;
+  border-radius: 20px;
   background: #fff;
-  color: #ff5722;
+  color: #2563eb;
+  font-weight: 700;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
+.reset-btn:hover {
+  background: #eff6ff;
+}
+
+/* Pagination */
 .pagination {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 16px;
-  padding: 24px 0;
+  padding: 32px 0;
 }
 
 .pagination button {
-  padding: 8px 16px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 8px 18px;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
   background: #fff;
+  font-weight: 600;
+  color: #475569;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination button:hover:not(:disabled) {
+  color: #2563eb;
+  border-color: rgba(37, 99, 235, 0.3);
 }
 
 .pagination button:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
+}
+
+.pagination span {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
 }
 
 /* Drawer */
@@ -540,8 +625,9 @@ const totalPages = computed(() => Math.ceil(total.value / (params.page_size || 2
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 100;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(2px);
+  z-index: 1100;
   display: flex;
   justify-content: flex-end;
 }
@@ -551,35 +637,53 @@ const totalPages = computed(() => Math.ceil(total.value / (params.page_size || 2
   background: #fff;
   display: flex;
   flex-direction: column;
+  box-shadow: -10px 0 25px rgba(0, 0, 0, 0.1);
+  height: 100%;
 }
 
 .drawer-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid #eee;
+  padding: 20px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .drawer-header h3 {
   margin: 0;
   font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.drawer-header button {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.drawer-header button:hover {
+  color: #475569;
 }
 
 .drawer-body {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 20px;
 }
 
 .filter-group {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .filter-group h4 {
-  margin: 0 0 8px;
+  margin: 0 0 12px;
   font-size: 14px;
-  color: #333;
+  font-weight: 700;
+  color: #0f172a;
 }
 
 .filter-options {
@@ -590,42 +694,156 @@ const totalPages = computed(() => Math.ceil(total.value / (params.page_size || 2
 
 .filter-option {
   padding: 6px 12px;
-  border: 1px solid #eee;
-  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
   font-size: 13px;
+  font-weight: 500;
+  color: #475569;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-option:hover {
+  border-color: rgba(37, 99, 235, 0.3);
+  color: #2563eb;
 }
 
 .filter-option.selected {
-  border-color: #ff5722;
-  color: #ff5722;
-  background: #fff3e0;
+  border-color: #2563eb;
+  color: #2563eb;
+  background: #eff6ff;
+  font-weight: 600;
 }
 
 .drawer-footer {
   display: flex;
   gap: 12px;
-  padding: 16px;
-  border-top: 1px solid #eee;
+  padding: 20px;
+  border-top: 1px solid #f1f5f9;
+  background: #fff;
 }
 
 .drawer-footer button {
   flex: 1;
-  padding: 10px;
-  border-radius: 4px;
+  padding: 12px;
+  border-radius: 8px;
   font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.drawer-footer .reset-btn {
+  margin-top: 0;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+}
+
+.drawer-footer .reset-btn:hover {
+  background: #f8fafc;
 }
 
 .apply-btn {
-  background: #ff5722;
+  background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
   color: #fff;
   border: none;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
 }
 
+.apply-btn:hover {
+  opacity: 0.95;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .product-grid.grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 1024px) {
+  .product-list-page {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 24px;
+    padding: 24px 24px 60px;
+  }
+
+  .filter-bar {
+    grid-column: 2;
+    grid-row: 1;
+    border: none;
+    padding: 0;
+    margin-bottom: 8px;
+  }
+
+  .sort-bar {
+    grid-column: 2;
+    grid-row: 2;
+    padding: 12px 20px;
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+  }
+
+  .product-grid {
+    grid-column: 2;
+    grid-row: 3;
+    padding: 0;
+  }
+
+  .product-grid.grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .loading-state {
+    grid-column: 2;
+    grid-row: 3;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding: 0;
+  }
+
+  .empty-state {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  .pagination {
+    grid-column: 2;
+    grid-row: 4;
+  }
+
+  /* Static Left Sidebar Panel */
+  .drawer-overlay {
+    grid-column: 1;
+    grid-row: 1 / span 4;
+    display: block !important;
+    position: sticky;
+    top: 94px;
+    height: calc(100vh - 120px);
+    background: transparent;
+    backdrop-filter: none;
+    z-index: 10;
+    width: 100%;
+  }
+
+  .drawer {
+    width: 100% !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 16px;
+    height: 100%;
+  }
+
+  .drawer-header button {
+    display: none; /* No close button on desktop */
+  }
+
+  .drawer-body {
+    padding: 20px;
   }
 }
 </style>

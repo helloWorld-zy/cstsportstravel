@@ -135,7 +135,7 @@ async function loadBanners() {
   bannersLoading.value = true
   try {
     const res = await listBanners()
-    banners.value = res.data?.items || []
+    banners.value = res?.items || []
   } catch {
     ElMessage.error('加载 Banner 列表失败')
   } finally {
@@ -191,7 +191,7 @@ async function saveBanner() {
         sort_order: editingBanner.sort_order,
         status: editingBanner.status,
       })
-      banners.value.push({ ...editingBanner, id: res.data?.id || Date.now() })
+      banners.value.push({ ...editingBanner, id: res?.id || Date.now() })
     }
     bannerDialogVisible.value = false
     ElMessage.success('保存成功')
@@ -231,7 +231,7 @@ async function loadDestinations() {
   destsLoading.value = true
   try {
     const res = await listDestinations()
-    destinations.value = res.data?.items || []
+    destinations.value = res?.items || []
   } catch {
     ElMessage.error('加载目的地列表失败')
   } finally {

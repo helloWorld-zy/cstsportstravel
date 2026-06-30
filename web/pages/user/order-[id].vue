@@ -200,6 +200,10 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Picture } from '@element-plus/icons-vue'
+
+definePageMeta({
+  layout: 'user',
+})
 import { ElMessage, ElMessageBox } from 'element-plus'
 import RefundRequest from '~/components/RefundRequest.vue'
 import ReviewForm from '~/components/ReviewForm.vue'
@@ -338,9 +342,7 @@ onMounted(() => {
 
 <style scoped>
 .order-detail-page {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 20px;
+  max-width: 100%;
 }
 
 .detail-header {

@@ -329,31 +329,39 @@ function goToBooking() {
 
 <style scoped>
 .product-detail-page {
-  max-width: 768px;
+  width: 100%;
+  max-width: 1200px;
   margin: 0 auto;
-  padding-bottom: 70px;
-  background: #f5f5f5;
+  padding: 16px 16px 90px;
+  background: transparent;
+  min-height: calc(100vh - 70px);
 }
 
 .section {
   background: #fff;
-  margin-top: 8px;
-  padding: 16px;
+  margin-top: 16px;
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
 }
 
 .section-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #f0f0f0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  position: relative;
 }
 
 /* Image Carousel */
 .image-carousel {
   position: relative;
-  background: #000;
+  background: #0f172a;
+  border-radius: 16px;
+  overflow: hidden;
 }
 
 .carousel-track img {
@@ -369,111 +377,126 @@ function goToBooking() {
 
 .carousel-dots {
   position: absolute;
-  bottom: 12px;
-  right: 16px;
+  bottom: 16px;
+  right: 24px;
   display: flex;
-  gap: 6px;
+  gap: 8px;
+  z-index: 5;
 }
 
 .carousel-dots .dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.4);
   cursor: pointer;
+  transition: all 0.2s;
 }
 
 .carousel-dots .dot.active {
   background: #fff;
+  width: 18px;
+  border-radius: 4px;
 }
 
 /* Product Info */
 .product-name {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 12px;
+  line-height: 1.3;
 }
 
 .product-meta {
   display: flex;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 16px;
 }
 
 .product-meta span {
   font-size: 12px;
-  color: #666;
-  padding: 2px 6px;
-  background: #f5f5f5;
-  border-radius: 3px;
+  font-weight: 600;
+  color: #475569;
+  padding: 4px 10px;
+  background: #f1f5f9;
+  border-radius: 6px;
 }
 
 .product-price {
   display: flex;
   align-items: baseline;
-  gap: 2px;
-  margin-bottom: 8px;
+  gap: 4px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .price-label {
   font-size: 12px;
-  color: #999;
+  color: #64748b;
+  font-weight: 500;
 }
 
 .price-value {
-  font-size: 24px;
-  font-weight: bold;
-  color: #ff5722;
+  font-size: 28px;
+  font-weight: 800;
+  color: #2563eb;
 }
 
 .price-unit {
   font-size: 12px;
-  color: #999;
+  color: #64748b;
+  font-weight: 500;
 }
 
 .product-summary {
   font-size: 14px;
-  color: #666;
+  color: #475569;
   line-height: 1.6;
-  margin: 0 0 8px;
+  margin: 0 0 16px;
 }
 
 .product-tags {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .tag {
-  padding: 2px 8px;
-  background: #fff3e0;
-  color: #ff5722;
-  border-radius: 3px;
+  padding: 4px 10px;
+  background: #eff6ff;
+  color: #2563eb;
+  border-radius: 6px;
   font-size: 12px;
+  font-weight: 600;
 }
 
 /* Itinerary */
 .itinerary-timeline {
   position: relative;
-  padding-left: 20px;
+  padding-left: 24px;
 }
 
 .itinerary-timeline::before {
   content: '';
   position: absolute;
   left: 8px;
-  top: 0;
-  bottom: 0;
+  top: 8px;
+  bottom: 8px;
   width: 2px;
-  background: #eee;
+  background: #e2e8f0;
 }
 
 .itinerary-day {
   display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 16px;
+  margin-bottom: 24px;
   position: relative;
+}
+
+.itinerary-day:last-child {
+  margin-bottom: 0;
 }
 
 .day-marker {
@@ -483,174 +506,200 @@ function goToBooking() {
 
 .day-num {
   display: inline-block;
-  background: #ff5722;
+  background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
   color: #fff;
-  padding: 2px 8px;
-  border-radius: 10px;
+  padding: 4px 12px;
+  border-radius: 20px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
 }
 
 .day-content {
   flex: 1;
+  padding-top: 2px;
 }
 
 .day-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 8px;
 }
 
 .day-desc {
   font-size: 13px;
-  color: #666;
-  margin: 0 0 8px;
-  line-height: 1.5;
+  color: #475569;
+  margin: 0 0 12px;
+  line-height: 1.6;
 }
 
 .day-details {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: 16px;
+  margin-bottom: 12px;
 }
 
 .detail-item {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: #666;
+  gap: 6px;
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
 }
 
 .day-spots {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
 
 .spot-item {
-  padding: 4px 8px;
-  background: #f5f5f5;
-  border-radius: 4px;
+  padding: 6px 12px;
+  background: #f8fafc;
+  border-radius: 8px;
   font-size: 12px;
+  border: 1px solid #f1f5f9;
+  font-weight: 500;
 }
 
 .spot-name {
-  color: #333;
+  color: #334155;
 }
 
 .spot-duration {
-  color: #999;
-  margin-left: 4px;
+  color: #94a3b8;
+  margin-left: 6px;
 }
 
 /* Fees */
 .fee-block {
-  margin-bottom: 12px;
+  margin-bottom: 20px;
+}
+
+.fee-block:last-child {
+  margin-bottom: 0;
 }
 
 .fee-title {
-  font-size: 14px;
-  font-weight: 500;
-  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .fee-title.included {
-  color: #4caf50;
+  color: #10b981;
 }
 
 .fee-title.excluded {
-  color: #ff5722;
+  color: #f59e0b;
 }
 
 .fee-content {
   font-size: 13px;
-  color: #666;
-  line-height: 1.6;
+  color: #475569;
+  line-height: 1.7;
 }
 
 /* Pricing */
 .pricing-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+  gap: 12px;
 }
 
 .pricing-item {
   display: flex;
   justify-content: space-between;
-  padding: 8px 12px;
-  background: #f9f9f9;
-  border-radius: 4px;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #f1f5f9;
 }
 
 .pricing-label {
   font-size: 13px;
-  color: #666;
+  color: #64748b;
+  font-weight: 500;
 }
 
 .pricing-value {
-  font-size: 13px;
-  font-weight: 600;
-  color: #ff5722;
+  font-size: 14px;
+  font-weight: 700;
+  color: #2563eb;
 }
 
 /* Cancellation */
 .cancellation-rules {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .rule-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
-  background: #f9f9f9;
-  border-radius: 4px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 12px;
   font-size: 13px;
+  border: 1px solid #f1f5f9;
 }
 
 .rule-name {
-  color: #333;
-  font-weight: 500;
+  color: #0f172a;
+  font-weight: 700;
 }
 
 .rule-desc {
-  color: #666;
+  color: #475569;
   flex: 1;
-  margin: 0 12px;
+  margin: 0 16px;
+  font-weight: 500;
 }
 
 .rule-pct {
-  color: #ff5722;
-  font-weight: 500;
+  color: #2563eb;
+  font-weight: 700;
 }
 
 /* Reviews */
 .review-summary {
   display: flex;
-  gap: 20px;
-  margin-bottom: 16px;
+  gap: 32px;
+  margin-bottom: 24px;
+  align-items: center;
 }
 
 .rating-big {
   text-align: center;
+  background: #fffbeb;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid #fef3c7;
+  min-width: 100px;
 }
 
 .rating-num {
-  font-size: 36px;
-  font-weight: bold;
-  color: #ff9800;
+  font-size: 42px;
+  font-weight: 800;
+  color: #d97706;
 }
 
 .rating-label {
-  font-size: 14px;
-  color: #999;
+  font-size: 12px;
+  color: #b45309;
+  font-weight: 600;
+  display: block;
+  margin-top: -2px;
 }
 
 .rating-dist {
@@ -660,110 +709,136 @@ function goToBooking() {
 .dist-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
+  gap: 10px;
+  margin-bottom: 6px;
 }
 
 .dist-label {
   font-size: 12px;
-  color: #666;
-  width: 30px;
+  color: #64748b;
+  width: 32px;
+  font-weight: 500;
 }
 
 .dist-bar {
   flex: 1;
-  height: 6px;
-  background: #f0f0f0;
-  border-radius: 3px;
+  height: 8px;
+  background: #f1f5f9;
+  border-radius: 4px;
   overflow: hidden;
 }
 
 .dist-fill {
   height: 100%;
-  background: #ff9800;
-  border-radius: 3px;
+  background: #f59e0b;
+  border-radius: 4px;
 }
 
 .dist-count {
   font-size: 12px;
-  color: #999;
+  color: #94a3b8;
   width: 30px;
   text-align: right;
+  font-weight: 500;
 }
 
 .review-filters {
   display: flex;
   gap: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 20px;
 }
 
 .review-filters button {
-  padding: 4px 12px;
-  border: 1px solid #ddd;
-  border-radius: 16px;
+  padding: 6px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
   background: #fff;
   font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.review-filters button:hover {
+  color: #2563eb;
+  border-color: rgba(37, 99, 235, 0.3);
 }
 
 .review-filters button.active {
-  border-color: #ff5722;
-  color: #ff5722;
-  background: #fff3e0;
+  border-color: #2563eb;
+  color: #2563eb;
+  background: #eff6ff;
 }
 
 .review-item {
-  padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 20px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.review-item:last-child {
+  border-bottom: none;
 }
 
 .review-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .review-user {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 700;
+  color: #334155;
 }
 
 .review-rating {
-  color: #ff9800;
+  color: #f59e0b;
   font-size: 12px;
+  letter-spacing: 2px;
 }
 
 .review-date {
   font-size: 12px;
-  color: #999;
+  color: #94a3b8;
   margin-left: auto;
+  font-weight: 500;
 }
 
 .review-content {
   font-size: 13px;
-  color: #333;
+  color: #334155;
   line-height: 1.6;
   margin: 0;
+  font-weight: 500;
 }
 
 .review-images {
   display: flex;
-  gap: 6px;
-  margin-top: 8px;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .review-images img {
-  width: 60px;
-  height: 60px;
+  width: 70px;
+  height: 70px;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: 8px;
+  border: 1px solid #f1f5f9;
+  cursor: zoom-in;
+  transition: opacity 0.2s;
+}
+
+.review-images img:hover {
+  opacity: 0.9;
 }
 
 .empty-reviews {
   text-align: center;
-  padding: 24px;
-  color: #999;
+  padding: 32px;
+  color: #94a3b8;
+  font-weight: 500;
 }
 
 /* Booking Bar */
@@ -775,50 +850,62 @@ function goToBooking() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 12px 24px;
   background: #fff;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+  border-top: 1px solid #e2e8f0;
   z-index: 100;
 }
 
 .booking-bar .price-value {
-  font-size: 20px;
+  font-size: 24px;
 }
 
 .booking-btn {
-  padding: 10px 32px;
-  background: #ff5722;
+  padding: 12px 36px;
+  background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
   color: #fff;
   border: none;
-  border-radius: 20px;
+  border-radius: 24px;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  transition: all 0.2s;
 }
 
-/* Loading/Error */
+.booking-btn:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+}
+
+/* Loading/Error/Skeleton */
 .loading-state {
-  padding: 16px;
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .skeleton-banner {
-  height: 240px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  height: 360px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
+  border-radius: 16px;
 }
 
 .skeleton-content {
-  padding: 16px;
+  padding: 24px 0;
 }
 
 .skeleton-line {
-  height: 16px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  height: 18px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
-  margin-bottom: 12px;
-  border-radius: 4px;
+  margin-bottom: 16px;
+  border-radius: 6px;
 }
 
 .w80 { width: 80%; }
@@ -832,23 +919,85 @@ function goToBooking() {
 
 .error-state {
   text-align: center;
-  padding: 48px;
-  color: #999;
+  padding: 80px 24px;
+  color: #64748b;
+  font-weight: 500;
 }
 
 .error-state button {
-  margin-top: 12px;
-  padding: 8px 24px;
-  border: 1px solid #ff5722;
-  border-radius: 4px;
+  margin-top: 16px;
+  padding: 10px 28px;
+  border: 1px solid #2563eb;
+  border-radius: 8px;
   background: #fff;
-  color: #ff5722;
+  color: #2563eb;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.error-state button:hover {
+  background: #eff6ff;
 }
 
 .loading-text {
   text-align: center;
-  padding: 16px;
-  color: #999;
+  padding: 24px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* Responsive desktop enhancements */
+@media (min-width: 1024px) {
+  .product-detail-page {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 24px;
+    padding: 24px 24px 100px;
+  }
+
+  .image-carousel {
+    grid-column: span 2;
+    margin-bottom: 8px;
+  }
+  
+  .carousel-track img {
+    height: 400px;
+  }
+
+  .product-info,
+  .itinerary-section,
+  .fees-section,
+  .pricing-section,
+  .cancellation-section,
+  .reviews-section {
+    grid-column: 1;
+  }
+
+  .calendar-section {
+    grid-column: 2;
+    grid-row: 3 / span 5; /* spans along the left content columns */
+    align-self: start;
+    position: sticky;
+    top: 94px; /* sticky position below header */
+    margin-top: 16px;
+    z-index: 10;
+  }
+
+  .booking-bar {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 48px);
+    max-width: 1200px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    padding: 16px 32px;
+    z-index: 100;
+  }
 }
 </style>
