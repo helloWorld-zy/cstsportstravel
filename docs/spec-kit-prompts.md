@@ -1350,7 +1350,7 @@ infra/
 ```
 /speckit-implement
 
-请实现 tasks.md 中 Phase 1（服务拆分基础设施）的全部任务（T001-T020）。
+请基于TDD开发模式实现 tasks.md 中 Phase 1（服务拆分基础设施）的全部任务（T001-T020）。
 
 执行前先阅读：
 1. specs/002-outbound-supplier-distribution/plan.md（§Implementation Phases Phase 1）
@@ -1384,7 +1384,7 @@ Phase 1 包含：
 ```
 /speckit-implement
 
-请实现 tasks.md 中 Phase 2（出境游产品与预订）的全部任务（T021-T055）。
+请基于TDD开发模式实现 tasks.md 中 Phase 2（出境游产品与预订）的全部任务（T021-T055）。
 
 执行前先阅读：
 1. .specify/memory/constitution.md（项目宪法，在实现过程中严格遵守其中的原则）
@@ -1445,7 +1445,7 @@ Phase 2 包含：
 ```
 /speckit-implement
 
-请实现 tasks.md 中 Phase 3（供应商入驻与管理）的全部任务（T056-T076）。
+请基于TDD开发模式实现 tasks.md 中 Phase 3（供应商入驻与管理）的全部任务（T056-T076）。
 
 执行前先阅读：
 1. .specify/memory/constitution.md（项目宪法，Principle III 数据隔离要求）
@@ -1501,7 +1501,7 @@ Phase 3 包含：
 ```
 /speckit-implement
 
-请实现 tasks.md 中 Phase 4（二级分销体系）的全部任务（T077-T108）。
+请基于TDD开发模式实现 tasks.md 中 Phase 4（二级分销体系）的全部任务（T077-T108）。
 
 执行前先阅读：
 1. .specify/memory/constitution.md（项目宪法）
@@ -1573,7 +1573,7 @@ Phase 4 包含：
 ```
 /speckit-implement
 
-请实现 tasks.md 中 Phase 5（支付扩展）的全部任务（T109-T122）。
+请基于TDD开发模式实现 tasks.md 中 Phase 5（支付扩展）的全部任务（T109-T122）。
 
 执行前先阅读：
 1. .specify/memory/constitution.md（项目宪法，Principle III 支付安全要求）
@@ -1628,7 +1628,7 @@ Phase 5 包含：
 ```
 /speckit-implement
 
-请实现 tasks.md 中 Phase 6（营销系统）的全部任务（T123-T138）。
+请基于TDD开发模式实现 tasks.md 中 Phase 6（营销系统）的全部任务（T123-T138）。
 
 执行前先阅读：
 1. .specify/memory/constitution.md（项目宪法）
@@ -1676,7 +1676,7 @@ Phase 6 包含：
 ```
 /speckit-implement
 
-请实现 tasks.md 中 Phase 7（Meilisearch 搜索集成）的全部任务（T139-T144）。
+请基于TDD开发模式实现 tasks.md 中 Phase 7（Meilisearch 搜索集成）的全部任务（T139-T144）。
 
 执行前先阅读：
 1. specs/002-outbound-supplier-distribution/plan.md（§Technical Context，Meilisearch 选型）
@@ -1708,7 +1708,7 @@ Phase 7 包含：
 ```
 /speckit-implement
 
-请实现 tasks.md 中 Phase 8（抖音小程序）的全部任务（T145-T150）。
+请基于TDD开发模式实现 tasks.md 中 Phase 8（抖音小程序）的全部任务（T145-T150）。
 
 执行前先阅读：
 1. specs/002-outbound-supplier-distribution/spec.md（FR-183~FR-186，抖音小程序需求）
@@ -1739,7 +1739,7 @@ Phase 8 包含：
 ```
 /speckit-implement
 
-请实现 tasks.md 中 Phase 9（供应商工作台前端）的全部任务（T151-T160）。
+请基于TDD开发模式实现 tasks.md 中 Phase 9（供应商工作台前端）的全部任务（T151-T160）。
 
 执行前先阅读：
 1. .specify/memory/constitution.md（项目宪法，Principle III 安全要求）
@@ -1776,7 +1776,7 @@ Phase 9 包含：
 ```
 /speckit-implement
 
-请实现 tasks.md 中 Phase 10（分销商中心前端）的全部任务（T161-T170）。
+请基于TDD开发模式实现 tasks.md 中 Phase 10（分销商中心前端）的全部任务（T161-T170）。
 
 执行前先阅读：
 1. specs/002-outbound-supplier-distribution/spec.md（US3 前端页面维度验收场景 #19-#30）
@@ -1816,7 +1816,7 @@ Phase 10 包含：
 ```
 /speckit-implement
 
-请实现 tasks.md 中 Phase 11（集成测试与安全加固）的全部任务（T171-T184）。
+请基于TDD开发模式实现 tasks.md 中 Phase 11（集成测试与安全加固）的全部任务（T171-T184）。
 
 执行前先阅读：
 1. .specify/memory/constitution.md（Principle III 安全基线逐项检查）
@@ -1855,7 +1855,7 @@ Phase 11 包含：
 ```
 /speckit-implement
 
-请实现 tasks.md 中 Phase 12（部署与监控）的全部任务（T185-T193）。
+请基于TDD开发模式实现 tasks.md 中 Phase 12（部署与监控）的全部任务（T185-T193）。
 
 执行前先阅读：
 1. specs/002-outbound-supplier-distribution/plan.md（§Implementation Phases Phase 12）

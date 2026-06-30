@@ -1,0 +1,16 @@
+<service>
+  <id>product-service</id>
+  <name>Travel Booking Product Service</name>
+  <description>Product catalog, categories, destinations, and supplier management service</description>
+  <executable>%BASE%\cmd\product-service\product-service.exe</executable>
+  <arguments>-port 8082 -consul localhost:8500</arguments>
+  <logpath>%BASE%\logs\product-service</logpath>
+  <log mode="roll-by-size">
+    <sizeThreshold>10240</sizeThreshold>
+    <keepFiles>5</keepFiles>
+  </log>
+  <onfailure action="restart" delay="10 sec"/>
+  <onfailure action="restart" delay="20 sec"/>
+  <onfailure action="none"/>
+  <resetfailure>1 hour</resetfailure>
+</service>

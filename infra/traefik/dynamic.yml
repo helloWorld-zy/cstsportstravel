@@ -1,0 +1,151 @@
+# Traefik Dynamic Configuration
+# Service routing rules for Travel Booking microservices
+# Services register with Consul; Traefik discovers them via file provider
+
+http:
+  routers:
+    # ── User Service ──
+    user-service:
+      rule: "PathPrefix(`/api/v2/users`) || PathPrefix(`/api/v1/users`)"
+      service: user-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - rate-limit
+        - compress
+
+    # ── Product Service ──
+    product-service:
+      rule: "PathPrefix(`/api/v2/products`) || PathPrefix(`/api/v1/products`)"
+      service: product-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - rate-limit
+        - compress
+
+    # ── Order Service ──
+    order-service:
+      rule: "PathPrefix(`/api/v2/orders`) || PathPrefix(`/api/v1/orders`)"
+      service: order-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - rate-limit
+        - compress
+
+    # ── Payment Service ──
+    payment-service:
+      rule: "PathPrefix(`/api/v2/payments`) || PathPrefix(`/api/v1/payments`)"
+      service: payment-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - rate-limit
+        - compress
+
+    # ── Distribution Service ──
+    distribution-service:
+      rule: "PathPrefix(`/api/v2/distributors`) || PathPrefix(`/api/v2/commissions`)"
+      service: distribution-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - rate-limit
+        - compress
+
+    # ── Supplier (part of product-service) ──
+    supplier-service:
+      rule: "PathPrefix(`/api/v2/suppliers`)"
+      service: product-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - rate-limit
+        - compress
+
+    # ── Visa (part of order-service) ──
+    visa-service:
+      rule: "PathPrefix(`/api/v2/visa`)"
+      service: order-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - rate-limit
+        - compress
+
+    # ── Marketing ──
+    marketing-service:
+      rule: "PathPrefix(`/api/v2/coupons`) || PathPrefix(`/api/v2/promotions`)"
+      service: product-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - rate-limit
+        - compress
+
+    # ── Admin API ──
+    admin-service:
+      rule: "PathPrefix(`/api/v1/admin`)"
+      service: user-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - rate-limit
+        - compress
+
+  services:
+    user-service:
+      loadBalancer:
+        servers:
+          - url: "http://localhost:8081"
+        healthCheck:
+          path: /health
+          interval: 10s
+
+    product-service:
+      loadBalancer:
+        servers:
+          - url: "http://localhost:8082"
+        healthCheck:
+          path: /health
+          interval: 10s
+
+    order-service:
+      loadBalancer:
+        servers:
+          - url: "http://localhost:8083"
+        healthCheck:
+          path: /health
+          interval: 10s
+
+    payment-service:
+      loadBalancer:
+        servers:
+          - url: "http://localhost:8084"
+        healthCheck:
+          path: /health
+          interval: 10s
+
+    distribution-service:
+      loadBalancer:
+        servers:
+          - url: "http://localhost:8085"
+        healthCheck:
+          path: /health
+          interval: 10s
+
+  middlewares:
+    rate-limit:
+      rateLimit:
+        average: 100
+        burst: 200
+        period: 1s
+
+    compress:
+      compress: {}
+
+    retry:
+      retry:
+        attempts: 3
+        initialInterval: 100ms

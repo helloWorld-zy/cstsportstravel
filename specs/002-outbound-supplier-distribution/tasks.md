@@ -30,26 +30,26 @@
 
 **Purpose**: 从 Gin 单体拆分为 5 个微服务，搭建 NATS/Consul/Meilisearch/Traefik
 
-- [ ] T001 [P] Deploy Consul dev cluster and create Go client wrapper in `backend/internal/shared/consul/client.go`
-- [ ] T002 [P] Deploy NATS with JetStream enabled and create Go client wrapper in `backend/internal/shared/nats/client.go`
-- [ ] T003 [P] Deploy Meilisearch and create Go client wrapper in `backend/internal/shared/meili/client.go`
-- [ ] T004 Create Traefik config with dynamic service routing in `infra/traefik/traefik.yml` and `infra/traefik/dynamic.yml`
-- [ ] T005 [P] Define NATS subjects, event DTOs, and pub/sub wrappers in `backend/internal/shared/event/events.go`
-- [ ] T006 [P] Create database migration for outbound product extensions in `backend/migrations/002_outbound_tables.sql` (country, visa_material_template, product columns)
-- [ ] T007 [P] Create database migration for supplier tables in `backend/migrations/003_supplier_tables.sql` (supplier, supplier_qualification, settlement_statement, commission_rule)
-- [ ] T008 [P] Create database migration for distribution tables in `backend/migrations/004_distribution_tables.sql` (distributor, distributor_relation, promotion_link, commission_detail, withdrawal_record, promotion_click)
-- [ ] T009 [P] Create database migration for visa tables in `backend/migrations/005_visa_tables.sql` (visa_order, visa_material, visa_progress)
-- [ ] T010 [P] Create database migration for marketing tables in `backend/migrations/006_marketing_tables.sql` (coupon, coupon_claim, promotion_activity)
-- [ ] T011 [P] Create database migration for payment extension columns in `backend/migrations/007_payment_extension.sql` (main_order/payment_transaction new columns)
-- [ ] T012 Split user-service from monolith: create `backend/cmd/user-service/main.go` with WinSW XML config in `infra/winsw/user-service.xml`
-- [ ] T013 Split product-service from monolith: create `backend/cmd/product-service/main.go` with WinSW XML config in `infra/winsw/product-service.xml`
-- [ ] T014 Split order-service from monolith: create `backend/cmd/order-service/main.go` with WinSW XML config in `infra/winsw/order-service.xml`
-- [ ] T015 Split payment-service from monolith: create `backend/cmd/payment-service/main.go` with WinSW XML config in `infra/winsw/payment-service.xml`
-- [ ] T016 Create distribution-service skeleton: `backend/cmd/distribution-service/main.go` with health check endpoint and WinSW config
-- [ ] T017 Create OpenAPI v2 aggregation document in `backend/api/openapi/v2.yaml` referencing all sub-specs
-- [ ] T018 Create shared middleware package (auth, rate-limit, audit, tenant isolation) in `backend/internal/shared/middleware/`
-- [ ] T019 Create unified error codes package in `backend/internal/shared/errors/codes.go`
-- [ ] T020 Create AES-256-GCM field encryption utility in `backend/internal/shared/encryption/aes_gcm.go`
+- [X] T001 [P] Deploy Consul dev cluster and create Go client wrapper in `internal/shared/consul/client.go`
+- [X] T002 [P] Deploy NATS with JetStream enabled and create Go client wrapper in `internal/shared/nats/client.go`
+- [X] T003 [P] Deploy Meilisearch and create Go client wrapper in `internal/shared/meili/client.go`
+- [X] T004 Create Traefik config with dynamic service routing in `infra/traefik/traefik.yml` and `infra/traefik/dynamic.yml`
+- [X] T005 [P] Define NATS subjects, event DTOs, and pub/sub wrappers in `internal/shared/event/events.go`
+- [X] T006 [P] Create database migration for outbound product extensions in `migrations/002_outbound_tables.sql` (country, visa_material_template, product columns)
+- [X] T007 [P] Create database migration for supplier tables in `migrations/003_supplier_tables.sql` (supplier, supplier_qualification, settlement_statement, commission_rule)
+- [X] T008 [P] Create database migration for distribution tables in `migrations/004_distribution_tables.sql` (distributor, distributor_relation, promotion_link, commission_detail, withdrawal_record, promotion_click)
+- [X] T009 [P] Create database migration for visa tables in `migrations/005_visa_tables.sql` (visa_order, visa_material, visa_progress)
+- [X] T010 [P] Create database migration for marketing tables in `migrations/006_marketing_tables.sql` (coupon, coupon_claim, promotion_activity)
+- [X] T011 [P] Create database migration for payment extension columns in `migrations/007_payment_extension.sql` (main_order/payment_transaction new columns)
+- [X] T012 Split user-service from monolith: create `cmd/user-service/main.go` with WinSW XML config in `infra/winsw/user-service.xml`
+- [X] T013 Split product-service from monolith: create `cmd/product-service/main.go` with WinSW XML config in `infra/winsw/product-service.xml`
+- [X] T014 Split order-service from monolith: create `cmd/order-service/main.go` with WinSW XML config in `infra/winsw/order-service.xml`
+- [X] T015 Split payment-service from monolith: create `cmd/payment-service/main.go` with WinSW XML config in `infra/winsw/payment-service.xml`
+- [X] T016 Create distribution-service skeleton: `cmd/distribution-service/main.go` with health check endpoint and WinSW config
+- [X] T017 Create OpenAPI v2 aggregation document in `api/openapi/v2.yaml` referencing all sub-specs
+- [X] T018 Create shared middleware package (auth, rate-limit, audit, tenant isolation) in `internal/shared/middleware/`
+- [X] T019 Create unified error codes package in `internal/shared/errors/codes.go`
+- [X] T020 Create AES-256-GCM field encryption utility in `internal/shared/encryption/aes_gcm.go`
 
 **Checkpoint**: All 5 services can start independently, register with Consul, and communicate via NATS
 

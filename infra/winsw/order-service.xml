@@ -1,0 +1,16 @@
+<service>
+  <id>order-service</id>
+  <name>Travel Booking Order Service</name>
+  <description>Order lifecycle, visa orders, and booking flows service</description>
+  <executable>%BASE%\cmd\order-service\order-service.exe</executable>
+  <arguments>-port 8083 -consul localhost:8500</arguments>
+  <logpath>%BASE%\logs\order-service</logpath>
+  <log mode="roll-by-size">
+    <sizeThreshold>10240</sizeThreshold>
+    <keepFiles>5</keepFiles>
+  </log>
+  <onfailure action="restart" delay="10 sec"/>
+  <onfailure action="restart" delay="20 sec"/>
+  <onfailure action="none"/>
+  <resetfailure>1 hour</resetfailure>
+</service>

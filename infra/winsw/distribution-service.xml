@@ -1,0 +1,16 @@
+<service>
+  <id>distribution-service</id>
+  <name>Travel Booking Distribution Service</name>
+  <description>Two-level distribution system: distributor management, commission calculation, promotion links</description>
+  <executable>%BASE%\cmd\distribution-service\distribution-service.exe</executable>
+  <arguments>-port 8085 -consul localhost:8500</arguments>
+  <logpath>%BASE%\logs\distribution-service</logpath>
+  <log mode="roll-by-size">
+    <sizeThreshold>10240</sizeThreshold>
+    <keepFiles>5</keepFiles>
+  </log>
+  <onfailure action="restart" delay="10 sec"/>
+  <onfailure action="restart" delay="20 sec"/>
+  <onfailure action="none"/>
+  <resetfailure>1 hour</resetfailure>
+</service>

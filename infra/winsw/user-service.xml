@@ -1,0 +1,16 @@
+<service>
+  <id>user-service</id>
+  <name>Travel Booking User Service</name>
+  <description>User authentication, profile management, and traveller info service</description>
+  <executable>%BASE%\cmd\user-service\user-service.exe</executable>
+  <arguments>-port 8081 -consul localhost:8500</arguments>
+  <logpath>%BASE%\logs\user-service</logpath>
+  <log mode="roll-by-size">
+    <sizeThreshold>10240</sizeThreshold>
+    <keepFiles>5</keepFiles>
+  </log>
+  <onfailure action="restart" delay="10 sec"/>
+  <onfailure action="restart" delay="20 sec"/>
+  <onfailure action="none"/>
+  <resetfailure>1 hour</resetfailure>
+</service>

@@ -1,0 +1,567 @@
+openapi: 3.0.3
+info:
+  title: Travel Booking OTA Platform API v2
+  description: |
+    Aggregated API documentation for the Travel Booking microservices.
+
+    ## Services
+    - **user-service** (port 8081): User authentication, profile, passport management
+    - **product-service** (port 8082): Product catalog, outbound products, supplier management
+    - **order-service** (port 8083): Order lifecycle, visa orders, booking flows
+    - **payment-service** (port 8084): Payment processing (Alipay/WeChat/UnionPay), refunds
+    - **distribution-service** (port 8085): Distributor management, commission, promotion links
+
+    ## Authentication
+    All API endpoints require JWT Bearer token in the Authorization header.
+    Token lifetime: 15 minutes (access), 7 days (refresh).
+
+    ## Response Envelope
+    All responses follow the unified envelope format:
+    ```json
+    {
+      "code": 0,
+      "message": "success",
+      "data": {},
+      "trace_id": "uuid"
+    }
+    ```
+
+    ## Rate Limiting
+    - Default: 100 requests/second per IP
+    - Authenticated: 100 requests/second per user
+  version: 2.0.0
+  contact:
+    name: Travel Booking Team
+    email: api@travel-booking.com
+
+servers:
+  - url: https://api.travel-booking.com
+    description: Production
+  - url: http://localhost:8080
+    description: Development (Traefik gateway)
+
+tags:
+  - name: users
+    description: User authentication and profile management
+  - name: products
+    description: Product catalog and outbound products
+  - name: suppliers
+    description: Supplier open platform
+  - name: orders
+    description: Order lifecycle management
+  - name: visa
+    description: Visa order and material management
+  - name: payments
+    description: Payment processing and refunds
+  - name: distributors
+    description: Distribution system
+  - name: commissions
+    description: Commission calculation and rules
+  - name: coupons
+    description: Marketing coupons
+  - name: promotions
+    description: Promotion activities
+
+paths:
+  # ── User Service ──
+  /api/v2/users/profile:
+    get:
+      tags: [users]
+      summary: Get current user profile
+      operationId: getUserProfile
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+
+  /api/v2/users/passport:
+    post:
+      tags: [users]
+      summary: Create passport info
+      operationId: createPassport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PassportCreate'
+      responses:
+        '200':
+          description: Passport created
+
+  # ── Product Service ──
+  /api/v2/products/outbound:
+    get:
+      tags: [products]
+      summary: List outbound products with filters
+      operationId: listOutboundProducts
+      parameters:
+        - name: continent
+          in: query
+          schema:
+            type: string
+            enum: [asia, europe, north_america, south_america, oceania, africa]
+        - name: country_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: visa_type
+          in: query
+          schema:
+            type: string
+            enum: [visa_free, visa_on_arrival, e_visa, visa_required]
+        - name: days
+          in: query
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Outbound product list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductList'
+
+  /api/v2/products/outbound/{id}:
+    get:
+      tags: [products]
+      summary: Get outbound product detail with visa info
+      operationId: getOutboundProduct
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Outbound product detail
+
+  /api/v2/countries:
+    get:
+      tags: [products]
+      summary: List countries with visa info
+      operationId: listCountries
+      parameters:
+        - name: continent
+          in: query
+          schema:
+            type: string
+        - name: visa_type
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Country list
+
+  # ── Supplier ──
+  /api/v2/suppliers/apply:
+    post:
+      tags: [suppliers]
+      summary: Submit supplier application
+      operationId: applySupplier
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SupplierApplication'
+      responses:
+        '200':
+          description: Application submitted
+
+  # ── Order Service ──
+  /api/v2/orders/outbound:
+    post:
+      tags: [orders]
+      summary: Create outbound booking (5-step wizard)
+      operationId: createOutboundBooking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OutboundBooking'
+      responses:
+        '200':
+          description: Booking created
+
+  # ── Visa ──
+  /api/v2/visa/orders:
+    post:
+      tags: [visa]
+      summary: Create visa order
+      operationId: createVisaOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VisaOrderCreate'
+      responses:
+        '200':
+          description: Visa order created
+
+  /api/v2/visa/orders/{id}/materials:
+    post:
+      tags: [visa]
+      summary: Upload visa material
+      operationId: uploadVisaMaterial
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                material_type:
+                  type: string
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Material uploaded
+
+  /api/v2/visa/orders/{id}/progress:
+    get:
+      tags: [visa]
+      summary: Get visa progress
+      operationId: getVisaProgress
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Visa progress
+
+  # ── Payment ──
+  /api/v2/payments:
+    post:
+      tags: [payments]
+      summary: Create payment order
+      operationId: createPayment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentCreate'
+      responses:
+        '200':
+          description: Payment created
+
+  /api/v2/payments/deposit:
+    post:
+      tags: [payments]
+      summary: Pay deposit
+      operationId: payDeposit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepositPayment'
+      responses:
+        '200':
+          description: Deposit payment created
+
+  /api/v2/payments/balance:
+    post:
+      tags: [payments]
+      summary: Pay balance
+      operationId: payBalance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BalancePayment'
+      responses:
+        '200':
+          description: Balance payment created
+
+  # ── Distribution ──
+  /api/v2/distributors/apply:
+    post:
+      tags: [distributors]
+      summary: Apply to become distributor
+      operationId: applyDistributor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DistributorApplication'
+      responses:
+        '200':
+          description: Application submitted
+
+  /api/v2/distributors/overview:
+    get:
+      tags: [distributors]
+      summary: Get distributor overview dashboard
+      operationId: getDistributorOverview
+      responses:
+        '200':
+          description: Overview data
+
+  /api/v2/distributors/promotion-links:
+    post:
+      tags: [distributors]
+      summary: Create promotion link
+      operationId: createPromotionLink
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromotionLinkCreate'
+      responses:
+        '200':
+          description: Link created
+
+  /api/v2/commissions:
+    get:
+      tags: [commissions]
+      summary: List commission details
+      operationId: listCommissions
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Commission list
+
+  /api/v2/withdrawals:
+    post:
+      tags: [distributors]
+      summary: Submit withdrawal request
+      operationId: createWithdrawal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WithdrawalCreate'
+      responses:
+        '200':
+          description: Withdrawal submitted
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        nickname:
+          type: string
+        phone:
+          type: string
+        avatar_url:
+          type: string
+
+    PassportCreate:
+      type: object
+      required: [passport_no, nationality, full_name, expiry_date]
+      properties:
+        passport_no:
+          type: string
+        nationality:
+          type: string
+        full_name:
+          type: string
+        expiry_date:
+          type: string
+          format: date
+        front_image_url:
+          type: string
+        back_image_url:
+          type: string
+
+    ProductList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+        total:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+
+    SupplierApplication:
+      type: object
+      required: [company_name, credit_code, contact_name, contact_phone]
+      properties:
+        company_name:
+          type: string
+        credit_code:
+          type: string
+        contact_name:
+          type: string
+        contact_phone:
+          type: string
+        business_license:
+          type: string
+          format: binary
+
+    OutboundBooking:
+      type: object
+      required: [product_id, departure_date, travellers]
+      properties:
+        product_id:
+          type: integer
+          format: int64
+        departure_date:
+          type: string
+          format: date
+        travellers:
+          type: array
+          items:
+            type: object
+        visa_service:
+          type: boolean
+        addons:
+          type: array
+          items:
+            type: object
+
+    VisaOrderCreate:
+      type: object
+      required: [order_id, country_id, visa_type]
+      properties:
+        order_id:
+          type: integer
+          format: int64
+        country_id:
+          type: integer
+          format: int64
+        visa_type:
+          type: string
+
+    PaymentCreate:
+      type: object
+      required: [order_id, channel]
+      properties:
+        order_id:
+          type: integer
+          format: int64
+        channel:
+          type: string
+          enum: [alipay, wechat, unionpay]
+        payment_mode:
+          type: string
+          enum: [full, deposit]
+          default: full
+
+    DepositPayment:
+      type: object
+      required: [order_id, channel]
+      properties:
+        order_id:
+          type: integer
+          format: int64
+        channel:
+          type: string
+        amount:
+          type: number
+          format: double
+
+    BalancePayment:
+      type: object
+      required: [order_id]
+      properties:
+        order_id:
+          type: integer
+          format: int64
+        channel:
+          type: string
+
+    DistributorApplication:
+      type: object
+      required: [distributor_type, phone]
+      properties:
+        distributor_type:
+          type: string
+          enum: [personal, enterprise]
+        phone:
+          type: string
+        real_name:
+          type: string
+        id_card_number:
+          type: string
+        enterprise_name:
+          type: string
+        credit_code:
+          type: string
+
+    PromotionLinkCreate:
+      type: object
+      required: [product_id]
+      properties:
+        product_id:
+          type: integer
+          format: int64
+
+    WithdrawalCreate:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: number
+          format: double
+          minimum: 100
+
+security:
+  - bearerAuth: []

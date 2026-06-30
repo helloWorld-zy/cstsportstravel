@@ -1,0 +1,16 @@
+<service>
+  <id>payment-service</id>
+  <name>Travel Booking Payment Service</name>
+  <description>Payment processing, refunds, and reconciliation service (Alipay/WeChat/UnionPay)</description>
+  <executable>%BASE%\cmd\payment-service\payment-service.exe</executable>
+  <arguments>-port 8084 -consul localhost:8500</arguments>
+  <logpath>%BASE%\logs\payment-service</logpath>
+  <log mode="roll-by-size">
+    <sizeThreshold>10240</sizeThreshold>
+    <keepFiles>5</keepFiles>
+  </log>
+  <onfailure action="restart" delay="10 sec"/>
+  <onfailure action="restart" delay="20 sec"/>
+  <onfailure action="none"/>
+  <resetfailure>1 hour</resetfailure>
+</service>
