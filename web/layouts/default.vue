@@ -179,18 +179,40 @@ function handleUserCommand(command: string) {
   color: #475569;
   text-decoration: none;
   padding: 6px 4px;
-  border-bottom: 2px solid transparent;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  transition: color 0.25s ease;
+}
+
+.nav-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #2563eb;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .nav-item:hover {
   color: #2563eb;
 }
 
+.nav-item:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
 .nav-item.active {
   color: #2563eb;
   font-weight: 600;
-  border-bottom-color: #2563eb;
+}
+
+.nav-item.active::after {
+  transform: scaleX(1);
+  background-color: #2563eb;
 }
 
 .user-area {
