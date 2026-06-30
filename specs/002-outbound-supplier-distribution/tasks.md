@@ -147,38 +147,38 @@
 
 ### Implementation
 
-- [ ] T077 [P] [US3] Create Distributor domain model with status (pending/active/frozen/cancelled/deactivated) and grade (normal/senior) in `backend/internal/distribution/domain/distributor.go`
-- [ ] T078 [P] [US3] Create DistributorRelation domain model (parent_id, level 1 or 2) in `backend/internal/distribution/domain/distributor_relation.go`
-- [ ] T079 [P] [US3] Create CommissionDetail domain model with status machine (pending→frozen→withdrawable→withdrawn/recovered) in `backend/internal/distribution/domain/commission.go`
-- [ ] T080 [P] [US3] Create PromotionLink domain model with click tracking in `backend/internal/distribution/domain/promotion_link.go`
-- [ ] T081 [P] [US3] Create WithdrawalRecord domain model in `backend/internal/distribution/domain/withdrawal.go`
-- [ ] T082 [P] [US3] Create PromotionClick domain model with IP/device fingerprint in `backend/internal/distribution/domain/promotion_click.go`
-- [ ] T083 [US3] Create Distributor repository with all CRUD and relationship queries in `backend/internal/distribution/repository/distributor_repo.go`
-- [ ] T084 [US3] Create CommissionDetail repository with freeze/thaw batch operations in `backend/internal/distribution/repository/commission_repo.go`
-- [ ] T085 [US3] Create PromotionLink repository with click statistics in `backend/internal/distribution/repository/promotion_link_repo.go`
-- [ ] T086 [US3] Create distributor application API (personal/enterprise, auto-validate ID card/bank card/business license) in `backend/internal/distribution/handler/application_handler.go`
-- [ ] T087 [US3] Create distributor audit API (approve/reject/supplement, distributor code generation 8-char) in `backend/internal/distribution/handler/audit_handler.go`
-- [ ] T088 [US3] Create agreement signing API (record sign time + IP, status transition to active, 15-day activation timeout auto-reject via Asynq) in `backend/internal/distribution/handler/agreement_handler.go`
-- [ ] T089 [US3] Create invitation mechanism API (invite link/invite code generation, parent_id binding) in `backend/internal/distribution/handler/invitation_handler.go`
-- [ ] T090 [US3] Create promotion link generation API (short link + QR code with logo, 3 sizes) in `backend/internal/distribution/handler/promotion_handler.go`
-- [ ] T091 [US3] Create promotion tracking service (URL param + Cookie 30-day dual tracking) in `backend/internal/distribution/service/tracking_service.go`
-- [ ] T092 [US3] Create distribution order tracking (record distributor_id_l1/l2, promotion_code, track_source on order creation) in `backend/internal/distribution/handler/order_tracking_handler.go`
-- [ ] T093 [US3] Create commission rule configuration API (3-level priority: product>category>global, level1/level2 rates, 5min cache refresh) in `backend/internal/distribution/handler/commission_rule_handler.go`
-- [ ] T094 [US3] Create commission calculation engine (NATS consumer, base/ratio/attribution/cap rules, 50% cap enforcement) in `backend/internal/distribution/service/commission_service.go`
-- [ ] T095 [US3] Create commission freeze/thaw service (T+N: domestic 7d, outbound 15d, cruise 15d; auto-thaw Asynq job) in `backend/internal/distribution/service/freeze_service.go`
-- [ ] T096 [US3] Create commission refund recovery service (full/partial, freeze-in/out handling) in `backend/internal/distribution/service/recovery_service.go`
-- [ ] T097 [US3] Create distributor withdrawal API (min 100 CNY, review, senior T+3 accelerated) in `backend/internal/distribution/handler/withdrawal_handler.go`
-- [ ] T098 [US3] Create anti-fraud engine (self-purchase ban, identity isolation, device association 30d, IP rate limit 10/h, violation punishment) in `backend/internal/distribution/service/anti_fraud_service.go`
-- [ ] T099 [US3] Create distributor grade service (auto upgrade/downgrade 90-day review Asynq job) in `backend/internal/distribution/service/grade_service.go`
-- [ ] T100 [US3] Create distributor overview API (total/withdrawable/frozen commission, today stats, announcements) in `backend/internal/distribution/handler/overview_handler.go`
-- [ ] T101 [US3] Create my-promotion API (product list, link management, click/order stats) in `backend/internal/distribution/handler/promotion_stats_handler.go`
-- [ ] T102 [US3] Create my-team API (member list, team summary, invite, leaderboard, L1 only) in `backend/internal/distribution/handler/team_handler.go`
-- [ ] T103 [US3] Create commission detail list API (filter by time/category/status, export Excel) in `backend/internal/distribution/handler/commission_detail_handler.go`
-- [ ] T104 [US3] Create performance dashboard API (trend charts, product ranking, channel analysis) in `backend/internal/distribution/handler/performance_handler.go`
-- [ ] T105 [US3] Create admin distributor list/detail API (filter by type/grade/status, freeze/unfreeze/cancel) in `backend/internal/distribution/handler/admin_distributor_handler.go`
-- [ ] T106 [US3] Create admin commission settlement audit API (list/approve/reject/batch approve) in `backend/internal/distribution/handler/admin_withdrawal_handler.go`
-- [ ] T107 [US3] Create admin distribution rule configuration API (commission rates, settlement rules, change log) in `backend/internal/distribution/handler/admin_rule_handler.go`
-- [ ] T108 [US3] Create admin distribution report API (order stats, commission spend, activity analysis, export) in `backend/internal/distribution/handler/admin_report_handler.go`
+- [X] T077 [P] [US3] Create Distributor domain model with status (pending/active/frozen/cancelled/deactivated) and grade (normal/senior) in `backend/internal/distribution/domain/distributor.go`
+- [X] T078 [P] [US3] Create DistributorRelation domain model (parent_id, level 1 or 2) in `backend/internal/distribution/domain/distributor_relation.go`
+- [X] T079 [P] [US3] Create CommissionDetail domain model with status machine (pending→frozen→withdrawable→withdrawn/recovered) in `backend/internal/distribution/domain/commission.go`
+- [X] T080 [P] [US3] Create PromotionLink domain model with click tracking in `backend/internal/distribution/domain/promotion_link.go`
+- [X] T081 [P] [US3] Create WithdrawalRecord domain model in `backend/internal/distribution/domain/withdrawal.go`
+- [X] T082 [P] [US3] Create PromotionClick domain model with IP/device fingerprint in `backend/internal/distribution/domain/promotion_click.go`
+- [X] T083 [US3] Create Distributor repository with all CRUD and relationship queries in `backend/internal/distribution/repository/distributor_repo.go`
+- [X] T084 [US3] Create CommissionDetail repository with freeze/thaw batch operations in `backend/internal/distribution/repository/commission_repo.go`
+- [X] T085 [US3] Create PromotionLink repository with click statistics in `backend/internal/distribution/repository/promotion_link_repo.go`
+- [X] T086 [US3] Create distributor application API (personal/enterprise, auto-validate ID card/bank card/business license) in `backend/internal/distribution/handler/application_handler.go`
+- [X] T087 [US3] Create distributor audit API (approve/reject/supplement, distributor code generation 8-char) in `backend/internal/distribution/handler/audit_handler.go`
+- [X] T088 [US3] Create agreement signing API (record sign time + IP, status transition to active, 15-day activation timeout auto-reject via Asynq) in `backend/internal/distribution/handler/agreement_handler.go`
+- [X] T089 [US3] Create invitation mechanism API (invite link/invite code generation, parent_id binding) in `backend/internal/distribution/handler/invitation_handler.go`
+- [X] T090 [US3] Create promotion link generation API (short link + QR code with logo, 3 sizes) in `backend/internal/distribution/handler/promotion_handler.go`
+- [X] T091 [US3] Create promotion tracking service (URL param + Cookie 30-day dual tracking) in `backend/internal/distribution/service/tracking_service.go`
+- [X] T092 [US3] Create distribution order tracking (record distributor_id_l1/l2, promotion_code, track_source on order creation) in `backend/internal/distribution/handler/order_tracking_handler.go`
+- [X] T093 [US3] Create commission rule configuration API (3-level priority: product>category>global, level1/level2 rates, 5min cache refresh) in `backend/internal/distribution/handler/commission_rule_handler.go`
+- [X] T094 [US3] Create commission calculation engine (NATS consumer, base/ratio/attribution/cap rules, 50% cap enforcement) in `backend/internal/distribution/service/commission_service.go`
+- [X] T095 [US3] Create commission freeze/thaw service (T+N: domestic 7d, outbound 15d, cruise 15d; auto-thaw Asynq job) in `backend/internal/distribution/service/freeze_service.go`
+- [X] T096 [US3] Create commission refund recovery service (full/partial, freeze-in/out handling) in `backend/internal/distribution/service/recovery_service.go`
+- [X] T097 [US3] Create distributor withdrawal API (min 100 CNY, review, senior T+3 accelerated) in `backend/internal/distribution/handler/withdrawal_handler.go`
+- [X] T098 [US3] Create anti-fraud engine (self-purchase ban, identity isolation, device association 30d, IP rate limit 10/h, violation punishment) in `backend/internal/distribution/service/anti_fraud_service.go`
+- [X] T099 [US3] Create distributor grade service (auto upgrade/downgrade 90-day review Asynq job) in `backend/internal/distribution/service/grade_service.go`
+- [X] T100 [US3] Create distributor overview API (total/withdrawable/frozen commission, today stats, announcements) in `backend/internal/distribution/handler/overview_handler.go`
+- [X] T101 [US3] Create my-promotion API (product list, link management, click/order stats) in `backend/internal/distribution/handler/promotion_stats_handler.go`
+- [X] T102 [US3] Create my-team API (member list, team summary, invite, leaderboard, L1 only) in `backend/internal/distribution/handler/team_handler.go`
+- [X] T103 [US3] Create commission detail list API (filter by time/category/status, export Excel) in `backend/internal/distribution/handler/commission_detail_handler.go`
+- [X] T104 [US3] Create performance dashboard API (trend charts, product ranking, channel analysis) in `backend/internal/distribution/handler/performance_handler.go`
+- [X] T105 [US3] Create admin distributor list/detail API (filter by type/grade/status, freeze/unfreeze/cancel) in `backend/internal/distribution/handler/admin_distributor_handler.go`
+- [X] T106 [US3] Create admin commission settlement audit API (list/approve/reject/batch approve) in `backend/internal/distribution/handler/admin_withdrawal_handler.go`
+- [X] T107 [US3] Create admin distribution rule configuration API (commission rates, settlement rules, change log) in `backend/internal/distribution/handler/admin_rule_handler.go`
+- [X] T108 [US3] Create admin distribution report API (order stats, commission spend, activity analysis, export) in `backend/internal/distribution/handler/admin_report_handler.go`
 
 **Checkpoint**: 分销体系后端全部完成，佣金计算和防薅羊毛规则可独立测试
 
