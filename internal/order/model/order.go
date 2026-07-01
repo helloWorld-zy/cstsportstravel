@@ -32,6 +32,25 @@ type MainOrder struct {
 	CreatedAt             time.Time  `gorm:"column:created_at;not null;default:now();index:idx_order_user_status" json:"created_at"`
 	UpdatedAt             time.Time  `gorm:"column:updated_at;not null;default:now()" json:"updated_at"`
 
+	// Payment mode extension (FR-163, migration 007)
+	PaymentMode    string     `gorm:"column:payment_mode;size:20;default:full" json:"payment_mode"`               // full/deposit
+	DepositAmount  int64      `gorm:"column:deposit_amount" json:"deposit_amount"`                                 // cents
+	BalanceAmount  int64      `gorm:"column:balance_amount" json:"balance_amount"`                                 // cents
+	BalanceDeadline *time.Time `gorm:"column:balance_deadline" json:"balance_deadline,omitempty"`                  // 尾款截止时间
+	DepositPaidAt  *time.Time `gorm:"column:deposit_paid_at" json:"deposit_paid_at,omitempty"`                     // 定金支付时间
+	BalancePaidAt  *time.Time `gorm:"column:balance_paid_at" json:"balance_paid_at,omitempty"`                     // 尾款支付时间
+
+	// Distribution tracking (migration 007)
+	DistributorIDL1  *int64  `gorm:"column:distributor_id_l1" json:"distributor_id_l1,omitempty"`
+	DistributorIDL2  *int64  `gorm:"column:distributor_id_l2" json:"distributor_id_l2,omitempty"`
+	PromotionCode    string  `gorm:"column:promotion_code;size:20" json:"promotion_code,omitempty"`
+
+	// Marketing (migration 007)
+	CouponClaimID    *int64  `gorm:"column:coupon_claim_id" json:"coupon_claim_id,omitempty"`
+	CouponDiscount   int64   `gorm:"column:coupon_discount" json:"coupon_discount"`                               // cents
+	ActivityID       *int64  `gorm:"column:activity_id" json:"activity_id,omitempty"`
+	ActivityDiscount int64   `gorm:"column:activity_discount" json:"activity_discount"`                           // cents
+
 	// Relations
 	SubOrders      []SubOrder      `gorm:"foreignKey:MainOrderID" json:"sub_orders,omitempty"`
 	StatusLogs     []OrderStatusLog `gorm:"foreignKey:OrderID" json:"status_logs,omitempty"`
@@ -103,6 +122,8 @@ func (OrderTraveller) TableName() string {
 // Order status constants (internal states, snake_case).
 const (
 	OrderStatusPendingPay    = "pending_pay"
+	OrderStatusPaidDeposit   = "paid_deposit"    // FR-164: 定金已付
+	OrderStatusPendingBalance = "pending_balance" // FR-164: 待付尾款
 	OrderStatusPaidFull      = "paid_full"
 	OrderStatusPendingTravel = "pending_travel"
 	OrderStatusInTravel      = "in_travel"
@@ -123,14 +144,16 @@ const (
 
 // ValidTransitions defines the allowed order status transitions.
 var ValidTransitions = map[string][]string{
-	OrderStatusPendingPay:    {OrderStatusPaidFull, OrderStatusCancelled, OrderStatusRefunding},
-	OrderStatusPaidFull:      {OrderStatusPendingTravel, OrderStatusRefunding},
-	OrderStatusPendingTravel: {OrderStatusInTravel},
-	OrderStatusInTravel:      {OrderStatusCompleted},
-	OrderStatusCompleted:     {OrderStatusClosed},
-	OrderStatusCancelled:     {OrderStatusClosed},
-	OrderStatusRefunding:     {OrderStatusRefunded, OrderStatusPaidFull},
-	OrderStatusRefunded:      {OrderStatusClosed},
+	OrderStatusPendingPay:     {OrderStatusPaidFull, OrderStatusPaidDeposit, OrderStatusCancelled, OrderStatusRefunding},
+	OrderStatusPaidDeposit:    {OrderStatusPendingBalance, OrderStatusCancelled, OrderStatusRefunding},
+	OrderStatusPendingBalance: {OrderStatusPaidFull, OrderStatusCancelled},
+	OrderStatusPaidFull:       {OrderStatusPendingTravel, OrderStatusRefunding},
+	OrderStatusPendingTravel:  {OrderStatusInTravel},
+	OrderStatusInTravel:       {OrderStatusCompleted},
+	OrderStatusCompleted:      {OrderStatusClosed},
+	OrderStatusCancelled:      {OrderStatusClosed},
+	OrderStatusRefunding:      {OrderStatusRefunded, OrderStatusPaidFull},
+	OrderStatusRefunded:       {OrderStatusClosed},
 }
 
 // CanTransitionTo checks if the order can transition from its current status to the target.
@@ -152,4 +175,19 @@ const (
 	ChannelWeb    = "web"
 	ChannelMiniApp = "miniapp"
 	ChannelAdmin  = "admin"
+)
+
+// Payment mode constants.
+const (
+	PaymentModeFull    = "full"    // 全额支付
+	PaymentModeDeposit = "deposit" // 定金+尾款
+)
+
+// Default deposit configuration.
+const (
+	DefaultDepositRatio = 0.30 // 默认定金比例 30%
+	MinDepositRatio     = 0.10 // 最小定金比例 10%
+	MaxDepositRatio     = 0.50 // 最大定金比例 50%
+	DefaultGracePeriodHours = 24 // 默认宽限期 24 小时
+	DefaultReminderDaysBefore = 3 // 默认提前提醒天数
 )

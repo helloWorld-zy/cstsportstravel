@@ -14,6 +14,7 @@ type Config struct {
 	Redis      RedisConfig      `mapstructure:"redis"`
 	JWT        JWTConfig        `mapstructure:"jwt"`
 	Payment    PaymentConfig    `mapstructure:"payment"`
+	Deposit    DepositConfig    `mapstructure:"deposit"`
 	SMS        SMSConfig        `mapstructure:"sms"`
 	Log        LogConfig        `mapstructure:"log"`
 	Consul     ConsulConfig     `mapstructure:"consul"`
@@ -86,9 +87,10 @@ type JWTConfig struct {
 
 // PaymentConfig holds payment channel settings.
 type PaymentConfig struct {
-	Alipay  AlipayConfig  `mapstructure:"alipay"`
-	Wechat  WechatConfig  `mapstructure:"wechat"`
-	Timeout int           `mapstructure:"timeout"` // minutes
+	Alipay   AlipayConfig   `mapstructure:"alipay"`
+	Wechat   WechatConfig   `mapstructure:"wechat"`
+	UnionPay UnionPayConfig `mapstructure:"unionpay"`
+	Timeout  int            `mapstructure:"timeout"` // minutes
 }
 
 // AlipayConfig holds Alipay SDK settings.
@@ -107,6 +109,27 @@ type WechatConfig struct {
 	APIKey    string `mapstructure:"api_key"`
 	NotifyURL string `mapstructure:"notify_url"`
 	CertPath  string `mapstructure:"cert_path"`
+}
+
+// UnionPayConfig holds UnionPay SDK settings.
+// Uses smartwalle/unionpay SDK with RSA-SHA256 signing.
+type UnionPayConfig struct {
+	MerID           string `mapstructure:"mer_id"`            // 商户号
+	SignCertPath    string `mapstructure:"sign_cert_path"`    // pfx签名证书路径
+	SignCertPwd     string `mapstructure:"sign_cert_pwd"`     // pfx签名证书密码
+	VerifyCertPath  string `mapstructure:"verify_cert_path"`  // cer验签证书路径
+	FrontNotifyURL  string `mapstructure:"front_notify_url"`  // 前台通知地址（仅展示参考）
+	BackNotifyURL   string `mapstructure:"back_notify_url"`   // 后台通知地址（确认依据）
+	GatewayURL      string `mapstructure:"gateway_url"`       // 银联网关地址
+	IsProduction    bool   `mapstructure:"is_production"`     // 是否生产环境
+}
+
+// DepositConfig holds deposit + balance payment mode settings.
+type DepositConfig struct {
+	DefaultRatio      float64 `mapstructure:"default_ratio"`       // 默认定金比例 (0.10-0.50), default 0.30
+	BalanceDeadlineDays int   `mapstructure:"balance_deadline_days"` // 尾款截止日（出发前N天）
+	GracePeriodHours  int     `mapstructure:"grace_period_hours"`  // 逾期宽限期（小时），default 24
+	ReminderDaysBefore int    `mapstructure:"reminder_days_before"` // 提前提醒天数，default 3
 }
 
 // SMSConfig holds SMS service settings.

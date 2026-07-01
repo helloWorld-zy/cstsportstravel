@@ -192,20 +192,20 @@
 
 ### Implementation
 
-- [ ] T109 [P] [US4] Create UnionPay gateway adapter (smartwalle/unionpay, gateway + WAP payment) in `backend/internal/payment/gateway/unionpay.go`
-- [ ] T110 [P] [US4] Create UnionPay callback handler (backUrl for confirmation, frontUrl for display only) in `backend/internal/payment/handler/unionpay_notify.go`
-- [ ] T111 [P] [US4] Create UnionPay refund adapter (cancel for same-day, refund for next-day) in `backend/internal/payment/gateway/unionpay_refund.go`
-- [ ] T112 [P] [US4] Create DepositOrder domain model (deposit_amount, balance_amount, balance_deadline) in `backend/internal/order/domain/deposit_order.go`
-- [ ] T113 [US4] Create deposit payment flow service (create deposit payment, status transition to paid_deposit) in `backend/internal/payment/service/deposit_service.go`
-- [ ] T114 [US4] Create balance payment flow service (create balance payment, reminder 3 days before via Asynq) in `backend/internal/payment/service/balance_service.go`
-- [ ] T115 [US4] Create balance overdue handler (24h grace period, auto-cancel, inventory release, deposit refund) in `backend/internal/payment/service/overdue_service.go`
-- [ ] T116 [US4] Create partial refund API (amount validation, original-channel return, cumulative check) in `backend/internal/payment/handler/partial_refund_handler.go`
-- [ ] T117 [US4] Create payment status proactive query service (30s trigger, 60s retry, all 3 channels) in `backend/internal/payment/service/proactive_query_service.go`
-- [ ] T118 [US4] Extend reconciliation system for UnionPay (file download, parsing, 3-way matching) in `backend/internal/payment/service/reconciliation_service.go`
-- [ ] T119 [US4] Add UnionPay payment option and deposit/balance selection to web payment page in `frontend/web/components/payment/PaymentMethodSelector.vue`
-- [ ] T120 [US4] Create balance payment reminder page (paid deposit, balance due, countdown) in `frontend/web/components/payment/BalanceReminder.vue`
-- [ ] T121 [US4] Create partial refund application page in `frontend/web/components/order/PartialRefund.vue`
-- [ ] T122 [US4] Create Douyin payment adapter (tt.pay API, conditional compilation) in `frontend/miniprogram/utils/payment.js`
+- [X] T109 [P] [US4] Create UnionPay gateway adapter (smartwalle/unionpay, gateway + WAP payment) in `backend/internal/payment/gateway/unionpay.go`
+- [X] T110 [P] [US4] Create UnionPay callback handler (backUrl for confirmation, frontUrl for display only) in `backend/internal/payment/handler/unionpay_notify.go`
+- [X] T111 [P] [US4] Create UnionPay refund adapter (cancel for same-day, refund for next-day) in `backend/internal/payment/gateway/unionpay_refund.go`
+- [X] T112 [P] [US4] Create DepositOrder domain model (deposit_amount, balance_amount, balance_deadline) in `backend/internal/order/domain/deposit_order.go`
+- [X] T113 [US4] Create deposit payment flow service (create deposit payment, status transition to paid_deposit) in `backend/internal/payment/service/deposit_service.go`
+- [X] T114 [US4] Create balance payment flow service (create balance payment, reminder 3 days before via Asynq) in `backend/internal/payment/service/balance_service.go`
+- [X] T115 [US4] Create balance overdue handler (24h grace period, auto-cancel, inventory release, deposit refund) in `backend/internal/payment/service/overdue_service.go`
+- [X] T116 [US4] Create partial refund API (amount validation, original-channel return, cumulative check) in `backend/internal/payment/handler/partial_refund_handler.go`
+- [X] T117 [US4] Create payment status proactive query service (30s trigger, 60s retry, all 3 channels) in `backend/internal/payment/service/proactive_query_service.go`
+- [X] T118 [US4] Extend reconciliation system for UnionPay (file download, parsing, 3-way matching) in `backend/internal/payment/service/reconciliation_service.go`
+- [X] T119 [US4] Add UnionPay payment option and deposit/balance selection to web payment page in `frontend/web/components/payment/PaymentMethodSelector.vue`
+- [X] T120 [US4] Create balance payment reminder page (paid deposit, balance due, countdown) in `frontend/web/components/payment/BalanceReminder.vue`
+- [X] T121 [US4] Create partial refund application page in `frontend/web/components/order/PartialRefund.vue`
+- [X] T122 [US4] Create Douyin payment adapter (tt.pay API, conditional compilation) in `frontend/miniprogram/utils/payment.js`
 
 **Checkpoint**: 银联支付和定金+尾款模式可独立测试
 
