@@ -267,12 +267,12 @@
 
 ### Implementation
 
-- [ ] T145 [P] Configure Uni-App conditional compilation for Douyin (`#ifdef MP-TOUTIAO`) in `frontend/miniprogram/utils/platform.js`
-- [ ] T146 [P] Create Douyin login adapter (tt.login, OpenID acquisition, account binding) in `frontend/miniprogram/pages-douyin/login.vue`
-- [ ] T147 [P] Create Douyin payment adapter (tt.pay API integration) in `frontend/miniprogram/utils/douyin_payment.js`
-- [ ] T148 Create core page conditional compilation adaptations (product list/detail/booking/order/personal) in `frontend/miniprogram/utils/douyin_adapters.js`
-- [ ] T149 Create Douyin mini-program manifest and config in `frontend/miniprogram/manifest.json` (MP-TOUTIAO section)
-- [ ] T150 Submit Douyin mini-program for review (7-14 day cycle)
+- [X] T145 [P] Configure Uni-App conditional compilation for Douyin (`#ifdef MP-TOUTIAO`) in `frontend/miniprogram/utils/platform.js`
+- [X] T146 [P] Create Douyin login adapter (tt.login, OpenID acquisition, account binding) in `frontend/miniprogram/pages-douyin/login.vue`
+- [X] T147 [P] Create Douyin payment adapter (tt.pay API integration) in `frontend/miniprogram/utils/douyin_payment.js`
+- [X] T148 Create core page conditional compilation adaptations (product list/detail/booking/order/personal) in `frontend/miniprogram/utils/douyin_adapters.js`
+- [X] T149 Create Douyin mini-program manifest and config in `frontend/miniprogram/manifest.json` (MP-TOUTIAO section)
+- [X] T150 Submit Douyin mini-program for review (7-14 day cycle)
 
 **Checkpoint**: 抖音小程序可提审
 

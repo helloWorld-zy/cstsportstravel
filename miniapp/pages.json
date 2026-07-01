@@ -47,12 +47,54 @@
       "style": {
         "navigationBarTitleText": "登录"
       }
+    },
+    {
+      "path": "pages/coupon/index",
+      "style": {
+        "navigationBarTitleText": "领券中心"
+      }
+    },
+    {
+      "path": "pages/coupon/mine",
+      "style": {
+        "navigationBarTitleText": "我的优惠券"
+      }
+    },
+    {
+      "path": "pages/outbound/list",
+      "style": {
+        "navigationBarTitleText": "出境游"
+      }
+    },
+    {
+      "path": "pages/visa/progress",
+      "style": {
+        "navigationBarTitleText": "签证进度"
+      }
+    },
+    {
+      "path": "pages-douyin/login",
+      "style": {
+        "navigationBarTitleText": "抖音登录",
+        "mp-toutiao": {
+          "navigationBarTitleText": "登录"
+        }
+      }
     }
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "境内跟团游",
+    "navigationBarTitleText": "旅游预订平台",
     "navigationBarBackgroundColor": "#ffffff",
     "backgroundColor": "#f5f5f5"
+  },
+  "condition": {
+    "list": [
+      {
+        "name": "抖音登录页",
+        "path": "pages-douyin/login",
+        "query": ""
+      }
+    ]
   }
 }
