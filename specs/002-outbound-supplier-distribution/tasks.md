@@ -248,12 +248,12 @@
 
 ### Implementation
 
-- [ ] T139 [P] Design Meilisearch product index schema (searchable/filterable/sortable attributes for domestic+outbound+cruise) in `backend/internal/shared/meili/index_schema.go`
-- [ ] T140 [P] Create Meilisearch index initialization script in `backend/scripts/meili_init.go`
-- [ ] T141 Create product sync service (Asynq task, real-time push on product CRUD, <5s delay) in `backend/internal/product/service/search_sync_service.go`
-- [ ] T142 Create outbound product search handler with Meilisearch (continent/country/visa_type/city/days filters) in `backend/internal/product/handler/search_handler.go`
-- [ ] T143 Create search suggestion API (hot destinations → product names → attractions) in `backend/internal/product/handler/search_suggest_handler.go`
-- [ ] T144 Create database fallback search (Meilisearch unavailable → PostgreSQL tsvector) in `backend/internal/product/repository/search_fallback_repo.go`
+- [X] T139 [P] Design Meilisearch product index schema (searchable/filterable/sortable attributes for domestic+outbound+cruise) in `backend/internal/shared/meili/index_schema.go`
+- [X] T140 [P] Create Meilisearch index initialization script in `backend/scripts/meili_init.go`
+- [X] T141 Create product sync service (Asynq task, real-time push on product CRUD, <5s delay) in `backend/internal/product/service/search_sync_service.go`
+- [X] T142 Create outbound product search handler with Meilisearch (continent/country/visa_type/city/days filters) in `backend/internal/product/handler/search_handler.go`
+- [X] T143 Create search suggestion API (hot destinations → product names → attractions) in `backend/internal/product/handler/search_suggest_handler.go`
+- [X] T144 Create database fallback search (Meilisearch unavailable → PostgreSQL tsvector) in `backend/internal/product/repository/search_fallback_repo.go`
 
 **Checkpoint**: 搜索功能迁移至 Meilisearch，响应时间 <50ms
 
