@@ -219,22 +219,22 @@
 
 ### Implementation
 
-- [ ] T123 [P] [US5] Create Coupon domain model (4 types: full_reduction/discount/cash/exchange) in `backend/internal/marketing/domain/coupon.go`
-- [ ] T124 [P] [US5] Create CouponClaim domain model with status machine in `backend/internal/marketing/domain/coupon_claim.go`
-- [ ] T125 [P] [US5] Create PromotionActivity domain model (flash_sale/full_reduction/early_bird) in `backend/internal/marketing/domain/promotion_activity.go`
-- [ ] T126 [US5] Create coupon CRUD API (create with all config params, list, detail) in `backend/internal/marketing/handler/coupon_handler.go`
-- [ ] T127 [US5] Create coupon distribution API (6 methods: push/center/product/activity/share/exchange) in `backend/internal/marketing/handler/coupon_distribution_handler.go`
-- [ ] T128 [US5] Create coupon usage API (validate on order, occupy on confirm, use on pay, return on refund) in `backend/internal/marketing/handler/coupon_usage_handler.go`
-- [ ] T129 [US5] Create promotion activity engine (flash sale with isolated stock, tiered reduction, early bird auto-match) in `backend/internal/marketing/service/activity_engine.go`
-- [ ] T130 [US5] Create coupon analytics API (distributed/claimed/used/rate/GMV) in `backend/internal/marketing/handler/coupon_analytics_handler.go`
-- [ ] T131 [P] [US5] Create coupon center page (claimable list, one-click claim) in `frontend/web/pages/coupon/index.vue`
-- [ ] T132 [P] [US5] Create my coupons page (available/used/expired tabs) in `frontend/web/pages/coupon/mine.vue`
-- [ ] T133 [US5] Create coupon selector component for order confirmation (sorted by discount, real-time calc) in `frontend/web/components/coupon/CouponSelector.vue`
-- [ ] T134 [P] [US5] Create mini-program coupon center page in `frontend/miniprogram/pages/coupon/index.vue`
-- [ ] T135 [P] [US5] Create mini-program my coupons page in `frontend/miniprogram/pages/coupon/mine.vue`
-- [ ] T136 [US5] Create admin coupon management page (create/list/analytics) in `frontend/admin/views/marketing/CouponManage.vue`
-- [ ] T137 [US5] Create admin coupon analytics page in `frontend/admin/views/marketing/CouponAnalytics.vue`
-- [ ] T138 [US5] Create admin promotion activity management page in `frontend/admin/views/marketing/PromotionActivity.vue`
+- [X] T123 [P] [US5] Create Coupon domain model (4 types: full_reduction/discount/cash/exchange) in `backend/internal/marketing/domain/coupon.go`
+- [X] T124 [P] [US5] Create CouponClaim domain model with status machine in `backend/internal/marketing/domain/coupon_claim.go`
+- [X] T125 [P] [US5] Create PromotionActivity domain model (flash_sale/full_reduction/early_bird) in `backend/internal/marketing/domain/promotion_activity.go`
+- [X] T126 [US5] Create coupon CRUD API (create with all config params, list, detail) in `backend/internal/marketing/handler/coupon_handler.go`
+- [X] T127 [US5] Create coupon distribution API (6 methods: push/center/product/activity/share/exchange) in `backend/internal/marketing/handler/coupon_distribution_handler.go`
+- [X] T128 [US5] Create coupon usage API (validate on order, occupy on confirm, use on pay, return on refund) in `backend/internal/marketing/handler/coupon_usage_handler.go`
+- [X] T129 [US5] Create promotion activity engine (flash sale with isolated stock, tiered reduction, early bird auto-match) in `backend/internal/marketing/service/activity_engine.go`
+- [X] T130 [US5] Create coupon analytics API (distributed/claimed/used/rate/GMV) in `backend/internal/marketing/handler/coupon_analytics_handler.go`
+- [X] T131 [P] [US5] Create coupon center page (claimable list, one-click claim) in `frontend/web/pages/coupon/index.vue`
+- [X] T132 [P] [US5] Create my coupons page (available/used/expired tabs) in `frontend/web/pages/coupon/mine.vue`
+- [X] T133 [US5] Create coupon selector component for order confirmation (sorted by discount, real-time calc) in `frontend/web/components/coupon/CouponSelector.vue`
+- [X] T134 [P] [US5] Create mini-program coupon center page in `frontend/miniprogram/pages/coupon/index.vue`
+- [X] T135 [P] [US5] Create mini-program my coupons page in `frontend/miniprogram/pages/coupon/mine.vue`
+- [X] T136 [US5] Create admin coupon management page (create/list/analytics) in `frontend/admin/views/marketing/CouponManage.vue`
+- [X] T137 [US5] Create admin coupon analytics page in `frontend/admin/views/marketing/CouponAnalytics.vue`
+- [X] T138 [US5] Create admin promotion activity management page in `frontend/admin/views/marketing/PromotionActivity.vue`
 
 **Checkpoint**: 优惠券和促销活动可独立测试
 
